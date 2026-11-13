@@ -28,7 +28,7 @@ A página inicial tem um mapa com todas as aulas e o que vem antes do quê. De l
 
 O conteúdo das aulas vem da disciplina CI1056 da UFPR, do professor André Vignatti. Os códigos, pseudocódigos e enunciados das listas são do material da disciplina e não entram na licença deste projeto.
 
-O resto está sob [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). Use à vontade pra semear conhecimento: copie, adapte, leve pra sua turma. Só peço três coisas: dê o crédito, não venda e compartilhe do mesmo jeito que recebeu. Detalhes no `LICENSE.txt`.
+O resto está sob [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). Use à vontade pra semear conhecimento: copie, adapte, leve pra sua turma. Detalhes no `LICENSE.txt`.
 
 ---
 
