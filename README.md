@@ -1,12 +1,12 @@
 # Algoritmos II com jogos e animações
 
-> Decodificando a complexidade: a IA traduz, quem aprende é você.
+> Decodificando a complexidade.
 
 Comecei isso aqui porque eu travava em Algoritmos II. Não era falta de estudar: eu lia o pseudocódigo, via a recorrência no quadro e simplesmente não enxergava o que estava acontecendo. Então fui transformando cada aula em alguma coisa que eu conseguisse ver funcionando: uma animação, um joguinho, uma explicação linha por linha.
 
-Foi feito a partir do material da disciplina CI1056 (Algoritmos e Estruturas de Dados II) da UFPR, usando IA como tradutora: ela ajuda a montar as páginas e as explicações, mas a ideia é que quem estuda continue fazendo o trabalho de pensar. Por isso aqui não tem gabarito das listas.
+Foi feito a partir do material da disciplina CI1056 (Algoritmos e Estruturas de Dados II) da UFPR. A ideia é ajudar a enxergar, não pensar no lugar de quem estuda: por isso aqui não tem gabarito das listas.
 
-A ideia, a curadoria do conteúdo e os testes de cada página e de cada jogo foram feitos por uma pessoa estudante da disciplina, a partir do material que o professor disponibiliza publicamente. A IA ajudou a escrever o código; o que entra, o que sai e se está certo foi decidido por quem estuda.
+A ideia, a curadoria do conteúdo e os testes de cada página e de cada jogo foram feitos por uma pessoa estudante da disciplina, a partir do material que o professor disponibiliza publicamente.\*
 
 **Não substitui o material do professor, nem o professor e as explicações dele em aula.** É só uma ferramenta visual pra ajudar a entender.
 
@@ -29,6 +29,8 @@ A página inicial tem um mapa com todas as aulas e o que vem antes do quê. De l
 O conteúdo das aulas vem da disciplina CI1056 da UFPR, do professor André Vignatti. Os códigos, pseudocódigos e enunciados das listas são do material da disciplina e não entram na licença deste projeto.
 
 O resto está sob [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). Use à vontade pra semear conhecimento: copie, adapte, leve pra sua turma. Detalhes no `LICENSE.txt`.
+
+<sub>\* A estrutura e o código do site foram criados com apoio de IA.</sub>
 
 ---
 
