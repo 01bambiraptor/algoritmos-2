@@ -4,37 +4,37 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#f1f5f9">
 <title>Idioma das listas · Algoritmos II</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
 :root{--azul:#1d4ed8;--azulc:#eff6ff;--azulm:#dbeafe;--ink:#1e293b;--forte:#0f172a;--muted:#64748b;--borda:#e2e8f0;--cinza:#f8fafc;--amb:#f59e0b;--ambc:#fffbeb;--verde:#16a34a;--verdec:#f0fdf4;--verm:#dc2626;--vermc:#fef2f2}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;overflow-x:clip}
-body{margin:0;font-family:Inter,system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--ink);background:#fff;font-size:16.5px;line-height:1.65}
-header.topo{position:sticky;top:0;z-index:20;background:#ffffffee;backdrop-filter:blur(6px);border-bottom:1px solid var(--borda)}
+body{margin:0;font-family:Inter,system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--ink);background:#f1f5f9;font-size:16.5px;line-height:1.65}
+header.topo{position:sticky;top:0;z-index:20;background:#f1f5f9ee;backdrop-filter:blur(6px);border-bottom:1px solid var(--borda)}
 .tbar{max-width:1000px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:10px 18px;flex-wrap:wrap}
 .tbar h1{margin:0;font-size:1.15rem;color:var(--forte)}
-.voltar{text-decoration:none;color:var(--azul);font-weight:500;border:1px solid var(--borda);border-radius:8px;padding:6px 12px}
+.voltar{text-decoration:none;color:var(--azul);background:#fff;font-weight:500;border:1px solid var(--borda);border-radius:8px;padding:6px 12px}
 nav.ir{max-width:1000px;margin:0 auto;display:flex;gap:6px;overflow-x:auto;padding:0 18px 10px;scrollbar-width:none}
-nav.ir a{white-space:nowrap;text-decoration:none;color:#334155;border:1px solid var(--borda);border-radius:8px;padding:4px 11px;font-size:.88rem;font-weight:500}
+nav.ir a{white-space:nowrap;text-decoration:none;color:#334155;background:#fff;border:1px solid var(--borda);border-radius:8px;padding:4px 11px;font-size:.88rem;font-weight:500}
 nav.ir a:hover{border-color:var(--azul);color:var(--azul)}
 main{max-width:1000px;margin:0 auto;padding:0 18px 80px}
-section{padding:36px 0;border-bottom:1px solid var(--borda);scroll-margin-top:100px}
+section{padding:36px 0;border-bottom:1px solid #dbe2ea;scroll-margin-top:100px}
 section:last-of-type{border-bottom:0}
 h2{font-size:1.5rem;letter-spacing:-.015em;color:var(--forte);margin:0 0 4px;display:flex;align-items:center;gap:10px}
 h2 .n{display:inline-flex;width:30px;height:30px;border-radius:8px;background:var(--azulm);color:var(--azul);align-items:center;justify-content:center;font-size:.95rem}
 .lead{color:var(--muted);margin:0 0 14px;font-size:1.02rem}
 code,.m{font-family:'JetBrains Mono',monospace;font-size:.9em;background:#f1f5f9;color:var(--forte);border-radius:5px;padding:1px 5px}
 .dica{border-left:4px solid var(--amb);background:var(--ambc);border-radius:10px;padding:10px 14px;margin:12px 0}
-.info{border-left:4px solid #93c5fd;background:var(--cinza);border-radius:10px;padding:10px 14px;margin:12px 0}
+.info{border-left:4px solid #93c5fd;background:#fff;border-radius:10px;padding:10px 14px;margin:12px 0}
 
 /* capa */
-.capa{display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:24px;align-items:center;padding:34px 0 26px;border-bottom:1px solid var(--borda)}
+.capa{display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:24px;align-items:center;padding:34px 0 26px;border-bottom:1px solid #dbe2ea}
 .capa h2{font-size:2rem;line-height:1.2;display:block}
 .capa p{color:#334155;font-size:1.06rem;margin:10px 0}
 .capa .passos{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-.capa .passos a{text-decoration:none;font-weight:600;font-size:.92rem;border-radius:8px;padding:8px 14px;border:1px solid var(--borda);color:#334155}
+.capa .passos a{text-decoration:none;font-weight:600;font-size:.92rem;border-radius:8px;padding:8px 14px;border:1px solid var(--borda);color:#334155;background:#fff}
 .capa .passos a.pri{background:var(--azul);border-color:var(--azul);color:#fff}
 .capa svg{width:100%;height:auto}
 @media (max-width:720px){.capa{grid-template-columns:1fr}.capa svg{max-width:220px;margin:0 auto;display:block}}
@@ -50,7 +50,7 @@ code,.m{font-family:'JetBrains Mono',monospace;font-size:.9em;background:#f1f5f9
 .marca:hover,.marca.on{background:var(--azulm)}
 .marca .tag{font:700 .65rem Inter,sans-serif;color:#fff;background:var(--azul);border-radius:4px;padding:0 4px;margin-left:3px;vertical-align:2px}
 .andares{display:flex;flex-direction:column;gap:10px}
-.andar{border:1px solid var(--borda);border-radius:12px;padding:12px 14px;cursor:pointer;transition:border-color .15s,background .15s}
+.andar{border:1px solid var(--borda);background:#fff;border-radius:12px;padding:12px 14px;cursor:pointer;transition:border-color .15s,background .15s}
 .andar.on{border-color:var(--azul);background:var(--azulc)}
 .andar b{color:var(--forte)}
 .andar .num{display:inline-flex;width:24px;height:24px;border-radius:6px;background:var(--azul);color:#fff;font-size:.8rem;align-items:center;justify-content:center;margin-right:6px}
@@ -58,7 +58,7 @@ code,.m{font-family:'JetBrains Mono',monospace;font-size:.9em;background:#f1f5f9
 
 /* dicionários */
 .busca{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px}
-.busca input{flex:1 1 240px;font:inherit;border:1px solid var(--borda);border-radius:8px;padding:9px 12px}
+.busca input{flex:1 1 240px;font:inherit;background:#fff;border:1px solid var(--borda);border-radius:8px;padding:9px 12px}
 .busca input:focus{outline:2px solid var(--azulm);border-color:var(--azul)}
 .filtro{font:inherit;font-size:.88rem;font-weight:500;border:1px solid var(--borda);background:#fff;border-radius:8px;padding:6px 11px;cursor:pointer;color:#334155}
 .filtro.on{background:var(--azul);border-color:var(--azul);color:#fff}
@@ -99,7 +99,7 @@ code,.m{font-family:'JetBrains Mono',monospace;font-size:.9em;background:#f1f5f9
 .trad{border:1px solid var(--azul);background:var(--azulc);border-radius:12px;padding:12px 14px;min-height:96px}
 .trad .t1{font:700 .72rem Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--azul);margin-bottom:4px}
 .trad .orig{font-family:'JetBrains Mono',monospace;font-size:.86rem;color:var(--forte);background:#fff;border-radius:6px;padding:2px 6px;display:inline-block;margin-bottom:6px}
-.cx{border:1px solid var(--borda);border-radius:12px;padding:12px 14px}
+.cx{border:1px solid var(--borda);background:#fff;border-radius:12px;padding:12px 14px}
 .cx .t1{font:700 .72rem Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
 .cx ul{margin:4px 0 0;padding-left:20px}
 .cx li{margin:3px 0}
@@ -108,7 +108,7 @@ code,.m{font-family:'JetBrains Mono',monospace;font-size:.9em;background:#f1f5f9
 .cx.p{border-left:4px solid #f87171}.cx.p .t1{color:var(--verm)}
 
 /* pdf */
-.tab{width:100%;border-collapse:collapse;font-size:.95rem}
+.tab{width:100%;border-collapse:collapse;font-size:.95rem;background:#fff;border-radius:12px;overflow:hidden}
 .tab th,.tab td{border-bottom:1px solid var(--borda);padding:8px 10px;text-align:left}
 .tab th{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
 .tab td:first-child,.tab td:nth-child(2){font-family:'JetBrains Mono',monospace}
@@ -132,8 +132,8 @@ code,.m{font-family:'JetBrains Mono',monospace;font-size:.9em;background:#f1f5f9
   <svg viewBox="0 0 240 230" aria-hidden="true">
     <rect x="8" y="6" width="186" height="74" rx="16" fill="#eff6ff" stroke="#93c5fd"/>
     <path d="M150 80 L166 100 L170 80 Z" fill="#eff6ff" stroke="#93c5fd"/><rect x="149" y="76" width="22" height="6" fill="#eff6ff"/>
-    <text x="22" y="34" font-family="Inter,sans-serif" font-size="14" font-weight="700" fill="#1e3a8a">Ninguém falou Σ como</text>
-    <text x="22" y="54" font-family="Inter,sans-serif" font-size="14" font-weight="700" fill="#1e3a8a">a primeira palavra</text>
+    <text x="22" y="34" font-family="Inter,sans-serif" font-size="14" font-weight="700" fill="#1e3a8a">Ninguém nasce</text>
+    <text x="22" y="54" font-family="Inter,sans-serif" font-size="14" font-weight="700" fill="#1e3a8a">lendo ⌊n/2⌋ ∈ Σ</text>
     <g transform="translate(108,96) scale(2.1)">
       <ellipse cx="30" cy="57" rx="16" ry="2.5" fill="#0f172a" opacity=".12"/>
       <line x1="30" y1="10" x2="30" y2="5" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/><circle cx="30" cy="4.5" r="3.2" fill="#fbbf24"/>
