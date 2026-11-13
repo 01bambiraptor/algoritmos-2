@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · feito a partir do material da disciplina CI1056 (UFPR) · CC BY-NC-SA 4.0 · veja LICENSE.txt -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#e3f3ff">
+<title>Torre da Recursão</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#2d2a26;--muted:#7a7266;--card:#fffdf8;--wood1:#efcf9c;--wood2:#ddb06f;--wood3:#c48d4b;--edge:#a8723a;
+  --red:#e0483a;--ok:#2f9e5a;--gold:#f0a81c;--teal:#1f8fa6}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:none}
+body{font-family:'Fredoka',system-ui,sans-serif;color:var(--ink);background:linear-gradient(#dff1ff 0,#f3f9ff 45%,#fff3e0 100%) fixed}
+header{display:flex;align-items:center;gap:12px;padding:14px 20px 4px;flex-wrap:wrap}
+h1{margin:0;font-size:1.9rem;font-weight:700}
+h1 span{color:var(--red)}
+.sub{color:var(--muted);margin:0 20px 6px;font-size:1rem}
+.btn{font:inherit;font-weight:600;border-radius:14px;border:2px solid #d9cdb6;background:var(--card);padding:10px 18px;min-height:50px;cursor:pointer;color:var(--ink);font-size:1.05rem;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:transform .08s}
+.btn:active{transform:scale(.95)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.sobe{background:#2f9e5a;border-color:#23804a;color:#fff}
+.btn.desce{background:#e0483a;border-color:#b8372b;color:#fff}
+.btn.main{background:var(--gold);border-color:#d8920f;color:#3a2600}
+.btn.op{min-width:80px;justify-content:center;font-size:1.25rem}
+select.btn{padding-right:10px}
+.tabs{display:flex;gap:6px;background:#e7dcc6;padding:5px;border-radius:16px;margin-left:auto}
+.tab{border:0;background:transparent;font:inherit;padding:11px 18px;border-radius:12px;cursor:pointer;color:var(--muted);font-weight:600;font-size:1.02rem}
+.tab.on{background:var(--card);color:var(--ink);box-shadow:0 2px 6px #0001}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:6px 20px}
+main{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(320px,1fr);gap:18px;padding:6px 20px 30px}
+@media (orientation:portrait),(max-width:980px){main{grid-template-columns:1fr;padding-bottom:130px}
+  #controles{position:fixed;left:0;right:0;bottom:0;z-index:20;background:#fff8ecf2;box-shadow:0 -4px 14px #0002;padding:12px 16px calc(12px + env(safe-area-inset-bottom));backdrop-filter:blur(6px);justify-content:center}}
+.palco{position:relative;background:linear-gradient(#cfe9ff,#eaf5ff 70%);border-radius:24px;border:3px solid #fff;box-shadow:0 6px 18px #0001;min-height:700px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:20px 10px 0;overflow:hidden}
+.nuvem{position:absolute;background:#fff;border-radius:40px;opacity:.85}
+.mesa{width:92%;height:26px;background:linear-gradient(#b97a43,#94602f);border-radius:10px 10px 0 0;box-shadow:0 -2px 0 #d39a63 inset;position:relative;z-index:2}
+.torre{display:flex;flex-direction:column-reverse;align-items:center;transform-origin:50% 100%;position:relative;z-index:3;width:100%}
+.torre.balanca{animation:balanca 2.4s ease-in-out infinite}
+@keyframes balanca{0%,100%{transform:rotate(calc(var(--amp) * -1))}50%{transform:rotate(var(--amp))}}
+.torre.tremor{animation:tremor .45s}
+@keyframes tremor{20%{transform:rotate(-3deg) translateX(-6px)}40%{transform:rotate(3deg) translateX(6px)}60%{transform:rotate(-2deg)}80%{transform:rotate(1.5deg)}}
+.bloco{width:min(420px,86%);height:44px;margin-top:2px;border-radius:7px;position:relative;display:flex;align-items:center;justify-content:space-between;padding:0 14px;
+  background:repeating-linear-gradient(92deg,transparent 0 18px,#0000000a 18px 20px),linear-gradient(var(--wood1),var(--wood2));
+  border:2px solid var(--edge);box-shadow:0 3px 0 #0000001f;cursor:pointer;transition:transform .5s,opacity .5s}
+.bloco.alt{background:linear-gradient(90deg,#0000 0 32.6%,var(--edge) 32.6% 33.6%,#0000 33.6% 66.3%,var(--edge) 66.3% 67.3%,#0000 67.3%),repeating-linear-gradient(0deg,transparent 0 9px,#0000000b 9px 10px),linear-gradient(var(--wood1),var(--wood2))}
+.bloco .rot{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:1.05rem;background:#fff9;border-radius:8px;padding:1px 8px}
+.bloco .st{font-size:.85rem;color:#5a3d1c;background:#fff8;border-radius:8px;padding:1px 8px;max-width:58%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bloco.main{background:linear-gradient(#cfd8dc,#b0bec5);border-color:#78909c}
+.bloco.topo{box-shadow:0 0 0 4px var(--gold),0 0 18px #f0a81caa;z-index:2}
+.bloco.cai{animation:cai .45s cubic-bezier(.3,1.4,.6,1)}
+@keyframes cai{0%{transform:translateY(-120px);opacity:0}100%{transform:none;opacity:1}}
+.bloco.sai{animation:sai .6s forwards}
+@keyframes sai{100%{transform:translate(140px,-90px) rotate(25deg);opacity:0}}
+.bloco.recebe{animation:recebe .8s}
+@keyframes recebe{30%{box-shadow:0 0 0 5px var(--ok),0 0 24px #2f9e5a}}
+.bloco .chip{position:absolute;right:-12px;top:-14px;background:var(--ok);color:#fff;font-weight:700;border-radius:12px;padding:2px 10px;font-size:1rem;animation:chip .5s;box-shadow:0 2px 6px #0003}
+@keyframes chip{0%{transform:translateY(-40px);opacity:0}}
+.bloco.nao{animation:nao .4s}
+@keyframes nao{25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+.alturaReg{position:absolute;left:10px;bottom:30px;top:20px;width:30px;display:flex;flex-direction:column-reverse;font-size:.75rem;color:#7aa3c4;z-index:1}
+.limite{position:absolute;left:0;right:0;border-top:3px dashed #e0483a88;z-index:1;font-size:.8rem;color:#c0392b;padding-left:44px}
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:30;background:#fff8;backdrop-filter:blur(2px)}
+.overlay .box{background:#fff;border-radius:22px;padding:22px 26px;max-width:440px;text-align:center;box-shadow:0 10px 30px #0003;border:3px solid var(--red);animation:pop .35s}
+.overlay .box.bom{border-color:var(--ok)}
+.overlay h2{margin:0 0 6px;font-size:2rem}
+@keyframes pop{0%{transform:scale(.6);opacity:0}}
+.lado{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--card);border-radius:18px;padding:14px 16px;box-shadow:0 2px 10px #0000000f;border:1px solid #ecdfc8}
+.card h3{margin:0 0 8px;font-size:1.08rem;cursor:pointer;display:flex;justify-content:space-between}
+.card h3::after{content:'▾';color:var(--muted)}
+.card.fechado h3::after{content:'▸'}
+.card.fechado>:not(h3){display:none!important}
+.card.fechado h3{margin:0}
+.msg{font-size:1.1rem;line-height:1.45;min-height:56px;padding:12px 14px;border-radius:14px;background:#eef7ff;border:2px solid #cfe6fb}
+.msg.ruim{background:#fdecea;border-color:#f5b7ae;color:#9b2a1e}
+.msg.bom{background:#e5f6ec;border-color:#a9dcbc;color:#1f6e3f}
+.pergunta{margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.stat{flex:1;min-width:76px;background:#f6ecda;border-radius:12px;padding:6px 8px;text-align:center}
+.stat b{display:block;font-size:1.4rem}
+.stat small{color:var(--muted);font-size:.78rem}
+pre.code{margin:0;font-family:'JetBrains Mono',monospace;font-size:.86rem;line-height:1.7;background:#fbf6ea;border-radius:12px;padding:8px 0;overflow-x:auto}
+pre.code div{padding:0 12px;white-space:pre;border-left:5px solid transparent}
+pre.code div.on{background:#ffe7a8;border-left-color:var(--gold)}
+pre.code div.on.r{background:#d4f2df;border-left-color:var(--ok)}
+.cm{color:#9a8f7d}
+.saida{font-family:'JetBrains Mono',monospace;background:#20262e;color:#cde7ff;border-radius:10px;padding:8px 12px;min-height:40px;max-height:150px;overflow:auto;font-size:.85rem;white-space:pre}
+.diario{margin:0;padding:0;list-style:none;font-size:.92rem;max-height:220px;overflow:auto}
+.diario li{padding:3px 0;border-bottom:1px dashed #eadfca}
+.ideia{font-size:.98rem;line-height:1.5}
+.ideia p{margin:4px 0}
+.vel{display:flex;align-items:center;gap:6px;color:var(--muted)}
+.vel input{width:150px;height:34px}
+.hide{display:none!important}
+.vidas{letter-spacing:2px}
+</style>
+</head>
+<body>
+<header>
+  <a class="btn" href="index.html" >🕹 Início</a>
+  <h1>Torre da <span>Recursão</span></h1>
+  <div class="tabs">
+    <button class="tab on" data-modo="jogar">🎮 Você é a pilha</button>
+    <button class="tab" data-modo="ver">▶ Assistir</button>
+  </div>
+</header>
+<p class="sub">Com as funções das aulas 2, 3 e 6. Cada chamada de função é um bloco no topo da torre. Empilhou demais sem caso base? <b>Caiu, perdeu</b>: stack overflow.</p>
+<div class="bar">
+  <select class="btn" id="fase"></select>
+  <span id="faseDesc" style="color:var(--muted)"></span>
+</div>
+
+<main>
+  <section>
+    <div class="card" style="margin-bottom:12px">
+      <div class="msg" id="msg"></div>
+      <div class="pergunta" id="pergunta"></div>
+    </div>
+    <div class="palco" id="palco">
+      <div class="nuvem" style="width:120px;height:36px;top:40px;left:8%"></div>
+      <div class="nuvem" style="width:90px;height:28px;top:90px;right:10%"></div>
+      <div class="limite" id="limite">limite da pilha (memória acaba aqui)</div>
+      <div class="torre" id="torre"></div>
+      <div class="mesa"></div>
+      <div class="overlay hide" id="overlay"><div class="box" id="ovBox"></div></div>
+    </div>
+  </section>
+
+  <aside class="lado">
+    <div class="card" id="cardIdeia">
+      <h3>💡 A ideia</h3>
+      <div class="ideia">
+        <p>Quando uma função chama outra, ela <b>para e espera</b>. O computador guarda essa função esperando num bloco e põe a nova <b>em cima</b>. Só o bloco do topo está trabalhando.</p>
+        <p>Quando o topo chega no <code>return</code>, ele <b>sai da torre</b> e entrega o valor pro bloco de baixo, que continua de onde parou.</p>
+        <p>É uma <b>pilha</b>: o último que entrou é o primeiro que sai (LIFO). No Jenga dá pra puxar do meio, aqui não! Toque num bloco do meio pra ver.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="stats">
+        <div class="stat"><b id="sAlt">0</b><small>altura agora</small></div>
+        <div class="stat"><b id="sMax">0</b><small>altura máxima</small></div>
+        <div class="stat"><b id="sCham">0</b><small>chamadas</small></div>
+        <div class="stat jogo"><b id="sPts">0</b><small>pontos</small></div>
+        <div class="stat jogo"><b class="vidas" id="sVidas">❤️❤️❤️</b><small>tremidas que aguenta</small></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🧩 O código</h3>
+      <pre class="code" id="codigo"></pre>
+    </div>
+
+    <div class="card hide" id="cardSaida">
+      <h3>🖥 Saída do programa</h3>
+      <div class="saida" id="saida"></div>
+    </div>
+
+    <div class="card fechado">
+      <h3>📝 Diário</h3>
+      <ul class="diario" id="diario"></ul>
+    </div>
+  </aside>
+</main>
+
+<div class="bar" id="controles">
+  <span id="ctrlJogar" style="display:contents">
+    <button class="btn sobe" id="bChamar">⬆ Empilhar chamada</button>
+    <button class="btn desce" id="bRetornar">⬇ Retornar</button>
+    <button class="btn" id="bReiniciar">⟲ Recomeçar</button>
+  </span>
+  <span id="ctrlVer" style="display:none">
+    <button class="btn main" id="bPasso">▶| Um passo</button>
+    <button class="btn sobe" id="bPlay">▶ Rodar</button>
+    <button class="btn" id="bReiniciar2">⟲ Recomeçar</button>
+    <label class="vel">devagar <input type="range" id="vel" min="120" max="1600" value="800" style="direction:rtl"> rápido</label>
+  </span>
+</div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const LIMITE=12; // blocos de função que cabem antes do overflow (fora o main)
+
+/* ---------------- fases ---------------- */
+const VMIN=[null,16,23,4,42,15,8,4], VBB=[null,4,7,8,15,16,17,23,42];
+const FASES=[
+ {nome:'Fase 1 · Fatorial (aula 2)',fn:'f',args:[4],desc:'O f(n) da aula 2: n! = n · (n−1)!, com a base n == 0.',
+  codigo:['int f(int n) {','  if (n == 0)','    return 1;              <c>// base</c>','  else','    return n * f(n-1);','}'],
+  corpo:function*(n){
+    yield {l:1,msg:`f(${n}): n vale ${n}. É a base (n == 0)? ${n===0?'Sim!':'Não.'}`};
+    if(n===0) return {v:1,txt:'base, devolve 1',l:2};
+    const r=yield {l:4,call:[n-1],espera:`${n} * f(${n-1})`};
+    return {v:n*r,txt:`${n} * ${r} = ${n*r}`,l:4};
+  }},
+ {nome:'Fase 2 · Potência (aula 2)',fn:'potencia',args:[2,5],desc:'x elevado a n = x · x elevado a n−1. Dois parâmetros, só o n diminui.',
+  codigo:['float potencia (float x, int n) {','  if (n==0) return 1.0;      <c>// base</c>','  return x * potencia (x,n-1);','}'],
+  corpo:function*(x,n){
+    yield {l:1,msg:`potencia(${x}, ${n}): n vale ${n}. É a base (n == 0)? ${n===0?'Sim!':'Não.'}`};
+    if(n===0) return {v:1,txt:'base, devolve 1.0',l:1};
+    const r=yield {l:2,call:[x,n-1],espera:`${x} * potencia(${x}, ${n-1})`};
+    return {v:x*r,txt:`${x} * ${r} = ${x*r}`,l:2};
+  }},
+ {nome:'Fase 3 · Contagem pra baixo e pra cima (aula 2)',fn:'count_down_up',args:[3],saida:true,desc:'Imprime antes E depois de chamar. Olha a saída: a segunda metade só sai quando os blocos descem.',
+  codigo:['void count_down_up (int n) {','  if (n == 1)','    printf("%d", n);          <c>// base</c>','  else {','    printf("%d, ", n);','    count_down_up (n - 1);','    printf("%d, ", n);         <c>// roda na volta!</c>','  }','}'],
+  corpo:function*(n){
+    yield {l:1,msg:`count_down_up(${n}): n vale ${n}. É a base (n == 1)? ${n===1?'Sim!':'Não.'}`};
+    if(n===1){ yield {l:2,msg:`Base: imprime ${n}.`,out:`${n}`}; return {v:null,txt:'termina (é void, não devolve valor)',l:2}; }
+    yield {l:4,msg:`Imprime ${n} ANTES de chamar.`,out:`${n}, `};
+    yield {l:5,call:[n-1],espera:`count_down_up(${n-1})`};
+    yield {l:6,msg:`count_down_up(${n}) voltou a trabalhar e imprime ${n} de novo, DEPOIS da chamada.`,out:`, ${n}`};
+    return {v:null,txt:'termina (é void, não devolve valor)',l:6};
+  }},
+ {nome:'Fase 4 · Fibonacci (aula 2)',fn:'F',args:[4],desc:'F(n) = F(n−1) + F(n−2). A torre sobe e desce várias vezes: compare as chamadas com a altura máxima.',
+  codigo:['int F(int n) {','  if (n <= 1)','    return n;              <c>// base</c>','  return F(n-1) + F(n-2);','}'],
+  corpo:function*(n){
+    yield {l:1,msg:`F(${n}): n vale ${n}. É a base (n <= 1)? ${n<=1?'Sim!':'Não.'}`};
+    if(n<=1) return {v:n,txt:`base, devolve ${n}`,l:2};
+    const a=yield {l:3,call:[n-1],espera:`F(${n-1}) + F(${n-2})`};
+    yield {l:3,msg:`F(${n}) voltou: a primeira parcela vale ${a}. Agora falta F(${n-2}).`};
+    const b=yield {l:3,call:[n-2],espera:`${a} + F(${n-2})`};
+    return {v:a+b,txt:`${a} + ${b} = ${a+b}`,l:3};
+  }},
+ {nome:'Fase 5 · Mínimo de vetor (aula 3)',fn:"Minimo'",args:[1,7],desc:'Minimo\'(v, 1, 7) com o vetor da aula: v = 16 23 4 42 15 8 4. Devolve um ÍNDICE, não o valor!',
+  codigo:["Minimo'(v, a, b)","  Se a = b","    Devolva a                 <c>// base</c>","  m ← Minimo'(v, a, b − 1)","  Se v[b] < v[m]","    m ← b","  Devolva m"],
+  corpo:function*(a,b){
+    yield {l:1,msg:`Minimo'(v, ${a}, ${b}): a = b? ${a===b?'Sim!':'Não.'}`};
+    if(a===b) return {v:a,txt:`base, devolve o índice ${a}`,l:2};
+    const m=yield {l:3,call:[a,b-1],espera:`m ← Minimo'(v, ${a}, ${b-1})`};
+    const menor=VMIN[b]<VMIN[m];
+    yield {l:4,msg:`Voltou com m = ${m}. v[b] = v[${b}] = ${VMIN[b]} &lt; v[m] = v[${m}] = ${VMIN[m]}? ${menor?'Sim: m ← '+b:'Não.'}`};
+    return {v:menor?b:m,txt:menor?`v[${b}] é menor, devolve ${b}`:`v[${m}] continua o menor, devolve ${m}`,l:6};
+  }},
+ {nome:'Fase 6 · Busca binária (aula 6)',fn:'BuscaBinaria',args:[8,1,8],desc:'BuscaBinaria(8, v, 1, 8) com v = 4 7 8 15 16 17 23 42. A torre fica baixinha: no máximo ⌊lg n⌋ + 1 andares.',
+  codigo:['BuscaBinaria(x, v, a, b)','  Se a > b','    Devolva NÃO','  m ← ⌊(a+b)/2⌋','  Se x = v[m]','    Devolva m','  Se x < v[m]','    Devolva BuscaBinaria(x, v, a, m − 1)','  Devolva BuscaBinaria(x, v, m + 1, b)'],
+  corpo:function*(x,a,b){
+    yield {l:1,msg:`BuscaBinaria(${x}, v, ${a}, ${b}): a &gt; b? ${a>b?'Sim.':'Não.'}`};
+    if(a>b) return {v:0,txt:'não achou',l:2};
+    const m=Math.floor((a+b)/2);
+    yield {l:3,msg:`m = ⌊(${a}+${b})/2⌋ = ${m}, v[${m}] = ${VBB[m]}.`};
+    yield {l:4,msg:`x = v[m]? ${x} = ${VBB[m]}? ${x===VBB[m]?'Sim, achou!':'Não.'}`};
+    if(x===VBB[m]) return {v:m,txt:`achou na posição ${m}`,l:5};
+    if(x<VBB[m]){ const r=yield {l:7,call:[x,a,m-1],espera:`BuscaBinaria(${x}, v, ${a}, ${m-1})`}; return {v:r,txt:`repassa a resposta ${r}`,l:7}; }
+    const r=yield {l:8,call:[x,m+1,b],espera:`BuscaBinaria(${x}, v, ${m+1}, ${b})`}; return {v:r,txt:`repassa a resposta ${r}`,l:8};
+  }},
+ {nome:'Bônus 💥 · "Não pára!" (aula 2)',fn:'f',args:[3],semRetorno:true,desc:'A primeira versão da aula 2: f(n) = n · f(n − 1), sem a base. Só dá pra empilhar...',
+  codigo:['int f(int n) {','  return n * f(n-1);   <c>// cadê a base?</c>','}'],
+  corpo:function*(n){
+    yield {l:1,call:[n-1],espera:`${n} * f(${n-1})`};
+  }},
+];
+
+/* ------------- roda a função e grava cada evento (a "trilha") ------------- */
+function geraTrilha(F){
+  const ev=[], pilha=[]; let cham=0, alt=0;
+  const snap=()=>pilha.map(f=>({rot:f.rot,st:f.st,main:!!f.main}));
+  const rotulo=a=>`${F.fn}(${a.join(', ')})`;
+  pilha.push({rot:'main()',st:`chama ${rotulo(F.args)}`,main:true});
+  const novo=a=>({rot:rotulo(a),st:'executando',gen:F.corpo(...a)});
+  pilha.push(novo(F.args)); cham++; alt=1;
+  ev.push({t:'call',l:-1,rot:rotulo(F.args),pai:'main()',pilha:snap(),cham,alt,
+    msg:`main() chama ${rotulo(F.args)}. Um bloco novo vai pro topo.`});
+  let valor;
+  while(pilha.length>1){
+    const topo=pilha[pilha.length-1];
+    const r=topo.gen.next(valor); valor=undefined;
+    if(r.done){
+      if(!r.value){break;}
+      const {v,txt,l}=r.value; pilha.pop();
+      const pai=pilha[pilha.length-1];
+      pai.st=v===null?`voltou de ${topo.rot}`:`recebeu ${v}`;
+      ev.push({t:'ret',l,rot:topo.rot,pai:pai.rot,v,txt,pilha:snap(),cham,alt,
+        msg:v===null?`${topo.rot} ${txt}. O bloco sai do topo e ${pai.rot} continua de onde parou.`:`${topo.rot} termina: ${txt}. O bloco sai do topo e o ${v} desce pra ${pai.rot}.`});
+      valor=v; continue;
+    }
+    const y=r.value;
+    if(y.call){
+      topo.st=`esperando ${y.espera}`;
+      if(pilha.length-1>=LIMITE){
+        ev.push({t:'overflow',l:y.l,rot:rotulo(y.call),pai:topo.rot,pilha:snap(),cham,alt,
+          msg:`${topo.rot} tenta chamar ${rotulo(y.call)}, mas a pilha já está cheia!`});
+        return ev;
+      }
+      const nf=novo(y.call); pilha.push(nf); cham++; alt=Math.max(alt,pilha.length-1);
+      ev.push({t:'call',l:y.l,rot:nf.rot,pai:topo.rot,pilha:snap(),cham,alt,
+        msg:`${topo.rot} para e espera: precisa de ${nf.rot}. Bloco novo no topo!`});
+    } else {
+      ev.push({t:'linha',l:y.l,rot:topo.rot,pilha:snap(),cham,alt,msg:y.msg,out:y.out});
+    }
+  }
+  const fim=pilha[0].st;
+  ev.push({t:'fim',l:-1,pilha:snap(),cham,alt,
+    msg:`main() ${fim}. Torre vazia de novo: todo bloco que subiu, desceu.`});
+  return ev;
+}
+
+/* ---------------- estado ---------------- */
+let F, EV, idx, modo='jogar', J, timer=null, ultimo=null;
+
+function montaCodigo(){
+  $('codigo').innerHTML=F.codigo.map((l,i)=>`<div data-l="${i}">${l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/&lt;c>/g,'<span class="cm">').replace(/&lt;\/c>/g,'</span>')}</div>`).join('');
+}
+function marca(l,ret){document.querySelectorAll('#codigo div').forEach(d=>d.className=+d.dataset.l===l?('on'+(ret?' r':'')):'');}
+function setMsg(h,c=''){$('msg').innerHTML=h;$('msg').className='msg '+c;}
+function log(t){$('diario').insertAdjacentHTML('afterbegin',`<li>${t}</li>`);}
+
+/* ---------------- desenho da torre ---------------- */
+function desenhaTorre(pilha,efeito){
+  const t=$('torre');
+  t.innerHTML=pilha.map((b,i)=>{
+    const topo=i===pilha.length-1&&!b.main;
+    let cls='bloco'+(b.main?' main':'')+(i%2?' alt':'')+(topo?' topo':'');
+    if(efeito&&efeito.cai&&topo) cls+=' cai';
+    if(efeito&&efeito.recebe===i) cls+=' recebe';
+    const chip=efeito&&efeito.recebe===i?`<span class="chip">↓ ${efeito.v}</span>`:'';
+    return `<div class="${cls}" data-i="${i}"><span class="rot">${b.rot}</span><span class="st">${b.st}</span>${chip}</div>`;
+  }).join('');
+  if(efeito&&efeito.sai){
+    t.insertAdjacentHTML('beforeend',`<div class="bloco sai${pilha.length%2?' alt':''}"><span class="rot">${efeito.sai}</span><span class="st">return ${efeito.v}</span></div>`);
+  }
+  const h=pilha.length-1;
+  const amp=Math.max(0,(h-5))*0.35+(J&&modo==='jogar'?(3-J.vidas)*0.5:0);
+  t.style.setProperty('--amp',amp+'deg');
+  t.classList.toggle('balanca',amp>0);
+  t.querySelectorAll('.bloco[data-i]').forEach(el=>el.addEventListener('click',()=>tocaBloco(+el.dataset.i,pilha,el)));
+  // linha do limite
+  $('limite').style.bottom=(26+46*(LIMITE+1)+6)+'px';
+}
+function tocaBloco(i,pilha,el){
+  if(pilha[i].main){setMsg('Esse é o <b>main()</b>, a base da torre. Ele foi o primeiro a entrar, então vai ser o último a sair.');return;}
+  if(i===pilha.length-1){setMsg(`<b>${pilha[i].rot}</b> é o topo: é o único bloco que está executando agora.`);return;}
+  el.classList.remove('nao');void el.offsetWidth;el.classList.add('nao');
+  const t=$('torre');t.classList.remove('tremor');void t.offsetWidth;t.classList.add('tremor');
+  setMsg(`🚫 No Jenga dá pra puxar do meio, na pilha não! <b>${pilha[i].rot}</b> está ${pilha[i].st}. Ele só volta a trabalhar quando tudo que está em cima dele terminar. Último que entra, primeiro que sai (LIFO).`,'ruim');
+}
+function stats(e){
+  $('sAlt').textContent=e?e.pilha.length-1:0; $('sMax').textContent=e?e.alt:0; $('sCham').textContent=e?e.cham:0;
+  if(J){$('sPts').textContent=J.pts;$('sVidas').textContent='❤️'.repeat(J.vidas)+'🤍'.repeat(3-J.vidas);}
+}
+function aplica(e){
+  ultimo=e;
+  if(e.l>=0) marca(e.l,e.t==='ret'); else marca(-1);
+  if(e.out!==undefined){$('saida').textContent+=e.out;$('saida').scrollTop=1e6;}
+  let ef=null;
+  if(e.t==='call') ef={cai:true};
+  if(e.t==='ret') ef={sai:e.rot,v:e.v===null?'∅':e.v,recebe:e.pilha.length-1};
+  desenhaTorre(e.pilha,ef);
+  stats(e);
+  if(e.t==='call') log(`⬆ ${e.rot}`);
+  if(e.t==='ret') log(e.v===null?`⬇ ${e.rot} termina`:`⬇ ${e.rot} devolve ${e.v}`);
+}
+
+/* ---------------- desmoronar ---------------- */
+function desmorona(titulo,texto){
+  pausa();
+  const bl=[...document.querySelectorAll('#torre .bloco')];
+  $('torre').classList.remove('balanca');
+  bl.forEach((b,i)=>{
+    const dx=(Math.random()*2-1)*(120+i*25), dy=60+Math.random()*80, r=(Math.random()*2-1)*(60+i*10);
+    setTimeout(()=>{b.style.transform=`translate(${dx}px,${dy}px) rotate(${r}deg)`;b.style.opacity='.35';},i*40);
+  });
+  setTimeout(()=>mostraOverlay(`<h2>💥 Caiu, perdeu!</h2>${texto}<div style="margin-top:14px"><button class="btn main" id="ovDeNovo">⟲ Tentar de novo</button></div>`,false),700);
+}
+function mostraOverlay(html,bom){
+  $('ovBox').className='box'+(bom?' bom':''); $('ovBox').innerHTML=html; $('overlay').classList.remove('hide');
+  const b=$('ovDeNovo'); if(b) b.onclick=reinicia;
+  const p=$('ovProx'); if(p) p.onclick=()=>{$('fase').value=Math.min(+$('fase').value+1,FASES.length-1);carregaFase();};
+}
+function textoOverflow(){
+  return `<p><b>Stack overflow!</b> Como diz a aula 2: <i>não pára!</i> Cada chamada ocupa memória na pilha. Sem base, <code>f</code> chama <code>f</code> pra sempre (passa do zero e segue nos negativos), a torre passa do limite e o programa morre com <b>Segmentation fault</b>.</p><p style="color:var(--muted)">O conserto é o da aula: <code>if (n == 0) return 1;</code></p>`;
+}
+function fimBom(){
+  const e=EV[EV.length-1];
+  const extra=F.fn==='fib'?`<p>Repara: foram <b>${e.cham} chamadas</b>, mas a torre nunca passou de <b>${e.alt} andares</b>. A pilha só guarda o caminho atual, não a árvore inteira!</p>`:`<p>A torre chegou a <b>${e.alt} andares</b> e desceu inteira.</p>`;
+  const prox=+$('fase').value<FASES.length-1?`<button class="btn sobe" id="ovProx">Próxima fase ▸</button>`:'';
+  mostraOverlay(`<h2>🎉 Torre de pé!</h2><p>${e.msg}</p>${extra}${J&&modo==='jogar'?`<p><b>${J.pts} pontos</b></p>`:''}<div style="margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" id="ovDeNovo">⟲ De novo</button>${prox}</div>`,true);
+}
+
+/* ================= MODO JOGAR ================= */
+function iniciaJogo(){
+  J={pts:0,vidas:3,esperando:false,fim:false};
+  $('pergunta').innerHTML='';
+  idx=0; aplica(EV[0]); idx=1;
+  setMsg(`${EV[0].msg} Agora é com você: a cada momento, decida se o topo vai <b>empilhar</b> uma chamada ou <b>retornar</b>.`);
+  avancaAteDecisao();
+}
+function avancaAteDecisao(){
+  clearTimeout(timer);
+  const e=EV[idx];
+  if(!e||J.fim) return;
+  if(e.t==='linha'){
+    aplica(e); setMsg(e.msg); idx++;
+    timer=setTimeout(avancaAteDecisao,700); botoes(false); return;
+  }
+  if(e.t==='fim'){aplica(e);setMsg(e.msg,'bom');J.fim=true;botoes(false);setTimeout(fimBom,500);return;}
+  // decisão: call, ret ou overflow
+  J.esperando=true; botoes(true);
+  const topo=ultimo.pilha[ultimo.pilha.length-1];
+  $('pergunta').innerHTML='';
+  setMsg(`${ultimo.t==='linha'?ultimo.msg+'<br>':''}🤔 <b>${topo.rot}</b> está no topo. E agora: empilha outra chamada ou retorna?`);
+}
+function botoes(on){$('bChamar').disabled=$('bRetornar').disabled=!on;}
+function erro(txt){
+  J.vidas--; stats(ultimo);
+  const t=$('torre');t.classList.remove('tremor');void t.offsetWidth;t.classList.add('tremor');
+  desenhaTorre(ultimo.pilha);
+  if(J.vidas<=0){
+    J.fim=true; botoes(false);
+    desmorona('Caiu',`<p>A torre tremeu três vezes e foi. ${txt}</p>`);
+    return true;
+  }
+  setMsg('😬 A torre tremeu! '+txt,'ruim'); return false;
+}
+function decide(acao){
+  if(!J.esperando||J.fim) return;
+  const e=EV[idx], topo=ultimo.pilha[ultimo.pilha.length-1].rot;
+  const certo=e.t==='ret'?'ret':'call';
+  if(e.t==='overflow'){
+    if(acao==='ret'){ erro(`<b>${topo}</b> não tem nenhum <code>return</code>! O único caminho é chamar de novo...`); return; }
+    J.esperando=false; botoes(false); aplica({...e,t:'linha'}); idx++;
+    setMsg(e.msg,'ruim'); J.fim=true;
+    setTimeout(()=>desmorona('Overflow',textoOverflow()),400); return;
+  }
+  if(acao!==certo){
+    J.esperando=false;
+    const caiu = acao==='ret'
+      ? erro(F.semRetorno?`<b>${topo}</b> não tem nenhum <code>return</code>! Nessa função só dá pra empilhar.`:`<b>${topo}</b> ainda não pode retornar: olha a linha acesa, ele precisa do resultado de outra chamada antes.`)
+      : erro(`<b>${topo}</b> não chama mais ninguém: ${e.t==='ret'&&/base/.test(e.txt)?'é a base da recursão!':'ele já tem tudo que precisa.'} É hora de devolver o valor.`);
+    if(!caiu){J.esperando=true;}
+    return;
+  }
+  J.esperando=false; botoes(false);
+  if(e.t==='call'){
+    J.pts+=10; aplica(e); setMsg('✅ '+e.msg,'bom'); idx++;
+    timer=setTimeout(avancaAteDecisao,900); return;
+  }
+  // retorno certo: agora pergunta o valor
+  J.pts+=10; stats(ultimo);
+  if(e.v===null){aplica(e);setMsg('✅ '+e.msg,'bom');idx++;timer=setTimeout(avancaAteDecisao,1000);return;}
+  const ops=opcoes(e.v);
+  setMsg(`✅ Isso, <b>${e.rot}</b> vai retornar. Mas <b>quanto</b> ele devolve?`,'bom');
+  $('pergunta').innerHTML=ops.map(v=>`<button class="btn op" data-v="${v}">${v}</button>`).join('');
+  $('pergunta').querySelectorAll('button').forEach(b=>b.onclick=()=>respondeValor(+b.dataset.v,e));
+}
+function opcoes(v){
+  const s=new Set([v]); const cand=[v+1,v-1,v*2,v+2,Math.max(0,v-2),v+3];
+  for(const c of cand){if(s.size>=3)break;if(c>=0)s.add(c);}
+  return [...s].sort(()=>Math.random()-.5);
+}
+function respondeValor(r,e){
+  $('pergunta').innerHTML='';
+  if(r===e.v){J.pts+=10;aplica(e);setMsg(`🎯 Isso! ${e.msg}`,'bom');}
+  else{
+    if(erro(`Não era ${r}: ${e.rot} faz ${e.txt}.`)) return;
+    aplica(e); setMsg(`😬 Não era ${r}. ${e.msg}`,'ruim');
+  }
+  idx++; timer=setTimeout(avancaAteDecisao,1100);
+}
+$('bChamar').onclick=()=>decide('call');
+$('bRetornar').onclick=()=>decide('ret');
+
+/* ================= MODO ASSISTIR ================= */
+function iniciaVer(){idx=0;umPasso();$('bPasso').disabled=$('bPlay').disabled=false;}
+function umPasso(){
+  const e=EV[idx]; if(!e) return;
+  if(e.t==='overflow'){aplica({...e,t:'linha'});setMsg(e.msg,'ruim');idx++;fimVer();setTimeout(()=>desmorona('Overflow',textoOverflow()),400);return;}
+  aplica(e); setMsg(e.msg,e.t==='fim'?'bom':''); idx++;
+  if(e.t==='fim'){fimVer();setTimeout(fimBom,500);}
+}
+function fimVer(){pausa();$('bPasso').disabled=$('bPlay').disabled=true;}
+function pausa(){clearTimeout(timer);timer=null;$('bPlay').textContent='▶ Rodar';}
+function roda(){umPasso();if(idx<EV.length&&!$('bPlay').disabled) timer=setTimeout(roda,+$('vel').value);}
+$('bPasso').onclick=()=>{pausa();umPasso();};
+$('bPlay').onclick=()=>{if(timer){pausa();}else{$('bPlay').textContent='⏸ Pausar';roda();}};
+
+/* ================= geral ================= */
+function reinicia(){
+  pausa(); $('overlay').classList.add('hide'); $('diario').innerHTML=''; $('saida').textContent=''; $('pergunta').innerHTML='';
+  EV=geraTrilha(F);
+  if(modo==='jogar') iniciaJogo(); else {J=null; iniciaVer();}
+}
+function carregaFase(){
+  F=FASES[+$('fase').value]; $('faseDesc').textContent=F.desc;
+  $('cardSaida').classList.toggle('hide',!F.saida);
+  montaCodigo(); reinicia();
+}
+FASES.forEach((f,i)=>$('fase').insertAdjacentHTML('beforeend',`<option value="${i}">${f.nome}</option>`));
+$('fase').onchange=carregaFase;
+$('bReiniciar').onclick=reinicia; $('bReiniciar2').onclick=reinicia;
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  modo=t.dataset.modo;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===t));
+  $('ctrlJogar').style.display=modo==='jogar'?'contents':'none';
+  $('ctrlVer').style.display=modo==='ver'?'contents':'none';
+  document.querySelectorAll('.stat.jogo').forEach(s=>s.classList.toggle('hide',modo!=='jogar'));
+  reinicia();
+});
+document.querySelectorAll('.card h3').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('fechado')));
+document.addEventListener('contextmenu',e=>e.preventDefault());
+carregaFase();
+</script>
+<script src="canto.js"></script>
+</body>
+</html>

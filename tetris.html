@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · feito a partir do material da disciplina CI1056 (UFPR) · CC BY-NC-SA 4.0 · veja LICENSE.txt -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#e7f2fb">
+<title>Tetris das Recorrências</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--titulo:#2f5d7c;--ceu:#e7f2fb;--gelo:#f2f7fb;--pessego:#ffd6b0;--rosa:#fdecef;--ink:#2b3440;--muted:#6b7785;--ok:#2f9e5a;--borda:#d5e6f3;--H:8;--rh:48px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{overflow-x:clip}
+html,body{margin:0}
+body{font-family:'Fredoka',system-ui,sans-serif;color:var(--ink);font-size:17px;line-height:1.5;touch-action:manipulation;
+  background:linear-gradient(180deg,#d4e8f6 0,#e7f2fb 40%,#f2f7fb 100%) fixed;min-height:100vh}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 18px;max-width:1160px;margin:0 auto}
+header h1{margin:0;font-size:1.5rem;color:var(--titulo)}
+header .sub{color:var(--muted);font-size:.95rem}
+.voltar{font:inherit;font-weight:600;text-decoration:none;color:var(--titulo);background:#fff;border:2px solid var(--borda);border-radius:12px;padding:7px 14px}
+main{max-width:1160px;margin:0 auto;padding:0 18px 60px}
+.barra{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:4px 0 14px}
+.chip{font:inherit;font-weight:600;border:2px solid var(--borda);background:#fff;color:var(--titulo);border-radius:999px;padding:6px 14px;cursor:pointer;min-height:42px}
+.chip.on{background:var(--titulo);border-color:var(--titulo);color:#fff}
+.chip small{font-weight:400;opacity:.85;margin-left:4px}
+.btn{font:inherit;font-weight:600;border-radius:12px;border:2px solid var(--borda);background:#fff;color:var(--titulo);min-height:48px;padding:8px 14px;cursor:pointer}
+.btn:active{transform:scale(.96)}
+.btn.pri{background:var(--titulo);border-color:var(--titulo);color:#fff}
+.palco{display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,350px);gap:18px;align-items:start}
+.palco>div{min-width:0}
+@media (min-width:861px){.palco>div:first-child{position:sticky;top:12px}}
+@media (max-width:860px){.palco{grid-template-columns:1fr}:root{--rh:32px}}
+.cartao{background:#ffffffe8;border:1.5px solid var(--borda);border-radius:22px;padding:16px 18px;box-shadow:0 6px 24px #2f5d7c12}
+.cartao h3{margin:0 0 6px;color:var(--titulo);font-size:1.1rem}
+.maquina{position:relative;border-radius:26px;padding:14px;background:linear-gradient(180deg,#fbfdff,#eef5fb);border:1.5px solid var(--borda);box-shadow:0 16px 30px #2f5d7c1f}
+.hud{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px;font-weight:600;color:var(--titulo)}
+.hud .pill{background:#fff;border:1.5px solid var(--borda);border-radius:999px;padding:2px 12px;font-size:.92rem}
+.peca-grande{min-height:74px;display:flex;align-items:center;justify-content:center;text-align:center;border-radius:16px;margin-bottom:10px;padding:8px 14px;
+  background:#fff7ee;border:2px solid #f3b884;font:600 clamp(14px,2.3vw,19px)/1.45 'JetBrains Mono',monospace;color:#7a3f10}
+.peca-grande small{display:block;font:500 .78rem Fredoka,sans-serif;color:#a0683a}
+.tab{position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;height:calc(var(--rh)*var(--H) + 6px*(var(--H) - 1));
+  background:repeating-linear-gradient(180deg,transparent 0 calc(var(--rh) + 1px),#e3edf6 calc(var(--rh) + 1px) calc(var(--rh) + 6px));border-radius:12px}
+.pista{position:relative;border-radius:10px;background:#f4f8fc;border:1.5px dashed #d7e4ef;cursor:pointer;display:flex;flex-direction:column-reverse;gap:6px;overflow:hidden}
+.pista.alvo{background:#eaf7ee;border-color:#8fd0a0}
+.pista.cur{background:#eef5fb;border-color:#9fc3dc}
+.bk{height:var(--rh);flex:0 0 var(--rh);border-radius:9px;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 4px;
+  font:700 clamp(9px,1.35vw,12.5px)/1.15 'JetBrains Mono',monospace;color:#2b3440;box-shadow:inset 0 -4px 0 #0000001a,inset 0 2px 0 #ffffff99;animation:cai .2s}
+@keyframes cai{from{transform:translateY(-8px)}}
+.bk.cinza{background:#dfe3e8!important;color:#7a8592;text-decoration:line-through}
+.bk.some{animation:some .35s forwards}
+@keyframes some{to{transform:scaleY(0);opacity:0}}
+.caindo{position:absolute;height:var(--rh);border-radius:9px;display:flex;align-items:center;justify-content:center;z-index:3;
+  font:700 clamp(9px,1.35vw,12.5px)/1.15 'JetBrains Mono',monospace;text-align:center;padding:0 4px;outline:3px solid var(--titulo);outline-offset:-1px;
+  box-shadow:0 6px 12px #2f5d7c33;transition:left .09s,top .09s}
+.rotulos{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:8px}
+.rot{text-align:center;border-radius:10px;padding:6px 2px;font:700 clamp(11px,1.8vw,16px) 'JetBrains Mono',monospace;color:#fff}
+.ctrl{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.msg{border-radius:14px;padding:10px 12px;background:var(--gelo);margin:8px 0;min-height:52px}
+.msg.ok{background:#e9f7ee}
+.msg.err{background:var(--rosa)}
+.abre{font:13px/1.5 'JetBrains Mono',monospace;background:#f7fafc;border:1.5px solid var(--borda);border-radius:12px;padding:8px 10px;margin:8px 0;min-height:44px}
+.lev{display:flex;gap:6px;margin:6px 0 2px}
+.lev button{flex:1;font:inherit;font-weight:600;border:1.5px solid var(--borda);background:#fff;border-radius:10px;padding:4px 0;color:var(--titulo);cursor:pointer;font-size:.92rem}
+.lev button.on{background:var(--ceu);border-color:var(--titulo)}
+.fim{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#f6f9fcee;z-index:5;padding:20px;text-align:center;border-radius:26px}
+.fim.on{display:flex}
+.fim h2{color:var(--titulo);margin:0 0 6px}
+.fim .acoes{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.estrelas{font-size:1.5rem;letter-spacing:4px}
+.linhaFeita{position:absolute;left:0;right:0;bottom:0;height:var(--rh);border-radius:10px;background:linear-gradient(90deg,#fff0,#fff7c2,#fff0);animation:brilho .5s forwards;pointer-events:none;z-index:4}
+@keyframes brilho{from{opacity:1}to{opacity:0}}
+kbd{font:600 12px 'JetBrains Mono',monospace;background:#fff;border:1px solid #cbd6e0;border-bottom-width:2px;border-radius:5px;padding:0 5px}
+</style>
+<script src="modo.js"></script>
+</head>
+<body>
+<header>
+  <a class="voltar" href="index.html">← Início</a>
+  <div><h1>🧱 Tetris das Recorrências</h1><div class="sub">leve cada peça pra coluna da fórmula certa · complete linhas antes que as pilhas cheguem no teto</div></div>
+</header>
+<main>
+  <div class="barra"><span id="modoSlot"></span></div>
+  <div class="barra" id="fases"></div>
+  <div class="palco">
+    <div>
+      <div class="maquina">
+        <div class="hud"><span id="vidas"></span><span class="pill" id="nivelTxt"></span><span class="pill" id="linhasTxt"></span><span class="pill" id="ptsTxt"></span></div>
+        <div class="peca-grande" id="grande"></div>
+        <div class="tab" id="tab"></div>
+        <div class="rotulos" id="rotulos"></div>
+        <div class="ctrl">
+          <button class="btn" id="bE">◀</button><button class="btn" id="bD">▶</button><button class="btn" id="bB">▼</button><button class="btn pri" id="bQ">⤓ solta</button><button class="btn maqBt soAprender" id="bM" style="grid-column:1/-1">🤖 a máquina mostra (leva a peça pra coluna certa)</button>
+        </div>
+        <div class="fim" id="fim"></div>
+      </div>
+    </div>
+    <div>
+      <div class="cartao">
+        <h3 id="titFase"></h3>
+        <div class="lev" id="lev"></div>
+        <div class="msg" id="msg"></div>
+        <div style="font-weight:600;color:var(--titulo);font-size:.95rem">Abrindo a última peça</div>
+        <div class="abre" id="abre">aparece aqui depois que a peça cair</div>
+        <div id="dica" style="font-size:.92rem;color:var(--muted)"></div>
+        <div class="soEsp" style="font-size:.92rem;color:var(--muted);margin-top:6px">🏆 Especialista: mais rápido, 3 vidas e erro vira entulho. No 🌱 aprender a peça errada é corrigida pra coluna certa e nada é perdido.</div>
+      </div>
+    </div>
+  </div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const embaralha=a=>{for(let i=a.length-1;i>0;i--){const j=rnd(0,i);[a[i],a[j]]=[a[j],a[i]];}return a;};
+let melhor={}; try{melhor=JSON.parse(localStorage.getItem('tetris-melhor')||'{}');}catch(e){}
+const CORES=['#9fd3f2','#ffc98f','#a8e0b5','#f7b2c1','#ffe08a'];
+const CORES_ESC=['#4f9cc9','#e08a2e','#3f9e5e','#d0607a','#c99a1e'];
+
+/* peças: t (texto grande), c (rótulo curto do bloco), a (coluna certa), abre (como abrir) */
+const FASES=[
+ {nome:'Recorrência → fórmula',tit:'Fase 1 · Abra a recorrência de cabeça',
+  cols:['n − 1','⌊lg n⌋ + 1','n(n − 1)/2','n lg n','2ⁿ − 1'],
+  pecas:[
+   {t:'C(n) = C(n − 1) + 1<br>C(1) = 0',c:'C(n−1)+1',a:0,abre:'C(n) = C(n−1) + 1 = C(n−2) + 2 = … = C(1) + (n − 1) = n − 1. É o Mínimo.'},
+   {t:'T(n) = 1 + T(n − 1)<br>T(1) = 0',c:'1+T(n−1)',a:0,abre:'n − 1 parcelas iguais a 1: n − 1. São as trocas da seleção.'},
+   {t:'C(n) = 1 + C(⌊n/2⌋)<br>C(0) = 0',c:'1+C(⌊n/2⌋)',a:1,abre:'Cada passo divide o n por 2 até chegar em 0: ⌊lg n⌋ + 1 passos. É a busca binária.'},
+   {t:'T(n) = T(⌊n/2⌋) + 1<br>T(1) = 1',c:'T(n/2)+1',a:1,abre:'n, n/2, n/4, …, 1: são ⌊lg n⌋ + 1 termos, cada um soma 1.'},
+   {t:'C(n) = C(n − 1) + (n − 1)<br>C(1) = 0',c:'C(n−1)+n−1',a:2,abre:'(n − 1) + (n − 2) + … + 1 + 0 = n(n − 1)/2. Seleção, ou inserção no pior caso.'},
+   {t:'C(n) = C(n − 1) + C<sub>M</sub>(n)<br>C<sub>M</sub>(n) = n − 1',c:'C(n−1)+C_M',a:2,abre:'Soma dos Mínimos: (n − 1) + (n − 2) + … + 1 = n(n − 1)/2. É a seleção.'},
+   {t:'C(n) = 2C(n/2) + n<br>C(1) = 0',c:'2C(n/2)+n',a:3,abre:'lg n níveis de recursão, e cada nível custa n somando todas as chamadas: n lg n.'},
+   {t:'C(n) = C(⌈n/2⌉) + C(⌊n/2⌋) + n',c:'C(⌈⌉)+C(⌊⌋)+n',a:3,abre:'Duas metades e um Intercala de custo n: é o mergesort, n lg n.'},
+   {t:'T(n) = 2T(n − 1) + 1<br>T(0) = 0',c:'2T(n−1)+1',a:4,abre:'1 + 2 + 4 + … + 2ⁿ⁻¹ = 2ⁿ − 1. Cada chamada vira duas: a Torre de Hanói.'},
+   {t:'H(n) = H(n − 1) + 1 + H(n − 1)<br>H(1) = 1',c:'2H(n−1)+1',a:4,abre:'Move n − 1 discos, o maior, e de novo n − 1: H(n) = 2H(n − 1) + 1, que dá 2ⁿ − 1.'}],
+  niveis:[{ms:900,linhas:3},{ms:650,linhas:4},{ms:470,linhas:5}],
+  dica:'Cada peça é uma recorrência. Leve pra coluna da fórmula fechada. <kbd>←</kbd> <kbd>→</kbd> movem, <kbd>↓</kbd> desce rápido, <kbd>espaço</kbd> solta. No celular, toque na coluna. Uma linha completa some e alivia as pilhas.'},
+ {nome:'Algoritmo → custo',tit:'Fase 2 · Quantas comparações?',
+  cols:['n','n − 1','≈ n²/2','⌊lg n⌋ + 1','≈ n lg n'],
+  pecas:[
+   {t:'Busca (sequencial)<br><small>pior caso: x não está</small>',c:'Busca ✗',a:0,abre:'Testa v[b], v[b−1], …, v[a]: n comparações e devolve não.'},
+   {t:'Particiona(v, a, b, x)<br><small>comparações</small>',c:'Particiona',a:0,abre:'O laço Para i ← a até b roda n vezes, uma comparação v[i] ≤ x por volta.'},
+   {t:'Intercala(v, a, m, b)<br><small>voltas do laço</small>',c:'Intercala',a:0,abre:'Para k ← 0 até b − a: n voltas, uma pra cada elemento que vai pro u.'},
+   {t:'Mínimo(v, a, b)<br><small>comparações</small>',c:'Mínimo',a:1,abre:'Uma comparação pra cada elemento além do primeiro: n − 1.'},
+   {t:'Inserção<br><small>melhor caso: vetor já ordenado</small>',c:'Ins. melhor',a:1,abre:'Cada Insere compara uma vez só e já para: n − 1.'},
+   {t:'Seleção<br><small>número de trocas</small>',c:'Sel. trocas',a:1,abre:'Uma Troca por chamada, até sobrar 1 elemento: n − 1.'},
+   {t:'Seleção<br><small>comparações (qualquer vetor)</small>',c:'Seleção',a:2,abre:'(n − 1) + (n − 2) + … + 1 = n(n − 1)/2 ≈ n²/2, sempre.'},
+   {t:'Inserção<br><small>pior caso: vetor invertido</small>',c:'Ins. pior',a:2,abre:'O Insere vai até o começo toda vez: 1 + 2 + … + (n − 1) = n(n − 1)/2.'},
+   {t:'Quicksort<br><small>pior caso: vetor já ordenado</small>',c:'Quick pior',a:2,abre:'O pivô v[b] é sempre o maior: C(n) = C(n − 1) + n ≈ n²/2.'},
+   {t:'BuscaBinaria<br><small>pior caso</small>',c:'Binária',a:3,abre:'C⁺(n) = 1 + C⁺(⌊n/2⌋): ⌊lg n⌋ + 1.'},
+   {t:'Mergesort<br><small>comparações</small>',c:'Merge',a:4,abre:'C(n) = 2C(n/2) + n: n lg n.'},
+   {t:'Quicksort<br><small>caso médio</small>',c:'Quick médio',a:4,abre:'Com pivôs razoáveis as partes ficam perto da metade: ≈ n lg n.'}],
+  niveis:[{ms:850,linhas:3},{ms:620,linhas:4},{ms:450,linhas:5}],
+  dica:'Agora a peça é um algoritmo (ou um caso dele). Lembre de onde vem a recorrência e leve pra coluna do custo.'},
+ {nome:'Conta pra n = 8',tit:'Fase 3 · Faça a conta com n = 8',
+  cols:['4','7','8','24','28'],
+  pecas:[
+   {t:'BuscaBinaria, pior caso<br><small>n = 8</small>',c:'Bin(8)',a:0,abre:'⌊lg 8⌋ + 1 = 3 + 1 = 4.'},
+   {t:'C(n) = 1 + C(⌊n/2⌋), C(0) = 0<br><small>C(8) = ?</small>',c:'1+C(⌊n/2⌋)',a:0,abre:'C(8) = 1 + C(4) = 2 + C(2) = 3 + C(1) = 4 + C(0) = 4.'},
+   {t:'Mínimo<br><small>n = 8</small>',c:'Mín(8)',a:1,abre:'n − 1 = 7.'},
+   {t:'Inserção, vetor já ordenado<br><small>n = 8</small>',c:'Ins(8) ✓',a:1,abre:'Melhor caso: n − 1 = 7.'},
+   {t:'Torre de Hanói<br><small>3 discos: quantos movimentos?</small>',c:'Hanói(3)',a:1,abre:'2³ − 1 = 7.'},
+   {t:'Busca, x não está<br><small>n = 8</small>',c:'Busca(8)',a:2,abre:'Pior caso: n = 8.'},
+   {t:'Particiona<br><small>n = 8</small>',c:'Part(8)',a:2,abre:'Uma comparação por elemento: 8.'},
+   {t:'Mergesort<br><small>n = 8</small>',c:'Merge(8)',a:3,abre:'n lg n = 8 · 3 = 24.'},
+   {t:'C(n) = 2C(n/2) + n, C(1) = 0<br><small>C(8) = ?</small>',c:'2C(n/2)+n',a:3,abre:'C(2) = 2, C(4) = 2·2 + 4 = 8, C(8) = 2·8 + 8 = 24.'},
+   {t:'Seleção<br><small>n = 8</small>',c:'Sel(8)',a:4,abre:'n(n − 1)/2 = 8 · 7 / 2 = 28.'},
+   {t:'Inserção, vetor invertido<br><small>n = 8</small>',c:'Ins(8) ✗',a:4,abre:'Pior caso: 8 · 7 / 2 = 28.'},
+   {t:'C(n) = C(n − 1) + (n − 1), C(1) = 0<br><small>C(8) = ?</small>',c:'C(n−1)+n−1',a:4,abre:'7 + 6 + 5 + 4 + 3 + 2 + 1 = 28.'}],
+  niveis:[{ms:900,linhas:3},{ms:650,linhas:4},{ms:480,linhas:5}],
+  dica:'Mesma ideia, mas com números: faça a conta com n = 8. Lembre que lg 8 = 3.'}
+];
+
+/* ================= estado ================= */
+const H=8; let F=0,L=0,S=null,loop=null;
+function novo(){
+  pararLoop(); $('fim').classList.remove('on');
+  S={vidas:3,erros:0,acertos:0,linhas:0,pts:0,fim:false,pilhas:[[],[],[],[],[]],saco:[],p:null,pausa:false,nv:FASES[F].niveis[L]};
+  desenhaTab(); proxima(); continuar();
+}
+function proxima(){
+  if(!S.saco.length){ const fa=FASES[F]; S.saco=embaralha([0,1,2,3,4].map(c=>{const ps=fa.pecas.filter(p=>p.a===c);return ps[rnd(0,ps.length-1)];})); }
+  S.p={...S.saco.pop(),col:2,lin:0};
+  if(S.pilhas[2].length>=H){ return perdeu('A coluna do meio encheu até o teto.'); }
+  $('grande').innerHTML=S.p.t;
+  desenha();
+}
+function continuar(){ pararLoop(); loop=setInterval(()=>{ if(!S.pausa&&!S.fim) desce(); },Math.round(S.nv.ms*(ESP()?.9:1.7))); }
+function pararLoop(){ if(loop){clearInterval(loop);loop=null;} }
+function chao(c){ return H-1-S.pilhas[c].length; }
+function desce(){ if(!S.p) return; if(S.p.lin<chao(S.p.col)){S.p.lin++;desenha();} else pousa(); }
+function move(d){ if(!S||S.fim||S.pausa||!S.p) return; const c=S.p.col+d; if(c<0||c>4) return; if(S.p.lin>chao(c)) return; S.p.col=c; desenha(); }
+function vaiPara(c){ if(!S||S.fim||S.pausa||!S.p) return; const pas=c>S.p.col?1:-1; while(S.p.col!==c){const ant=S.p.col; move(pas); if(S.p.col===ant) break;} }
+function solta(){ if(!S||S.fim||S.pausa||!S.p) return; S.p.lin=chao(S.p.col); desenha(); pousa(); }
+
+function pousa(){
+  const p=S.p, fa=FASES[F], certo=p.a===p.col; S.p=null;
+  const esp=ESP(), lane=certo||esp?p.col:p.a; S.pilhas[lane].push({c:p.c,a:p.a,cinza:!certo&&esp});
+  $('abre').innerHTML=`<b>${p.t.replace(/<br>/g,' · ').replace(/<\/?small>/g,'')}</b><br>${p.abre}`;
+  if(certo){ S.acertos++; S.pts+=10*(L+1); diz(`Isso! Vai na coluna <b>${fa.cols[p.a]}</b>.`,'ok'); }
+  else { S.erros++; if(esp) S.vidas--; diz(`Não é <b>${fa.cols[p.col]}</b>: o certo é <b>${fa.cols[p.a]}</b>. ${esp?'A peça virou entulho na coluna.':'Coloquei ela na coluna certa pra você.'}`,'err'); }
+  if(S.maqAgora){ S.maqAgora=false; diz(`🤖 Vai na coluna <b>${fa.cols[p.a]}</b>. Veja como abre, logo abaixo.`,'ok'); }
+  desenha(certo?null:p.a);
+  if(S.vidas<=0) return perdeu('Acabaram as vidas.');
+  if(S.pilhas.every(q=>q.length>0)) limpaLinha();
+  if(S.fim) return;
+  if(S.pilhas[lane].length>=H) return perdeu(`A coluna ${fa.cols[lane]} chegou no teto.`);
+  S.pausa=true; const eu=S;
+  setTimeout(()=>{ if(S!==eu||S.fim||S.ganhou) return; S.pausa=false; proxima(); },certo?250:1500);
+}
+function limpaLinha(){
+  S.linhas++; S.pts+=50*(L+1);
+  document.querySelectorAll('.pista').forEach(t=>{const b=t.querySelector('.bk'); if(b) b.classList.add('some');});
+  const fl=document.createElement('div'); fl.className='linhaFeita'; $('tab').appendChild(fl);
+  S.pilhas.forEach(q=>q.shift());
+  const eu=S; setTimeout(()=>{ if(S!==eu) return; desenha(); },330);
+  if(S.linhas>=S.nv.linhas){ S.ganhou=true; } if(S.ganhou) setTimeout(()=>{ if(S===eu) venceu(); },380);
+}
+
+/* ================= fim ================= */
+function estrelas(){return S.erros===0?3:S.erros<=2?2:1;}
+function venceu(){
+  S.fim=true; pararLoop();
+  const esp=ESP(), e=estrelas(), key=F+'-'+L; if(esp&&!(melhor[key]>=e)){melhor[key]=e; try{localStorage.setItem('tetris-melhor',JSON.stringify(melhor));}catch(x){}}
+  try{const k='fliperama-alg2',f=JSON.parse(localStorage.getItem(k)||'{}');f.tetris=1;localStorage.setItem(k,JSON.stringify(f));}catch(x){}
+  fasesBar(); levBar();
+  const ult=L===FASES[F].niveis.length-1, prox=ult?(F<FASES.length-1?'Próxima fase ▶':null):'Próximo nível ▶';
+  $('fim').innerHTML=`<div><h2>${esp?(S.erros===0?'Sem entulho!':'Nível concluído'):'🌱 Concluído no modo aprender'}</h2>${esp?`<div class="estrelas">${'⭐'.repeat(e)}${'☆'.repeat(3-e)}</div>`:''}
+    <p>${S.linhas} linhas, ${S.acertos} peças certas, ${S.erros} ${S.erros===1?'erro':'erros'}${S.maq?`, ${S.maq} pela máquina`:''} · ${S.pts} pontos</p>
+    ${esp?'':`<p>Acha que pegou? No especialista as peças caem mais rápido e as estrelas contam.</p>`}
+    <div class="acoes"><button class="btn" onclick="novo()">↻ De novo</button>${esp?'':`<button class="btn" onclick="setModo('especialista')">🏆 Tentar no especialista</button>`}${prox?`<button class="btn pri" onclick="avanca()">${prox}</button>`:''}</div></div>`;
+  $('fim').classList.add('on');
+}
+function perdeu(t){
+  S.fim=true; pararLoop(); desenha();
+  $('fim').innerHTML=`<div><h2>Fim de jogo</h2><p>${t} Releia as peças na caixa "Abrindo a última peça" e tente de novo.</p><div class="acoes"><button class="btn" onclick="setModo('aprender')">🌱 Rever no aprender</button><button class="btn pri" onclick="novo()">↻ Tentar de novo</button></div></div>`;
+  $('fim').classList.add('on');
+}
+function avanca(){ if(L<FASES[F].niveis.length-1) L++; else {F++;L=0;} trocaFase(); }
+
+/* ================= desenho ================= */
+function diz(t,c){const m=$('msg'); m.innerHTML=t; m.className='msg'+(c?' '+c:'');}
+function desenhaTab(){
+  $('tab').innerHTML=[0,1,2,3,4].map(c=>`<div class="pista" data-c="${c}"></div>`).join('');
+  $('tab').querySelectorAll('.pista').forEach(t=>t.onclick=()=>vaiPara(+t.dataset.c));
+  $('rotulos').innerHTML=FASES[F].cols.map((t,c)=>`<div class="rot" style="background:${CORES_ESC[c]}">${t}</div>`).join('');
+}
+function desenha(alvo){
+  $('vidas').textContent=ESP()?'❤️'.repeat(Math.max(0,S.vidas))+'🤍'.repeat(3-Math.max(0,S.vidas)):'🌱';
+  $('nivelTxt').textContent=`nível ${L+1}`;
+  $('linhasTxt').textContent=`linhas ${S.linhas}/${S.nv.linhas}`;
+  $('ptsTxt').textContent=`${S.pts} pts`;
+  const ps=$('tab').querySelectorAll('.pista');
+  ps.forEach((t,c)=>{
+    t.className='pista'+(S.p&&S.p.col===c?' cur':'')+(alvo===c?' alvo':'');
+    t.innerHTML=S.pilhas[c].map(b=>`<div class="bk${b.cinza?' cinza':''}" style="background:${CORES[b.a]}">${b.c}</div>`).join('');
+  });
+  $('tab').querySelectorAll('.caindo').forEach(x=>x.remove());
+  if(S.p){
+    const t=ps[S.p.col], rh=t.querySelector('.bk')?t.querySelector('.bk').offsetHeight:parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--rh'));
+    const d=document.createElement('div'); d.className='caindo'; d.textContent=S.p.c;
+    d.style.background='#fff7ee'; d.style.left=t.offsetLeft+'px'; d.style.width=t.offsetWidth+'px';
+    d.style.top=(S.p.lin*(rh+6))+'px'; $('tab').appendChild(d);
+  }
+}
+window.addEventListener('resize',()=>S&&desenha());
+
+/* ================= barras ================= */
+function somaEst(f){return FASES[f].niveis.reduce((s,_,l)=>s+(melhor[f+'-'+l]||0),0);}
+function fasesBar(){
+  $('fases').innerHTML=FASES.map((fa,f)=>`<button class="chip${f===F?' on':''}" data-f="${f}">${f+1}. ${fa.nome}<small>${somaEst(f)}/${fa.niveis.length*3}⭐</small></button>`).join('');
+  $('fases').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{F=+b.dataset.f;L=0;trocaFase();});
+}
+function levBar(){
+  $('lev').innerHTML=FASES[F].niveis.map((nv,l)=>`<button class="${l===L?'on':''}" data-l="${l}">nível ${l+1} ${melhor[F+'-'+l]?'⭐'.repeat(melhor[F+'-'+l]):''}</button>`).join('');
+  $('lev').querySelectorAll('button').forEach(b=>b.onclick=()=>{L=+b.dataset.l;trocaFase();});
+}
+function trocaFase(){ fasesBar(); levBar(); $('titFase').textContent=FASES[F].tit; $('dica').innerHTML=FASES[F].dica;
+  $('abre').textContent='aparece aqui depois que a peça cair'; diz('Leia a peça em cima e leve pra coluna certa.'); novo(); }
+document.addEventListener('keydown',e=>{
+  if(!S||S.fim) return;
+  const k=e.key;
+  if(k==='ArrowLeft'){e.preventDefault();move(-1);} else if(k==='ArrowRight'){e.preventDefault();move(1);}
+  else if(k==='ArrowDown'){e.preventDefault(); if(!S.pausa) desce();} else if(k===' '){e.preventDefault();solta();}
+});
+$('bE').onclick=()=>move(-1); $('bD').onclick=()=>move(1); $('bB').onclick=()=>{if(S&&!S.pausa&&!S.fim)desce();}; $('bQ').onclick=solta;
+$('bM').onclick=()=>{ if(!S||S.fim||S.pausa||!S.p) return; S.maq=(S.maq||0)+1; S.acertos--; S.pts-=10*(L+1); S.maqAgora=true; vaiPara(S.p.a); solta(); };
+document.addEventListener('visibilitychange',()=>{ if(S&&!S.fim){ if(document.hidden) pararLoop(); else continuar(); } });
+const q=new URLSearchParams(location.search); if(q.get('fase')) F=Math.min(2,Math.max(0,+q.get('fase')-1));
+window.addEventListener('modo',()=>{ trocaFase(); diz(ESP()?'🏆 Especialista: mais rápido, 3 vidas, erro vira entulho.':'🌱 Aprender: devagar, sem perder vida, e a peça errada vai pra coluna certa.'); });
+trocaFase();
+</script>
+<script src="canto.js"></script>
+</body>
+</html>

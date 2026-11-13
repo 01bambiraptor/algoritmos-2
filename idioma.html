@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · feito a partir do material da disciplina CI1056 (UFPR) · CC BY-NC-SA 4.0 · veja LICENSE.txt -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffffff">
+<title>Idioma das listas · Algoritmos II</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--azul:#1d4ed8;--azulc:#eff6ff;--azulm:#dbeafe;--ink:#1e293b;--forte:#0f172a;--muted:#64748b;--borda:#e2e8f0;--cinza:#f8fafc;--amb:#f59e0b;--ambc:#fffbeb;--verde:#16a34a;--verdec:#f0fdf4;--verm:#dc2626;--vermc:#fef2f2}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;overflow-x:clip}
+body{margin:0;font-family:Inter,system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--ink);background:#fff;font-size:16.5px;line-height:1.65}
+header.topo{position:sticky;top:0;z-index:20;background:#ffffffee;backdrop-filter:blur(6px);border-bottom:1px solid var(--borda)}
+.tbar{max-width:1000px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:10px 18px;flex-wrap:wrap}
+.tbar h1{margin:0;font-size:1.15rem;color:var(--forte)}
+.voltar{text-decoration:none;color:var(--azul);font-weight:500;border:1px solid var(--borda);border-radius:8px;padding:6px 12px}
+nav.ir{max-width:1000px;margin:0 auto;display:flex;gap:6px;overflow-x:auto;padding:0 18px 10px;scrollbar-width:none}
+nav.ir a{white-space:nowrap;text-decoration:none;color:#334155;border:1px solid var(--borda);border-radius:8px;padding:4px 11px;font-size:.88rem;font-weight:500}
+nav.ir a:hover{border-color:var(--azul);color:var(--azul)}
+main{max-width:1000px;margin:0 auto;padding:0 18px 80px}
+section{padding:36px 0;border-bottom:1px solid var(--borda);scroll-margin-top:100px}
+section:last-of-type{border-bottom:0}
+h2{font-size:1.5rem;letter-spacing:-.015em;color:var(--forte);margin:0 0 4px;display:flex;align-items:center;gap:10px}
+h2 .n{display:inline-flex;width:30px;height:30px;border-radius:8px;background:var(--azulm);color:var(--azul);align-items:center;justify-content:center;font-size:.95rem}
+.lead{color:var(--muted);margin:0 0 14px;font-size:1.02rem}
+code,.m{font-family:'JetBrains Mono',monospace;font-size:.9em;background:#f1f5f9;color:var(--forte);border-radius:5px;padding:1px 5px}
+.dica{border-left:4px solid var(--amb);background:var(--ambc);border-radius:10px;padding:10px 14px;margin:12px 0}
+.info{border-left:4px solid #93c5fd;background:var(--cinza);border-radius:10px;padding:10px 14px;margin:12px 0}
+
+/* capa */
+.capa{display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:24px;align-items:center;padding:34px 0 26px;border-bottom:1px solid var(--borda)}
+.capa h2{font-size:2rem;line-height:1.2;display:block}
+.capa p{color:#334155;font-size:1.06rem;margin:10px 0}
+.capa .passos{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.capa .passos a{text-decoration:none;font-weight:600;font-size:.92rem;border-radius:8px;padding:8px 14px;border:1px solid var(--borda);color:#334155}
+.capa .passos a.pri{background:var(--azul);border-color:var(--azul);color:#fff}
+.capa svg{width:100%;height:auto}
+@media (max-width:720px){.capa{grid-template-columns:1fr}.capa svg{max-width:220px;margin:0 auto;display:block}}
+
+/* molde */
+.molde{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.molde{grid-template-columns:1fr}}
+.papel{border:1px solid var(--borda);border-radius:12px;padding:16px 18px;background:#fff;box-shadow:0 1px 3px #0f172a0d;font-size:.98rem}
+.papel .prob{border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;margin:8px 0}
+.papel ol{margin:8px 0 0;padding-left:22px}
+.papel li{margin:4px 0}
+.marca{border-radius:4px;cursor:pointer;transition:background .15s;box-shadow:inset 0 -2px 0 #93c5fd}
+.marca:hover,.marca.on{background:var(--azulm)}
+.marca .tag{font:700 .65rem Inter,sans-serif;color:#fff;background:var(--azul);border-radius:4px;padding:0 4px;margin-left:3px;vertical-align:2px}
+.andares{display:flex;flex-direction:column;gap:10px}
+.andar{border:1px solid var(--borda);border-radius:12px;padding:12px 14px;cursor:pointer;transition:border-color .15s,background .15s}
+.andar.on{border-color:var(--azul);background:var(--azulc)}
+.andar b{color:var(--forte)}
+.andar .num{display:inline-flex;width:24px;height:24px;border-radius:6px;background:var(--azul);color:#fff;font-size:.8rem;align-items:center;justify-content:center;margin-right:6px}
+.andar p{margin:4px 0 0;color:#334155;font-size:.95rem}
+
+/* dicionários */
+.busca{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px}
+.busca input{flex:1 1 240px;font:inherit;border:1px solid var(--borda);border-radius:8px;padding:9px 12px}
+.busca input:focus{outline:2px solid var(--azulm);border-color:var(--azul)}
+.filtro{font:inherit;font-size:.88rem;font-weight:500;border:1px solid var(--borda);background:#fff;border-radius:8px;padding:6px 11px;cursor:pointer;color:#334155}
+.filtro.on{background:var(--azul);border-color:var(--azul);color:#fff}
+.grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.ver{border:1px solid var(--borda);border-radius:12px;padding:12px 14px;background:#fff}
+.ver .s{font:600 1.15rem 'JetBrains Mono',monospace;color:var(--forte)}
+.ver .le{font-size:.86rem;color:var(--azul);font-weight:600;margin:2px 0 6px}
+.ver .le:before{content:"🔊 ";font-size:.8rem}
+.ver p{margin:0;font-size:.94rem;color:#334155}
+.ver .ex{margin-top:8px;font-size:.86rem;color:var(--muted);border-top:1px dashed var(--borda);padding-top:6px}
+.ver .ex b{color:#334155;font-weight:600}
+.ver.pg{border-left:4px solid var(--amb)}
+.vazio{color:var(--muted);padding:10px 0}
+.pal{border:1px solid var(--borda);border-radius:12px;background:#fff;margin:8px 0;overflow:hidden}
+.pal summary{list-style:none;cursor:pointer;padding:12px 16px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.pal summary::-webkit-details-marker{display:none}
+.pal summary:before{content:"›";color:var(--muted);font-weight:700;transition:transform .2s;display:inline-block}
+.pal[open] summary:before{transform:rotate(90deg)}
+.pal .fr{font-weight:600;color:var(--forte)}
+.pal .eq{color:var(--azul);font-weight:500;font-size:.95rem}
+.pal .corpo{padding:0 16px 14px 34px;font-size:.95rem;color:#334155}
+.pal .corpo .entrega{background:var(--verdec);border-left:4px solid var(--verde);border-radius:8px;padding:8px 12px;margin:8px 0}
+.pal .corpo .cuid{background:var(--vermc);border-left:4px solid #f87171;border-radius:8px;padding:8px 12px;margin:8px 0}
+
+/* decodificador */
+.esc{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 14px}
+.esc button{font:inherit;font-size:.86rem;font-weight:500;border:1px solid var(--borda);background:#fff;border-radius:8px;padding:6px 11px;cursor:pointer;color:#334155;text-align:left}
+.esc button small{display:block;color:var(--muted);font-size:.74rem;font-weight:500}
+.esc button.on{border-color:var(--azul);background:var(--azulc);color:var(--azul)}
+.dec{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:860px){.dec{grid-template-columns:1fr}}
+.enun{font-size:1rem}
+.enun .cod{font-family:'JetBrains Mono',monospace;font-size:.88rem;white-space:pre;background:var(--cinza);border:1px solid var(--borda);border-radius:8px;padding:8px 12px;margin:8px 0;overflow-x:auto;display:block;line-height:1.55}
+.enun .prob{display:block;border:1px solid #cbd5e1;border-radius:8px;padding:8px 12px;margin:8px 0}
+.enun .it{display:block;margin:6px 0 6px 6px}
+.lado{position:sticky;top:110px;display:flex;flex-direction:column;gap:12px}
+@media (max-width:860px){.lado{position:static}}
+.trad{border:1px solid var(--azul);background:var(--azulc);border-radius:12px;padding:12px 14px;min-height:96px}
+.trad .t1{font:700 .72rem Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--azul);margin-bottom:4px}
+.trad .orig{font-family:'JetBrains Mono',monospace;font-size:.86rem;color:var(--forte);background:#fff;border-radius:6px;padding:2px 6px;display:inline-block;margin-bottom:6px}
+.cx{border:1px solid var(--borda);border-radius:12px;padding:12px 14px}
+.cx .t1{font:700 .72rem Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+.cx ul{margin:4px 0 0;padding-left:20px}
+.cx li{margin:3px 0}
+.cx.e{border-left:4px solid var(--verde)}.cx.e .t1{color:var(--verde)}
+.cx.c{border-left:4px solid var(--azul)}.cx.c .t1{color:var(--azul)}
+.cx.p{border-left:4px solid #f87171}.cx.p .t1{color:var(--verm)}
+
+/* pdf */
+.tab{width:100%;border-collapse:collapse;font-size:.95rem}
+.tab th,.tab td{border-bottom:1px solid var(--borda);padding:8px 10px;text-align:left}
+.tab th{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.tab td:first-child,.tab td:nth-child(2){font-family:'JetBrains Mono',monospace}
+.rodape{text-align:center;color:var(--muted);font-size:.85rem;padding:30px 0 10px}
+</style>
+</head>
+<body>
+<header class="topo">
+  <div class="tbar"><a class="voltar" href="index.html">← Início</a><h1>📖 Idioma das listas</h1></div>
+  <nav class="ir"><a href="#molde">1 · O molde</a><a href="#simbolos">2 · Símbolos</a><a href="#palavras">3 · Palavras</a><a href="#decod">4 · Decodificador</a><a href="#pdf">5 · Quando o PDF quebra</a></nav>
+</header>
+<main>
+
+<div class="capa">
+  <div>
+    <h2>Viu a lista do professor e não entendeu nada?</h2>
+    <p>Normal. As listas 1, 2 e 3 são escritas num idioma próprio, com símbolos de matemática e um jeito fixo de pedir as coisas. Ninguém nasce sabendo ler isso.</p>
+    <p>Aqui não tem resposta de exercício. Tem <b>tradução</b>: o que cada símbolo quer dizer, o que cada pedido espera que você entregue e por onde começar. A resolução continua sendo sua.</p>
+    <div class="passos"><a class="pri" href="#molde">Começar pelo molde</a><a href="#decod">Ir direto pro decodificador</a></div>
+  </div>
+  <svg viewBox="0 0 240 230" aria-hidden="true">
+    <rect x="8" y="6" width="186" height="74" rx="16" fill="#eff6ff" stroke="#93c5fd"/>
+    <path d="M150 80 L166 100 L170 80 Z" fill="#eff6ff" stroke="#93c5fd"/><rect x="149" y="76" width="22" height="6" fill="#eff6ff"/>
+    <text x="22" y="34" font-family="Inter,sans-serif" font-size="14" font-weight="700" fill="#1e3a8a">Ninguém falou Σ como</text>
+    <text x="22" y="54" font-family="Inter,sans-serif" font-size="14" font-weight="700" fill="#1e3a8a">a primeira palavra</text>
+    <g transform="translate(108,96) scale(2.1)">
+      <ellipse cx="30" cy="57" rx="16" ry="2.5" fill="#0f172a" opacity=".12"/>
+      <line x1="30" y1="10" x2="30" y2="5" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/><circle cx="30" cy="4.5" r="3.2" fill="#fbbf24"/>
+      <rect x="20" y="36" width="20" height="17" rx="7" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.3"/><circle cx="30" cy="44" r="3.2" fill="#3b82f6"/>
+      <path d="M21 41 Q14 45 13 49" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <path d="M39 41 Q46 43 47 47" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <rect x="3" y="40" width="22" height="16" rx="2" fill="#fff" stroke="#94a3b8" stroke-width="1" transform="rotate(-8 14 48)"/>
+      <line x1="7" y1="45" x2="20" y2="43" stroke="#cbd5e1" stroke-width="1.2"/><line x1="7" y1="49" x2="21" y2="47" stroke="#cbd5e1" stroke-width="1.2"/><line x1="8" y1="53" x2="17" y2="52" stroke="#cbd5e1" stroke-width="1.2"/>
+      <rect x="13" y="10" width="34" height="25" rx="11" fill="#fff" stroke="#94a3b8" stroke-width="1.3"/>
+      <rect x="17" y="15" width="26" height="15" rx="7" fill="#0f172a"/>
+      <circle cx="24.5" cy="22.5" r="3.1" fill="#60a5fa"/><circle cx="35.5" cy="22.5" r="3.1" fill="#60a5fa"/>
+      <circle cx="23.6" cy="21.6" r="1" fill="#fff"/><circle cx="34.6" cy="21.6" r="1" fill="#fff"/>
+      <path d="M26.5 27 Q30 29.5 33.5 27" stroke="#60a5fa" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    </g>
+  </svg>
+</div>
+
+<!-- 1. molde -->
+<section id="molde">
+  <h2><span class="n">1</span>O molde de quase todo exercício</h2>
+  <p class="lead">As três listas repetem a mesma estrutura. Reconhecendo o molde, metade do susto vai embora. Toque nos trechos sublinhados ou nos andares do lado.</p>
+  <div class="molde">
+    <div class="papel">
+      <div><b>Exercício 1.</b> <span class="marca" data-a="0">Considere o seguinte problema computacional.</span></div>
+      <div class="prob">
+        <div><b>Fatorial</b></div>
+        <div><span class="marca" data-a="1">Instância: n ∈ N.</span></div>
+        <div><span class="marca" data-a="2">Resposta: n!</span></div>
+      </div>
+      <ol>
+        <li><span class="marca" data-a="3">Escreva um algoritmo recursivo para resolver o problema.</span></li>
+        <li><span class="marca" data-a="4">Seja m(n) o número de multiplicações feitas pelo seu algoritmo para a instância n.</span> <span class="marca" data-a="5">Expresse m(n) como uma recorrência.</span></li>
+        <li><span class="marca" data-a="6">Resolva esta recorrência.</span></li>
+      </ol>
+      <div style="font-size:.8rem;color:var(--muted);margin-top:10px">Lista 1, exercício 1</div>
+    </div>
+    <div class="andares">
+      <div class="andar" data-and="0"><b><span class="num">0</span>Entender o problema</b><p id="txt0">"Considere o seguinte problema computacional" anuncia uma caixinha com três partes: o <b>nome</b>, a <b>instância</b> (o que entra) e a <b>resposta</b> (o que tem que sair). Ainda não é pra fazer nada: é só a definição.</p></div>
+      <div class="andar" data-and="1"><b><span class="num">1</span>Escrever o algoritmo</b><p>"Escreva um algoritmo recursivo" pede pseudocódigo no estilo das aulas: <code>Se</code>, <code>Devolva</code>, <code>←</code>. Tem que ter um <b>caso base</b> (para sem chamar ninguém) e uma <b>chamada pra um problema menor</b>.</p></div>
+      <div class="andar" data-and="2"><b><span class="num">2</span>Contar e virar recorrência</b><p>"Seja m(n) o número de multiplicações" dá um <b>nome</b> pra uma contagem. "Expresse como recorrência" pede pra escrever m(n) usando m de um n menor, olhando o <b>seu</b> algoritmo, linha por linha. Conta só a operação pedida.</p></div>
+      <div class="andar" data-and="3"><b><span class="num">3</span>Resolver</b><p>"Resolva esta recorrência" pede uma fórmula <b>sem m do lado direito</b>: abre m(n) = ... = ... até a base e soma o que sobrou.</p></div>
+    </div>
+  </div>
+  <div class="info" id="moldeTrad">Toque num trecho sublinhado do exercício.</div>
+  <div class="dica"><b>Repara:</b> a lista 3 (ordenação) quase não usa esse molde. Lá os pedidos são de outro tipo: "mostre como executa", "modifique", "qual o maior número de...". Eles estão no dicionário de palavras e no decodificador.</div>
+</section>
+
+<!-- 2. símbolos -->
+<section id="simbolos">
+  <h2><span class="n">2</span>Dicionário de símbolos</h2>
+  <p class="lead">Cada símbolo com o jeito de ler em voz alta, o que significa e onde aparece nas listas. Os de borda amarela são os que mais confundem.</p>
+  <div class="busca"><input id="buscaS" type="search" placeholder="procure: chão, somatório, mod, vetor..."><span id="filtrosS"></span></div>
+  <div class="grade" id="gradeS"></div>
+</section>
+
+<!-- 3. palavras -->
+<section id="palavras">
+  <h2><span class="n">3</span>Dicionário de palavras: o que ele quer quando diz...</h2>
+  <p class="lead">Os pedidos dos enunciados, traduzidos pro que você precisa <b>entregar</b>. Abra o que te travar.</p>
+  <div class="busca"><input id="buscaP" type="search" placeholder="procure: recorrência, pior caso, justifique..."></div>
+  <div id="listaP"></div>
+</section>
+
+<!-- 4. decodificador -->
+<section id="decod">
+  <h2><span class="n">4</span>Decodificador de enunciados</h2>
+  <p class="lead">Exercícios das listas, traduzidos pedaço por pedaço. Escolha um, toque nos trechos sublinhados e veja do lado o que ele quer e por onde começar. Não tem a resposta: tem o caminho.</p>
+  <div class="esc" id="esc"></div>
+  <div class="dec">
+    <div class="papel enun" id="enun"></div>
+    <div class="lado">
+      <div class="trad" id="trad"><div class="t1">tradução</div>Toque num trecho sublinhado do enunciado.</div>
+      <div class="cx e"><div class="t1">✔ o que entregar</div><ul id="entrega"></ul></div>
+      <div class="cx c"><div class="t1">→ por onde começar</div><div id="comeco"></div></div>
+      <div class="cx p"><div class="t1">⚠ cuidado</div><div id="cuidado"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. pdf -->
+<section id="pdf">
+  <h2><span class="n">5</span>Quando o PDF quebra os símbolos</h2>
+  <p class="lead">Se você copia um trecho da lista (pra colar numa anotação, num chat ou numa busca), alguns símbolos viram outra coisa. Isso confunde muito: o símbolo não é esse, é o PDF que quebrou.</p>
+  <table class="tab">
+    <thead><tr><th>aparece colado</th><th>na verdade é</th><th>como ler</th></tr></thead>
+    <tbody>
+      <tr><td>x 6= 0</td><td>x ≠ 0</td><td>x diferente de zero</td></tr>
+      <tr><td>r 6= não</td><td>r ≠ não</td><td>r é diferente de "não" (a busca achou algo)</td></tr>
+      <tr><td>bb/2c</td><td>⌊b/2⌋</td><td>chão de b sobre 2</td></tr>
+      <tr><td>b a+b 2 c</td><td>⌊(a+b)/2⌋</td><td>chão de a mais b sobre 2</td></tr>
+      <tr><td>xn, xn−1</td><td>xⁿ, xⁿ⁻¹</td><td>x elevado a n, x elevado a n menos 1</td></tr>
+      <tr><td>a2, ar2</td><td>a², ar²</td><td>a ao quadrado, a vezes r ao quadrado</td></tr>
+      <tr><td>nk</td><td>nᵏ (fatorial descendente) ou (n k)</td><td>depende do exercício: veja o símbolo no PDF</td></tr>
+      <tr><td>c+ (n), c− (n)</td><td>c⁺(n), c⁻(n)</td><td>c mais de n (pior caso), c menos de n (melhor caso)</td></tr>
+      <tr><td>Xb ... i=a</td><td>Σ de i = a até b</td><td>somatório de i igual a a até b</td></tr>
+    </tbody>
+  </table>
+  <div class="dica"><b>Regra prática:</b> sempre leia o símbolo no PDF aberto, não no texto copiado. E se algo parecer sem sentido, como "6=", provavelmente é um símbolo quebrado.</div>
+</section>
+
+<p class="rodape">Feito a partir do material da disciplina CI1056 · Algoritmos e Estruturas de Dados II · UFPR<br>Os enunciados citados são das listas 1, 2 e 3 dos professores Marcos Castilho, André Vignatti e Daniel Oliveira.<br>Este material não substitui o material do professor: é uma ferramenta visual de apoio ao entendimento.</p>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+/* ---------- 1. molde ---------- */
+const MOLDE=[
+ ['Considere o seguinte problema computacional.','Anúncio: vem aí uma caixinha com nome, instância e resposta. É a definição do que o algoritmo precisa fazer.',0],
+ ['Instância: n ∈ N.','A <b>entrada</b>. "n ∈ N" = "n pertence aos naturais": n é um número inteiro 0, 1, 2, 3...',0],
+ ['Resposta: n!','A <b>saída</b>: o que o algoritmo devolve. Aqui, o fatorial de n (n·(n−1)·...·1, e 0! = 1).',0],
+ ['Escreva um algoritmo recursivo para resolver o problema.','Pseudocódigo que chama a si mesmo com um n menor, e que tem um caso base pra parar. No estilo das aulas: Se ... Devolva ...',1],
+ ['Seja m(n) o número de multiplicações feitas pelo seu algoritmo para a instância n.','Ele <b>batiza</b> uma contagem: m(n) = quantas vezes aparece um "·" quando o <b>seu</b> algoritmo roda com entrada n. Só multiplicações; comparações e chamadas não entram.',2],
+ ['Expresse m(n) como uma recorrência.','Escreva m(n) em função de m(n − 1) (ou de outro menor), mais o caso base. Olhe o seu algoritmo: quantas multiplicações a chamada atual faz sozinha + quantas a chamada menor faz.',2],
+ ['Resolva esta recorrência.','Ache uma fórmula fechada: m(n) = (algo com n), sem m do lado direito. Abra m(n) = m(n−1)+... = m(n−2)+... até chegar na base.',3]];
+function molde(i){ document.querySelectorAll('#molde .marca').forEach(m=>m.classList.toggle('on',+m.dataset.a===i));
+  const [t,tr,a]=MOLDE[i]; $('moldeTrad').innerHTML=`<code>${t}</code><br>${tr}`;
+  document.querySelectorAll('.andar').forEach(e=>e.classList.toggle('on',+e.dataset.and===a)); }
+document.querySelectorAll('#molde .marca').forEach(m=>m.onclick=()=>molde(+m.dataset.a));
+document.querySelectorAll('.andar').forEach(e=>e.onclick=()=>{ const k=+e.dataset.and; molde(MOLDE.findIndex(x=>x[2]===k)); });
+
+/* ---------- 2. símbolos ---------- */
+const SIMB=[ // s, como ler, significado, exemplo, grupo, pegadinha?
+ ['n ∈ N','n pertence aos naturais','n é um inteiro não negativo: 0, 1, 2, 3...','Instância: n ∈ N (L1 ex.1, Fatorial)','conj'],
+ ['x ∈ R','x pertence aos reais','x pode ser qualquer número, com vírgula ou negativo.','Instância: (x, n), onde x ∈ R (L1 ex.2)','conj'],
+ ['x ≠ 0','x diferente de zero','Restrição: o zero não é uma entrada válida.','x ∈ R, x ≠ 0 (L1 ex.2)','conj'],
+ ['∀ n > 0','para todo n maior que zero','A frase vale pra qualquer n positivo.','xⁿ = x · xⁿ⁻¹, ∀n > 0 (L1 ex.2)','conj'],
+ ['(x, n)','o par x, n','A instância tem duas partes. Seu algoritmo recebe as duas.','Instância: (a, r, n) (L1 ex.8): três entradas','conj'],
+ ['d ∈ [0..l]','d entre 0 e l','d é um inteiro de 0 até l, incluindo os dois.','o menor d ∈ [0..l] tal que... (L2 ex.8)','conj'],
+ ['c ≤ d ∈ [a..b]','c menor ou igual a d, ambos entre a e b','Duas posições válidas do vetor, com c antes (ou igual) de d.','Dados c ≤ d ∈ [a..b] (L2 ex.4)','conj'],
+ ['v[a..b]','v de a até b','O pedaço do vetor que começa na posição a e termina na b. As aulas usam índice a partir de a, não de 0.','v é um vetor indexado por [a..b] (L1 ex.13)','vet'],
+ ['indexado por [a..b]','com índices de a até b','As posições válidas são a, a+1, ..., b. Pode ser a = 1, a = 5, qualquer coisa.','(v, a, b), onde v é um vetor indexado por [a..b]','vet'],
+ ['|(v, a, b)| = b − a + 1','o tamanho da instância','Quantos elementos tem o pedaço: de a até b são b − a + 1. É esse número que vira o "n" das recorrências.','usando como tamanho... |(v, a, b)| = b − a + 1 = n (L1 ex.13)','vet',1],
+ ['Troca(v, i, j)','troca v de i com v de j','Os valores das posições i e j trocam de lugar. Conta como uma "troca".','Troca(v, j, j + 1) (L3 ex.1, BubbleSort)','vet'],
+ ['m ← a','m recebe a','Atribuição: guarda o valor de a na variável m. Não é comparação!','m ← M(v, a + 1, b) (L1 ex.12)','pseudo',1],
+ ['Devolva','devolve / retorna','Termina a chamada e entrega o valor. É o return do C.','Se a = b, Devolva a (L1 ex.12)','pseudo'],
+ ['não','o valor "não"','Uma resposta especial que quer dizer "não achei". Não é o "não" do português.','Se a > b, Devolva não (L1 ex.15)','pseudo',1],
+ ['V','verdadeiro','Valor lógico verdadeiro (o "true").','Se n = 0, Devolva V (L2 ex.9b)','pseudo'],
+ ['F(n) = { ... se ..., ... se ...','F de n é igual a... nos casos...','Definição por casos (as chaves). Cada linha vale numa situação. É assim que uma recorrência é escrita.','Fibonacci: n se n ≤ 1; F(n−1) + F(n−2) se n > 1 (L1 ex.3)','mat'],
+ ['n!','n fatorial','n · (n − 1) · ... · 2 · 1. Por definição, 0! = 1.','Resposta: n! (L1 ex.1)','mat'],
+ ['xⁿ','x elevado a n','x multiplicado por ele mesmo n vezes. x⁰ = 1.','Resposta: xⁿ (L1 ex.2)','mat'],
+ ['⌊n/2⌋','chão de n sobre 2','Divide e arredonda pra baixo: ⌊7/2⌋ = 3, ⌊8/2⌋ = 4. Igual à divisão inteira do C pra positivos.','m ← ⌊(a + b)/2⌋ (L2 ex.10)','mat',1],
+ ['a mod b','a módulo b','O resto da divisão de a por b: 17 mod 5 = 2. É o % do C. "b mod 2 = 0" = "b é par".','mdc(b, a mod b) (L1 ex.9)','mat'],
+ ['Σ (i = a até b) v[i]','somatório de v de i, com i de a até b','Soma v[a] + v[a+1] + ... + v[b].','Resposta: Σ v[i] (L1 ex.13, Soma de Vetor)','mat'],
+ ['Π (i = n−k+1 até n) i','produtório de i, com i de n−k+1 até n','Multiplica todos esses i. Igual ao Σ, mas com vezes no lugar de mais.','fatorial descendente (L1 ex.5)','mat'],
+ ['nᵏ (com traço embaixo)','n fatorial descendente de k','n · (n−1) · ... · (n−k+1): k fatores, descendo a partir de n. Não é potência!','L1 ex.5','mat',1],
+ ['(n k) empilhados','n escolhe k / binomial de n e k','Quantos subconjuntos de k elementos tem um conjunto de n elementos.','Coeficiente Binomial (L2 ex.6)','mat'],
+ ['m(n), s(n), c(n), t(n), r(n)','m de n, s de n...','Nomes de contagens que o próprio enunciado define: multiplicações, somas, comparações, trocas, chamadas recursivas. Leia a frase "Seja ... o número de ..." pra saber qual é qual.','Seja s(n) o número de somas (L1 ex.3)','custo'],
+ ['m(n, k)','m de n e k','Contagem que depende de duas entradas. A recorrência vai ter dois parâmetros.','m(n, k) multiplicações (L1 ex.5)','custo'],
+ ['c⁺(n)','c mais de n','O <b>pior caso</b>: o maior número de comparações entre todas as entradas de tamanho n.','c⁺(n) = max{c(v,a,b) | |(v,a,b)| = n} (L2 ex.2)','custo',1],
+ ['c⁻(n)','c menos de n','O <b>melhor caso</b>: o menor número de comparações entre todas as entradas de tamanho n.','c⁻(n) = min{...} (L2 ex.2)','custo',1],
+ ['max{ c(v,a,b) | |(v,a,b)| = n }','o máximo de c de v, a, b, tal que o tamanho é n','A barra "|" do meio se lê "tal que". Pegue todas as instâncias de tamanho n, calcule c pra cada uma e fique com a maior.','definição de c⁺(n) (L2 ex.2)','custo',1],
+ ['p_{c,d}(x)','p índice c, d, aplicado em x','Um polinômio montado com os coeficientes p[c] até p[d]. O índice embaixo diz qual pedaço do vetor usar.','L2 ex.4, Avaliação de Polinômio','custo'],
+];
+const GR={todos:'todos',conj:'conjuntos',vet:'vetores',pseudo:'pseudocódigo',mat:'contas',custo:'custo'};
+let grS='todos';
+function desS(){ const q=$('buscaS').value.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  const L=SIMB.filter(s=>(grS==='todos'||s[4]===grS)&&(!q||(s.join(' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')).includes(q)));
+  $('gradeS').innerHTML=L.length?L.map(([s,l,m,e,g,pg])=>`<div class="ver${pg?' pg':''}"><div class="s">${s}</div><div class="le">${l}</div><p>${m}</p><div class="ex"><b>Na lista:</b> ${e}</div></div>`).join(''):'<div class="vazio">Nada com esse nome. Tente outra palavra.</div>'; }
+$('filtrosS').innerHTML=Object.entries(GR).map(([k,v])=>`<button class="filtro${k==='todos'?' on':''}" data-g="${k}">${v}</button>`).join(' ');
+$('filtrosS').querySelectorAll('.filtro').forEach(b=>b.onclick=()=>{grS=b.dataset.g;$('filtrosS').querySelectorAll('.filtro').forEach(x=>x.classList.toggle('on',x===b));desS();});
+$('buscaS').oninput=desS; desS();
+
+/* ---------- 3. palavras ---------- */
+const PAL=[ // frase, equivale, explicação, entrega, cuidado
+ ['Considere o seguinte problema computacional','vem aí a definição','Uma caixinha com Nome, Instância e Resposta. Leia como um contrato: o seu algoritmo recebe a instância e tem que devolver a resposta.','Nada ainda. Só entender o que entra e o que sai.',''],
+ ['Instância','a entrada','Os dados concretos que o algoritmo recebe. "(v, a, b)" = um vetor e as duas pontas do pedaço.','Saber quantos parâmetros o seu algoritmo vai ter: os mesmos da instância.',''],
+ ['Resposta','a saída','O que o algoritmo devolve. Às vezes é um número, às vezes um índice, às vezes "sim/não", às vezes o próprio vetor modificado.','Seu algoritmo tem que devolver exatamente isso.','Em Mínimo de Vetor a resposta é o <b>índice</b> do mínimo, não o valor.'],
+ ['Escreva um algoritmo recursivo','pseudocódigo que chama a si mesmo','No estilo das aulas: Se/Devolva/←. Com caso base (resolve direto) e chamada pra um problema menor (n − 1, metade, b − 1...).','O pseudocódigo completo, com o caso base.','Sem caso base, ou com uma chamada que não diminui, ele nunca para.'],
+ ['Escreva um algoritmo iterativo','com laço, sem chamar a si mesmo','Use Enquanto ou Para. É a mesma ideia, mas o "chamar de novo" vira "dar mais uma volta no laço".','Pseudocódigo com laço.',''],
+ ['Descreva ... recursivamente','definição matemática com casos','Não é código ainda: é escrever a coisa (ex.: nᵏ) usando uma versão menor dela mesma, com chaves e caso base.','Uma definição por casos: valor na base + fórmula que usa a versão menor.','Depois o item seguinte costuma pedir o algoritmo "baseado na descrição": aí é só traduzir as chaves em Se/Devolva.'],
+ ['Seja m(n) o número de multiplicações ...','batizando uma contagem','O enunciado dá nome a uma contagem. m(n) é um número: quantas multiplicações o algoritmo faz com entrada de tamanho n.','Nada ainda, mas guarde: o que conta é <b>só</b> o tipo de operação citado.','"comparações entre elementos de v" não inclui comparar índices (a = b, a > b).'],
+ ['Expresse m(n) como uma recorrência','escreva m(n) usando m de algo menor','Olhe o seu algoritmo: quantas operações a chamada atual faz sozinha, mais quantas fazem as chamadas recursivas. E o caso base: quanto vale m na base.','Uma definição por casos: m(base) = ... e m(n) = m(menor) + (o que a chamada faz sozinha).','A recorrência é do <b>seu</b> algoritmo. Algoritmos diferentes pro mesmo problema dão recorrências diferentes.'],
+ ['Expresse a função F como uma recorrência','escreva o VALOR de F com chaves','Pegadinha de vocabulário: aqui não é contar operações, é escrever o que F(n) vale, em notação matemática com casos.','F(n) = { ... se ..., ... caso contrário }','Não confunda com "expresse m(n)". Um é o resultado da função, o outro é o custo.'],
+ ['Resolva esta recorrência','ache a fórmula fechada','Transforme m(n) = m(n−1) + 1 em algo como m(n) = n − 1. Abra a recorrência (substitua uma, duas, três vezes), veja o padrão, vá até a base e some.','Uma fórmula só com n (e constantes), sem m do lado direito.','Confira com um n pequeno: calcule m(3) pela recorrência e pela fórmula. Tem que dar igual.'],
+ ['Preveja o que a função calcula / O que F calcula?','rode na mão e descubra','Escolha valores pequenos, rode o algoritmo no papel e monte uma tabela n → F(n). O padrão aparece.','Uma frase: "F(a, b) calcula ...".','Teste vários tipos de entrada: pares e ímpares, pequenos e grandes.'],
+ ['Descreva o que os algoritmos fazem sem a ajuda do computador','mesma coisa: rode na mão','É o "preveja" da lista 2. O título engraçado de cada item (ex.: "Muitos bits para mim") é uma dica!','Uma descrição em português do que o algoritmo faz.','Às vezes o algoritmo não termina pra algumas entradas. Isso também é uma resposta.'],
+ ['O algoritmo ... resolve o problema ...? Justifique','sim ou não, e por quê','Compare com a definição do problema (instância e resposta). Pra dizer sim: explique por que dá certo sempre. Pra dizer não: basta um contraexemplo.','"Sim, porque..." ou "Não: com a entrada X ele devolve Y, mas deveria devolver Z".','Um contraexemplo pequeno vale mais que um parágrafo.'],
+ ['tamanho da instância (n)','quantos elementos','Em vetores, n = b − a + 1. Em problemas numéricos às vezes é o próprio número, às vezes a quantidade de bits (L2 ex.7).','Saber o que é o n antes de montar a recorrência.',''],
+ ['melhor caso / pior caso','a entrada mais fácil / a mais difícil','Entre todas as entradas do mesmo tamanho n, a que faz o algoritmo contar menos / mais operações.','Dizer como é essa entrada e quanto ela custa.','É sobre o <b>tipo</b> de entrada (ordenado, invertido, tudo igual), não sobre n ser pequeno.'],
+ ['Descreva as instâncias para as quais c = c⁺(n)','como é o vetor do pior caso?','Diga em palavras como é a entrada que faz o máximo de comparações. Ex.: "quando o vetor é um palíndromo".','Uma descrição da entrada.',''],
+ ['Dê uma expressão para ...','uma fórmula direta','Diferente de "expresse como recorrência": aqui pode ir direto pra fórmula, sem passar pela recorrência.','Uma fórmula com n.',''],
+ ['Execute ... / Mostre como ... executa / ordena o vetor ...','simule no papel','Rode o algoritmo à mão e mostre o estado do vetor a cada passo importante (cada troca, cada chamada).','Uma sequência de estados do vetor, ou a árvore de chamadas.','Use o algoritmo <b>da aula</b>, com as mesmas regras (ex.: pivô é o último).'],
+ ['o vetor "EASYQUESTION"','cada letra é um elemento','O vetor é E, A, S, Y, Q, U, E, S, T, I, O, N. As letras se comparam em ordem alfabética (A < E < I...).','Ordenar essas 12 letras com o algoritmo pedido.','Tem letras repetidas (E, S): preste atenção no que o algoritmo faz com iguais.'],
+ ['Modifique / Re-escreva / Como você modificaria','mude poucas linhas do algoritmo da aula','Comece do pseudocódigo da aula e mexa só no necessário (a escolha do pivô, um sinal de comparação...).','O algoritmo novo, deixando claro o que mudou.','Muitas vezes basta trocar um &lt; por &gt;, ou um índice.'],
+ ['Pode ser usada pelo MergeSort?','funciona no lugar do original?','Teste se essa versão faz o mesmo trabalho que o Intercala da aula: com as duas metades ordenadas, devolve o pedaço todo ordenado?','Sim ou não, com justificativa.','Rode com um exemplo pequeno, com repetidos.'],
+ ['Intuitivamente (sem precisar mostrar contas)','explique em palavras','Não precisa de recorrência nem fórmula: uma explicação curta e convincente.','Duas ou três frases.',''],
+ ['número de chamadas recursivas','quantas vezes a função chama ela mesma','r(n) conta chamadas, não somas nem multiplicações.','Uma recorrência pra r(n).','A primeira chamada (a que você faz de fora) normalmente não conta como "recursiva". Leia o enunciado e combine consigo mesma o critério.'],
+];
+function desP(){ const q=$('buscaP').value.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  const L=PAL.filter(p=>!q||p.join(' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(q));
+  $('listaP').innerHTML=L.length?L.map(([f,eq,ex,en,cu])=>`<details class="pal"><summary><span class="fr">"${f}"</span><span class="eq">= ${eq}</span></summary><div class="corpo">${ex}<div class="entrega"><b>Entregar:</b> ${en}</div>${cu?`<div class="cuid"><b>Cuidado:</b> ${cu}</div>`:''}</div></details>`).join(''):'<div class="vazio">Nada com essa palavra.</div>'; }
+$('buscaP').oninput=desP; desP();
+
+/* ---------- 4. decodificador ---------- */
+// cada enunciado: lista de pedaços. string = texto normal; [texto, tradução] = trecho tocável; {cod:'...'} = bloco de código; {prob:[...]} = caixinha; {it:[...]} = item
+const DEC=[
+ {id:'L1-1',t:'Fatorial',sub:'Lista 1 · ex. 1',e:[
+   'Considere o seguinte problema computacional.',
+   {prob:[['<b>Fatorial</b>',''],['Instância: n ∈ N.','A entrada é um número natural n (0, 1, 2...).'],['Resposta: n!','O algoritmo devolve n! = n · (n−1) · ... · 1, com 0! = 1.']]},
+   {it:['1. ',['Escreva um algoritmo recursivo para resolver o problema.','Fatorial(n) que chama Fatorial de algo menor. A dica está na definição: n! = n · (n − 1)!']]},
+   {it:['2. ',['Seja m(n) o número de multiplicações feitas pelo seu algoritmo para a instância n.','m(n) = quantos "·" o seu algoritmo faz pra calcular n!.'],' ',['Expresse m(n) como uma recorrência.','m(base) = ? e m(n) = m(n − 1) + (multiplicações que a chamada atual faz sozinha).']]},
+   {it:['3. ',['Resolva esta recorrência.','Abra m(n) até a base e chegue numa fórmula só com n.']]}],
+  entrega:['o algoritmo Fatorial(n) com caso base','a recorrência de m(n), com o valor na base','a fórmula fechada de m(n)'],
+  comeco:'Escreva primeiro a definição matemática: 0! = 1 e n! = n · (n − 1)! pra n > 0. O algoritmo é essa definição em Se/Devolva.',
+  cuidado:'Na base (n = 0) o seu algoritmo faz alguma multiplicação? A resposta muda o valor de m(0) e, por consequência, a fórmula.'},
+ {id:'L1-3',t:'Fibonacci',sub:'Lista 1 · ex. 3',e:[
+   ['A sequência de Fibonacci é dada pela recorrência','Aqui "recorrência" é a definição do VALOR de F(n), não um custo.'],
+   {cod:'F(n) = n,                  se n ≤ 1\nF(n) = F(n − 1) + F(n − 2), se n > 1'},
+   {prob:[['<b>Número de Fibonacci</b>',''],['Instância: n ∈ N.','Um natural n.'],['Resposta: F(n).','O n-ésimo número de Fibonacci.']]},
+   {it:['1. ',['Escreva um algoritmo recursivo para resolver este problema.','É traduzir as chaves de F(n) em Se/Devolva.']]},
+   {it:['2. ',['Seja s(n) o número de somas','s(n) conta só os "+" do seu algoritmo.'],' efetuadas pelo seu algoritmo para computar a instância n. ',['Expresse s(n) como uma recorrência.','s(n) = s(?) + s(?) + (somas da chamada atual). São DUAS chamadas.']]},
+   {it:['3. ',['Seja r(n) o número de chamadas recursivas','r(n) conta chamadas, não somas. É outra recorrência, parecida com a de s(n).'],' efetuadas pelo seu algoritmo para computar a instância n. Expresse r(n) como uma recorrência.']}],
+  entrega:['o algoritmo','a recorrência de s(n) com as bases','a recorrência de r(n) com as bases'],
+  comeco:'Desenhe a árvore de chamadas de F(4). Conte nela os "+" e as chamadas: a recorrência sai do desenho.',
+  cuidado:'São duas bases (n = 0 e n = 1). E repare que ele NÃO pede pra resolver aqui: só expressar.'},
+ {id:'L1-4',t:'McCarthy 91',sub:'Lista 1 · ex. 4',e:[
+   'O seguinte algoritmo recursivo calcula a função de McCarthy 91:',
+   {cod:'F(n)\n  Se n > 100\n    Devolva n − 10\n  Devolva F(F(n + 11))'},
+   {it:['1. ',['Preveja o que a função F(n) calcula.','Rode na mão com alguns n e descubra o padrão. O nome "91" é uma dica.']]},
+   {it:['2. ',['Expresse a função F(n) como uma recorrência.','Escreva o VALOR de F(n) com chaves, igual ao Fibonacci do ex. 3. Não é contar operações!']]}],
+  entrega:['uma frase dizendo o que F(n) devolve (separando n > 100 e n ≤ 100)','F(n) escrita com chaves, copiando a estrutura do algoritmo'],
+  comeco:'Comece por n = 101 (direto), depois n = 100, 99, 95. Atenção: F(F(...)) chama F com o resultado de outra chamada de F.',
+  cuidado:'O item 2 não pede a fórmula que você descobriu no item 1: pede a recorrência, que é o próprio algoritmo em notação matemática.'},
+ {id:'L1-5',t:'Fatorial descendente',sub:'Lista 1 · ex. 5',e:[
+   ['O fatorial descendente de n a k é','Um "fatorial que para no meio": só os k primeiros fatores, descendo a partir de n.'],
+   {cod:'nᵏ = n! / (n − k)!  =  Π i, com i de n − k + 1 até n'},
+   {prob:[['<b>Fatorial Descendente</b>',''],['Instância: (n, k), onde n, k ∈ N, k ≥ 1.','Duas entradas naturais, com k pelo menos 1.'],['Resposta: nᵏ','O produto n · (n−1) · ... · (n−k+1).']]},
+   {it:['1. ',['Descreva nᵏ recursivamente.','Definição com chaves: nᵏ na base (k = 1) e nᵏ usando um fatorial descendente menor.']]},
+   {it:['2. ',['Escreva um algoritmo recursivo ... baseado na descrição do item anterior.','Traduza as chaves do item 1 em Se/Devolva.']]},
+   {it:['3. ',['Seja m(n, k) o número de multiplicações','A contagem tem dois parâmetros, mas veja qual deles realmente diminui.'],' ... Expresse m(n, k) como uma recorrência.']},
+   {it:['4. ',['Resolva esta recorrência.','Fórmula fechada de m(n, k).']]}],
+  entrega:['a definição recursiva de nᵏ','o algoritmo','a recorrência de m(n, k)','a fórmula fechada'],
+  comeco:'Escreva 5³ por extenso: 5 · 4 · 3. Agora 5⁴ = 5 · 4 · 3 · 2. Qual é a relação entre um e outro? E 5¹?',
+  cuidado:'nᵏ aqui NÃO é potência. O traço embaixo do k no PDF é o que diferencia.'},
+ {id:'L1-13',t:'Soma de vetor',sub:'Lista 1 · ex. 13',e:[
+   'Considere o seguinte problema computacional.',
+   {prob:[['<b>Soma de Vetor</b>',''],['Instância: (v, a, b), onde v é um vetor indexado por [a..b].','Um vetor e as duas pontas do pedaço: posições de a até b.'],['Resposta: Σ v[i], com i de a até b','A soma v[a] + v[a+1] + ... + v[b].']]},
+   {it:['1. ',['Escreva um algoritmo recursivo para resolver este problema.','Soma(v, a, b) que chama Soma de um pedaço menor (por exemplo, sem o último).']]},
+   {it:['2. ',['Seja s(n) o número de somas de elementos de v','Só conta somas que envolvem v[...]. Somar índices (b − 1) não conta.'],' ... Expresse s(n) como uma recorrência, ',['usando como tamanho de uma instância o valor de |(v, a, b)| = b − a + 1 = n','n é quantos elementos tem o pedaço. Se o pedaço perde um elemento, a chamada é de tamanho n − 1.']]},
+   {it:['3. ',['Resolva esta recorrência.','Fórmula de s(n).']]}],
+  entrega:['o algoritmo com caso base (pedaço vazio ou de 1 elemento: você escolhe)','a recorrência de s(n)','a fórmula fechada'],
+  comeco:'Decida o caso base: a > b (vazio, soma 0) ou a = b (um elemento). A escolha muda o s da base, então seja coerente.',
+  cuidado:'"b − 1" no índice não é soma de elementos de v. Só conte v[...] + algo.'},
+ {id:'L2-2',t:'Palíndromo',sub:'Lista 2 · ex. 2',e:[
+   ['Dizemos que o vetor v[a..b] é um palíndromo se a leitura de v na ordem direta é igual à sua leitura na ordem reversa','Lido do começo pro fim ou do fim pro começo, dá a mesma coisa. Ex.: 1 2 3 2 1.'],
+   {prob:[['<b>Palíndromo</b>',''],['Instância: (v, a, b)','Um vetor e as pontas do pedaço.'],['Resposta: sim se v[a..b] é um palíndromo ou não, caso contrário','O algoritmo devolve só "sim" ou "não".']]},
+   {it:['1. ',['Escreva um algoritmo recursivo para resolver este problema.','Compare as pontas e chame pro miolo.']]},
+   {it:['2. ',['Seja c(v, a, b) o número de comparações entre elementos de v','c depende da instância inteira (não só do tamanho): vetores diferentes do mesmo tamanho fazem números diferentes de comparações.'],', e sejam ',['c⁺(n) = max{c(v,a,b) | |(v,a,b)| = n}','Pior caso: o maior c entre todos os vetores de tamanho n.'],', ',['c⁻(n) = min{...}','Melhor caso: o menor c entre todos os vetores de tamanho n.']]},
+   {it:['(a) ',['Descreva as instâncias ... para as quais c(v, a, b) = c⁺(n).','Como é o vetor que obriga o algoritmo a comparar tudo?']]},
+   {it:['(b) ',['Descreva as instâncias ... para as quais c(v, a, b) = c⁻(n).','Como é o vetor em que ele desiste mais cedo?']]},
+   {it:['(c) ',['Dê uma expressão para c⁻(n).','Uma fórmula direta, sem recorrência.'],' (d) ',['Expresse c⁺(n) como uma recorrência.','O pior caso como recorrência: o pedaço diminui quanto a cada chamada?'],' (e) Resolva esta recorrência.']}],
+  entrega:['o algoritmo','(a) e (b): descrições em palavras de como é o vetor','(c) uma fórmula','(d) a recorrência de c⁺(n), com as bases','(e) a fórmula fechada'],
+  comeco:'Faça o algoritmo parar assim que achar uma diferença: é isso que cria melhor e pior caso. Depois pense: quando ele para logo? Quando vai até o fim?',
+  cuidado:'O pedaço diminui de 2 em 2 (some uma ponta de cada lado), então a recorrência é com n − 2 e tem duas bases (n = 0 e n = 1).'},
+ {id:'L2-8',t:'Diferença de vetores',sub:'Lista 2 · ex. 8',e:[
+   {prob:[['<b>Diferença de Vetores</b>',''],['Instância: (v, a, u, p, l), onde v é um vetor indexado por [a..a + l] e u é um vetor indexado por [p..p + l].','Dois vetores do mesmo tamanho (l + 1 elementos), cada um com o seu começo (a e p).'],['Resposta: o menor d ∈ [0..l] tal que v[a + d] ≠ u[p + d]','A primeira posição (contando a partir de 0) em que os dois vetores diferem.'],[', ou l + 1 se v[a + d] = u[p + d] para todo d ∈ [0..l].','Se forem iguais do começo ao fim, devolve l + 1 (um valor "fora", que avisa "não diferem").']]},
+   {it:['1. ',['Escreva um algoritmo recursivo para resolver este problema.','Compare o primeiro par; se for igual, chame pro resto.']]},
+   {it:['2. ',['Seja c(n) o número de comparações de pior caso','Já é pior caso: pense na entrada que faz comparar o máximo.'],' ... onde ',['o tamanho n da instância é |(v, a, u, p, l)| = l + 1 = n','n = quantos pares existem pra comparar.'],'. Expresse c(n) como uma recorrência.']},
+   {it:['3. Resolva esta recorrência.']}],
+  entrega:['o algoritmo','a recorrência de c(n) no pior caso','a fórmula fechada'],
+  comeco:'Teste com v = 4 8 15 e u = 4 8 16: a resposta é d = 2. Depois com dois vetores iguais: l + 1.',
+  cuidado:'O d é contado a partir de 0, não a partir de a ou de p. Quando chamar recursivamente, lembre de somar 1 no que voltar.'},
+ {id:'L2-9b',t:'eu / você',sub:'Lista 2 · ex. 9(b)',e:[
+   ['Descreva o que os algoritmos abaixo fazem sem a ajuda do computador.','Rode na mão e diga o que fazem.'],
+   {it:['(b) ',['Não sei lidar com esse inteiro, tente você.','O título é uma dica do que acontece.']]},
+   {cod:'eu(n)\n  Se n = 0\n    Devolva V\n  Devolva voce(n − 1)\n\nvoce(n)\n  Se n = 1\n    Devolva V\n  Devolva eu(n − 1)'}],
+  entrega:['uma descrição: pra quais n eles devolvem V e o que acontece com os outros'],
+  comeco:'Duas funções que chamam uma à outra (recursão mútua). Faça a lista de chamadas pra eu(0), eu(1), eu(2), eu(3).',
+  cuidado:'Nem toda chamada chega num caso base. Repare nas bases: uma é n = 0, a outra é n = 1. Teste os ímpares com calma.'},
+ {id:'L3-2',t:'InsertionSort em "EASYQUESTION"',sub:'Lista 3 · ex. 2',e:[
+   [`Mostre como o InsertionSort ordena o vetor “EASYQUESTION”.`,'Simule a inserção da aula, letra por letra, mostrando o vetor depois de cada Insere.']],
+  entrega:['a sequência de estados do vetor: depois de inserir cada letra, como o vetor fica'],
+  comeco:'O vetor é E A S Y Q U E S T I O N (12 elementos). Na aula, Ordena(v, a, b) ordena v[a..b−1] e depois insere v[b]: comece com o pedaço de 1 letra, que já está ordenado.',
+  cuidado:'As letras se comparam em ordem alfabética. Repare no que acontece quando o E (ou o S) encontra outro igual: a Busca da aula para no primeiro ≤.'},
+ {id:'L3-10',t:'Intercala alternativo',sub:'Lista 3 · ex. 10',e:[
+   ['A seguinte versão do Intercala (Merge) pode ser usada pelo MergeSort?','Ela funciona no lugar do Intercala da aula? Sim ou não, com justificativa.'],
+   {cod:'Intercala(A, p, q, r)\n  Para i ← p até q\n    B[i] ← A[i]\n  Para j ← q + 1 até r\n    B[r + q + 1 − j] ← A[j]\n  i ← p\n  j ← r\n  Para k ← p até r\n    Se B[i] ≤ B[j] então\n      A[k] ← B[i]\n      i ← i + 1\n    Senão\n      A[k] ← B[j]\n      j ← j − 1'}],
+  entrega:['sim ou não','a justificativa (um exemplo rodado na mão ajuda muito)'],
+  comeco:'Aqui A[p..q] e A[q+1..r] são as duas metades já ordenadas. Rode com A = 2 5 | 3 4 e veja como fica B depois dos dois primeiros laços.',
+  cuidado:'O segundo laço copia a metade direita de trás pra frente, e o j anda pra trás (j ← j − 1). Pense no que isso faz quando uma das metades acaba.'},
+ {id:'L3-17',t:'Quicksort: o maior elemento',sub:'Lista 3 · ex. 17',e:[
+   ['Considere o QuickSort executando em um vetor de tamanho n.','O QuickSort da aula, com o Particiona da aula (pivô = último).'],' ',['Qual o maior número de vezes que o maior elemento pode ser movido?','Entre todas as entradas de tamanho n, qual faz o maior elemento ser trocado de lugar mais vezes? E quantas são?']],
+  entrega:['um número (em função de n)','uma entrada que atinge esse número, como justificativa'],
+  comeco:'No Particiona, o maior elemento só se move quando entra numa Troca. Teste com n = 3 e n = 4 e procure a entrada pior pra ele.',
+  cuidado:'"Ser movido" = mudar de posição numa Troca. Uma Troca de um elemento com ele mesmo (m = i) não move nada.'}
+];
+let cur=0;
+function seg(x){ if(typeof x==='string') return x; if(Array.isArray(x)) return x[1]?`<span class="marca" data-t="${encodeURIComponent(x[1])}" data-o="${encodeURIComponent(x[0])}">${x[0]}</span>`:x[0]; return ''; }
+function desD(i){
+  cur=i; const d=DEC[i];
+  $('esc').querySelectorAll('button').forEach((b,k)=>b.classList.toggle('on',k===i));
+  $('enun').innerHTML=`<div style="font-size:.8rem;color:var(--muted);margin-bottom:6px">${d.sub}</div>`+d.e.map(p=>{
+    if(p.cod) return `<span class="cod">${p.cod}</span>`;
+    if(p.prob) return `<span class="prob">${p.prob.map(seg).join('<br>')}</span>`;
+    if(p.it) return `<span class="it">${p.it.map(seg).join('')}</span>`;
+    return seg(p)+' ';}).join('');
+  $('enun').querySelectorAll('.marca').forEach(m=>m.onclick=()=>{ $('enun').querySelectorAll('.marca').forEach(x=>x.classList.toggle('on',x===m));
+    $('trad').innerHTML=`<div class="t1">tradução</div><span class="orig">${decodeURIComponent(m.dataset.o)}</span><div>${decodeURIComponent(m.dataset.t)}</div>`; });
+  $('trad').innerHTML='<div class="t1">tradução</div>Toque num trecho sublinhado do enunciado.';
+  $('entrega').innerHTML=d.entrega.map(x=>`<li>${x}</li>`).join('');
+  $('comeco').innerHTML=d.comeco; $('cuidado').innerHTML=d.cuidado;
+}
+$('esc').innerHTML=DEC.map(d=>`<button type="button">${d.t}<small>${d.sub}</small></button>`).join('');
+$('esc').querySelectorAll('button').forEach((b,k)=>b.onclick=()=>desD(k));
+desD(0);
+try{const k='fliperama-alg2',f=JSON.parse(localStorage.getItem(k)||'{}');f.idioma=1;localStorage.setItem(k,JSON.stringify(f));}catch(e){}
+</script>
+<script>window.ROBO_PAGINA='idioma';</script>
+<script src="canto.js"></script>
+<script src="appdica.js"></script>
+</body>
+</html>

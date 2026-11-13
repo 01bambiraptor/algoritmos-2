@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · feito a partir do material da disciplina CI1056 (UFPR) · CC BY-NC-SA 4.0 · veja LICENSE.txt -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f3f8ec">
+<title>Ratinho no Labirinto</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="labirinto-core.js"></script>
+<style>
+:root{--ink:#2d2a26;--muted:#76705f;--card:#fffdf6;--ok:#2f9e5a;--red:#d9485f;--gold:#f0a81c;--verde:#5f8f4f}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:none}
+body{font-family:'Fredoka',system-ui,sans-serif;color:var(--ink);background:radial-gradient(circle at 10% 0,#e6f4dc 0,transparent 45%),radial-gradient(circle at 90% 20%,#fff1d6 0,transparent 40%),#f7f5ec fixed}
+header{display:flex;align-items:center;gap:12px;padding:14px 20px 4px;flex-wrap:wrap}
+h1{margin:0;font-size:1.9rem;font-weight:700}
+h1 span{color:var(--verde)}
+.sub{color:var(--muted);margin:0 20px 8px}
+.btn{font:inherit;font-weight:600;border-radius:14px;border:2px solid #dcd3bd;background:var(--card);padding:10px 16px;min-height:50px;cursor:pointer;color:var(--ink);font-size:1.02rem;text-decoration:none;display:inline-flex;align-items:center;gap:6px;justify-content:center}
+.btn:active{transform:scale(.95)}
+.btn:disabled{opacity:.4}
+.btn.pri{background:var(--verde);border-color:#4a7a3c;color:#fff}
+.btn.red{background:#fde7ea;border-color:#f3b8c3;color:#a3271a}
+.btn.gold{background:var(--gold);border-color:#d8920f;color:#3a2600}
+.tabs{display:flex;gap:6px;background:#e9e3cf;padding:5px;border-radius:16px;margin-left:auto}
+.tab{border:0;background:transparent;font:inherit;padding:11px 18px;border-radius:12px;cursor:pointer;color:var(--muted);font-weight:600;font-size:1.02rem}
+.tab.on{background:var(--card);color:var(--ink);box-shadow:0 2px 6px #0001}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:6px 20px}
+select.btn{padding-right:10px}
+.seg{display:inline-flex;background:#e9e3cf;border-radius:12px;padding:3px;gap:3px}
+.seg button{border:0;background:transparent;font:inherit;font-size:.95rem;padding:9px 12px;border-radius:9px;cursor:pointer;color:var(--muted);font-weight:600}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px #0001}
+main{display:grid;grid-template-columns:minmax(0,1fr) minmax(330px,1fr);gap:18px;padding:6px 20px 30px}
+@media (orientation:portrait),(max-width:980px){main{grid-template-columns:1fr}}
+.card{background:var(--card);border-radius:18px;padding:14px 16px;box-shadow:0 2px 10px #0000000f;border:1px solid #ece3cc}
+.card h3{margin:0 0 8px;font-size:1.05rem}
+.lado{display:flex;flex-direction:column;gap:14px}
+.msg{font-size:1.08rem;line-height:1.45;min-height:58px;padding:12px 14px;border-radius:14px;background:#eef7e8;border:2px solid #cfe5c2}
+.msg.ruim{background:#fdecef;border-color:#f3b8c3;color:#8c2433}
+.msg.bom{background:#e5f6ec;border-color:#a9dcbc;color:#1f6e3f}
+.dpad{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(3,64px);gap:6px;justify-content:center;margin:12px auto 0}
+.dpad .btn{min-width:64px;min-height:64px;font-size:1.6rem;padding:0}
+.acoes{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.stat{flex:1;min-width:76px;background:#f2ecd9;border-radius:12px;padding:6px 8px;text-align:center}
+.stat b{display:block;font-size:1.4rem}
+.stat small{color:var(--muted);font-size:.78rem}
+.pilha{display:flex;flex-direction:column-reverse;gap:3px;font-family:'JetBrains Mono',monospace;font-size:.82rem;max-height:220px;overflow:auto}
+.pilha div{background:#f6f2e6;border-radius:8px;padding:3px 8px;border:1px solid #e6dcc4}
+.pilha div:last-child{background:#ffe7c7;border-color:var(--gold);font-weight:600}
+.codigo{font-family:'JetBrains Mono',monospace;font-size:.78rem;background:#fbf9f2;border-radius:12px;padding:8px 0;overflow-x:auto}
+.codigo div{white-space:pre;padding:1px 12px;border-left:5px solid transparent;min-height:1.3em}
+.codigo div.on{background:#ffe7a8;border-left-color:var(--gold)}
+.codigo .cm{color:#9a917d}
+.ctrl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.ctrl input[type=range]{flex:1;min-width:140px;height:34px;accent-color:var(--verde)}
+.cont{color:var(--muted);font-size:.85rem}
+.overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#fff9;backdrop-filter:blur(3px);z-index:40}
+.overlay .box{background:#fff;border-radius:22px;padding:22px 26px;max-width:440px;text-align:center;box-shadow:0 10px 30px #0003;border:3px solid var(--ok)}
+.overlay h2{margin:0 0 6px;font-size:1.9rem}
+.hide{display:none!important}
+</style>
+<script src="modo.js"></script>
+</head>
+<body>
+<header>
+  <a class="btn" href="index.html">🕹 Início</a>
+  <h1>🐭 Ratinho no <span>Labirinto</span></h1>
+  <div class="tabs"><button class="tab on" data-m="jogar">🎮 Jogar</button><button class="tab" data-m="ver">🔍 Ver o C rodar</button></div>
+</header>
+<p class="sub">O <code>labirinto.c</code> do professor: o rato sai de (0,0) e precisa chegar no queijo. Cada passo é uma chamada; beco sem saída, volta.</p>
+<div class="bar">
+  <select class="btn" id="mapa"></select>
+  <div class="seg" id="segDir"><button data-d="2" class="on">↓ → (código do professor)</button><button data-d="4">↓ → ↑ ← (alteração)</button></div>
+  <button class="btn" id="novoAleat">🎲 Outro aleatório</button>
+</div>
+<p class="sub" id="descMapa"></p>
+<div style="max-width:1200px;margin:0 auto;padding:0 18px 10px"><span id="modoSlot" data-ap='com a ajuda "Ainda tem saída?"' data-esp='sem a ajuda "Ainda tem saída?"'></span></div>
+<main>
+  <section>
+    <div class="card" style="margin-bottom:12px"><div class="msg" id="msg"></div></div>
+    <div class="card">
+      <div class="grade" id="grade"></div>
+      <div id="ctrlJogo">
+        <div class="dpad" id="dpad"></div>
+        <div class="acoes">
+          <button class="btn red" id="bVoltar">↩ Voltar (backtrack)</button>
+          <button class="btn soAprender" id="bDica">🤔 Ainda tem saída?</button>
+          <button class="btn" id="bRe">⟲ Recomeçar</button>
+        </div>
+      </div>
+      <div id="ctrlVer" class="hide">
+        <div class="ctrl"><button class="btn" id="b0">⏮</button><button class="btn" id="bv">◀</button><button class="btn pri" id="bp">▶ Rodar</button><button class="btn" id="ba">▶|</button><input type="range" id="rng" min="0" value="0"><span class="cont" id="cont"></span></div>
+      </div>
+    </div>
+  </section>
+  <aside class="lado">
+    <div class="card"><div class="stats">
+      <div class="stat"><b id="sCham">0</b><small>chamadas</small></div>
+      <div class="stat"><b id="sBat">0</b><small>return false na hora<br>(parede/fora)</small></div>
+      <div class="stat"><b id="sVolta">0</b><small>voltas (sol = 0)</small></div>
+    </div></div>
+    <div class="card"><h3>Pilha de chamadas</h3><div class="pilha" id="pilha"></div></div>
+    <div class="card"><h3>Matriz <code>sol</code> <small style="color:var(--muted);font-weight:400">(o que o printSolution imprimiria)</small></h3><pre class="solmat" id="solmat"></pre></div>
+    <div class="card"><h3>O código</h3><div class="codigo" id="codigo"></div></div>
+  </aside>
+</main>
+<div class="overlay hide" id="ov"><div class="box" id="ovBox"></div></div>
+<script>
+"use strict";
+document.head.insertAdjacentHTML('beforeend',`<style>${LAB.CSS}</style>`);
+const $=id=>document.getElementById(id);
+const esc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const realce=t=>{const k=t.indexOf('//');return k>=0?esc(t.slice(0,k))+`<span class="cm">${esc(t.slice(k))}</span>`:esc(t);};
+let modo='jogar', mapaId='prof', M=LAB.MAPAS.prof.m, DIRS=2, J, F=[], f=0, timer=null;
+Object.entries(LAB.MAPAS).forEach(([k,v])=>$('mapa').insertAdjacentHTML('beforeend',`<option value="${k}">${v.nome}</option>`));
+$('mapa').insertAdjacentHTML('beforeend',`<option value="aleat">Aleatório (6 × 6)</option>`);
+function setMsg(h,c=''){$('msg').innerHTML=h;$('msg').className='msg '+c;}
+function montaCodigo(){ $('codigo').innerHTML=LAB.codigo(DIRS).map(([t,id])=>`<div data-id="${id}">${realce(t)||' '}</div>`).join(''); }
+function marca(ids){ids=[].concat(ids);document.querySelectorAll('#codigo div').forEach(d=>d.className=d.dataset.id&&ids.includes(d.dataset.id)?'on':'');}
+function carrega(){
+  if(mapaId==='aleat'){M=LAB.aleatorio(6);$('descMapa').textContent='Labirinto sorteado (sempre tem saída só com ↓ e →, e exige algumas voltas).';}
+  else {M=LAB.MAPAS[mapaId].m;$('descMapa').textContent=LAB.MAPAS[mapaId].desc;}
+  $('novoAleat').classList.toggle('hide',mapaId!=='aleat');
+  montaCodigo(); if(modo==='jogar') iniciaJogo(); else iniciaVer();
+}
+function setDirs(d){DIRS=d;document.querySelectorAll('#segDir button').forEach(b=>b.classList.toggle('on',+b.dataset.d===d));}
+
+/* ================= JOGAR ================= */
+const N=()=>M.length, chave=(x,y)=>x+','+y;
+function iniciaJogo(){
+  $('ov').classList.add('hide');
+  J={sol:M.map(r=>r.map(()=>0)),pilha:[[0,0]],becos:new Set(),cham:1,bat:0,voltas:0,fim:false};
+  J.sol[0][0]=1;
+  setMsg(`O rato começa em (0,0): a primeira chamada é <code>solveMazeUtil(maze, 0, 0, sol)</code>, que marcou <code>sol[0][0] = 1</code>. Escolha uma direção! ${DIRS===2?'O código do professor só anda ↓ e →.':'Com a alteração, também dá pra ↑ e ←.'}`);
+  marca(['mark']); desenhaJogo();
+}
+function topo(){return J.pilha[J.pilha.length-1];}
+function vizinhos(){const [x,y]=topo();return LAB.DIRS.slice(0,DIRS).map(d=>({d,x:x+d.dx,y:y+d.dy}));}
+function estado(x,y){ if(x<0||y<0||x>=N()||y>=N()) return 'fora'; if(!M[x][y]) return 'parede'; if(J.sol[x][y]) return 'vis'; return 'ok'; }
+function desenhaJogo(){
+  const alvos=new Set(vizinhos().filter(v=>estado(v.x,v.y)==='ok').map(v=>chave(v.x,v.y)));
+  LAB.grade($('grade'),M,{sol:J.sol,pilha:J.pilha,becos:J.becos,probe:J.probe||null},{alvos:J.fim?new Set():alvos});
+  $('grade').querySelectorAll('.casa').forEach(c=>c.onclick=()=>{const x=+c.dataset.x,y=+c.dataset.y;const v=vizinhos().find(v=>v.x===x&&v.y===y);if(v)anda(v.d);});
+  const pos={down:'3 / 2',right:'2 / 3',up:'1 / 2',left:'2 / 1'};
+  $('dpad').innerHTML=LAB.DIRS.slice(0,DIRS).map(d=>`<button class="btn" data-id="${d.id}" style="grid-area:${pos[d.id]}">${d.s}</button>`).join('')+`<div style="grid-area:2 / 2;display:flex;align-items:center;justify-content:center;font-size:2rem">🐭</div>`;
+  $('dpad').querySelectorAll('button').forEach(b=>b.onclick=()=>anda(LAB.DIRS.find(d=>d.id===b.dataset.id)));
+  $('dpad').querySelectorAll('button').forEach(b=>b.disabled=J.fim);
+  $('bVoltar').disabled=J.fim||J.pilha.length<=1;
+  $('sCham').textContent=J.cham; $('sBat').textContent=J.bat; $('sVolta').textContent=J.voltas;
+  $('pilha').innerHTML=J.pilha.map(([x,y])=>`<div>solveMazeUtil(maze, ${x}, ${y}, sol)</div>`).join('');
+  LAB.matriz($('solmat'),J.sol);
+}
+function anda(d){
+  if(J.fim) return;
+  const [x,y]=topo(), nx=x+d.dx, ny=y+d.dy, e=estado(nx,ny);
+  J.cham++; J.probe={x:nx,y:ny,ok:e==='ok'}; marca([d.id]);
+  if(e==='fora'||e==='parede'){ J.bat++; setMsg(`Chamou <code>solveMazeUtil(maze, ${nx}, ${ny}, sol)</code>, mas (${nx},${ny}) ${e==='fora'?'está fora do labirinto':'é parede'}: <code>isSafe</code> dá false e a chamada faz <code>return false</code> na hora. O rato continua em (${x},${y}).`,'ruim'); desenhaJogo(); checaBeco(); return; }
+  if(e==='vis'){ J.bat++; setMsg(`(${nx},${ny}) já está no caminho: <code>sol[${nx}][${ny}] == 1</code>, <code>return false</code>. Sem essa linha o rato andaria em círculos pra sempre!`,'ruim'); desenhaJogo(); checaBeco(); return; }
+  J.pilha.push([nx,ny]); J.sol[nx][ny]=1; J.becos.delete(chave(nx,ny));
+  if(nx===N()-1&&ny===N()-1){ J.fim=true; marca(['goal','goalM']); desenhaJogo(); vitoria(); return; }
+  marca(['mark']); setMsg(`${d.s} Andou pra (${nx},${ny}): <code>sol[${nx}][${ny}] = 1</code>. Agora o topo da pilha é essa chamada.`); desenhaJogo(); checaBeco();
+}
+function checaBeco(){
+  if(J.fim) return;
+  const vs=vizinhos(); if(vs.some(v=>estado(v.x,v.y)==='ok')) return;
+  const [x,y]=topo();
+  if(J.pilha.length===1){ setMsg(`Nenhuma direção sai de (0,0)... com ${DIRS===2?'só ↓ e →':'as 4 direções'} este labirinto não tem caminho: o programa imprimiria <b>"Solution doesn't exist"</b>.${DIRS===2?' Tenta ligar a alteração ↓ → ↑ ←!':''}`,'ruim'); return; }
+  setMsg(`🧱 Beco sem saída em (${x},${y}): todas as direções dão false. No código, os <code>if</code> acabaram: hora do <code>sol[${x}][${y}] = 0; // BACKTRACK</code>. Aperte <b>Voltar</b>.`,'ruim');
+}
+$('bVoltar').onclick=()=>{
+  if(J.fim||J.pilha.length<=1) return;
+  const [x,y]=J.pilha.pop(); J.sol[x][y]=0; J.becos.add(chave(x,y)); J.voltas++; J.probe=null;
+  const [tx,ty]=topo(); marca(['unmark','ret0']);
+  setMsg(`↩ <code>sol[${x}][${y}] = 0; return false;</code> A chamada de (${x},${y}) saiu da pilha. De volta em (${tx},${ty}), que tenta outra direção.`);
+  desenhaJogo(); checaBeco();
+};
+function temSaida(){
+  const sol=J.sol.map(r=>r.slice()), n=N(); let c=0;
+  function rec(x,y){ if(++c>200000) return null; if(x===n-1&&y===n-1&&M[x][y]) return true;
+    if(x<0||y<0||x>=n||y>=n||!M[x][y]||sol[x][y]) return false; sol[x][y]=1;
+    for(const d of LAB.DIRS.slice(0,DIRS)){const r=rec(x+d.dx,y+d.dy); if(r) return true; if(r===null) return null;}
+    sol[x][y]=0; return false; }
+  const [x,y]=topo(); for(const d of LAB.DIRS.slice(0,DIRS)){const r=rec(x+d.dx,y+d.dy); if(r) return [true,c]; if(r===null) return [null,c];}
+  return [false,c];
+}
+$('bDica').onclick=()=>{ if(J.fim) return; const [r,c]=temSaida();
+  if(r===null) setMsg('Muitas possibilidades, não deu pra decidir rápido.');
+  else if(r) setMsg(`✅ Ainda dá pra chegar no queijo a partir daqui. (O programa testou ${c} chamadas pra ter certeza.)`,'bom');
+  else setMsg(`❌ Daqui não tem saída: qualquer caminho vai dar em beco. O programa testou ${c} chamadas. Você precisa voltar.`,'ruim'); };
+$('bRe').onclick=iniciaJogo;
+function vitoria(){
+  const ref=LAB.gerar(M,DIRS);
+  setMsg(`🧀 Chegou! No código: <code>x == N - 1 && y == N - 1</code>, <code>sol[x][y] = 1; return true;</code> e o true sobe a pilha inteira.`,'bom');
+  $('ovBox').innerHTML=`<h2>🧀 Queijo!</h2><p>Você fez <b>${J.cham}</b> chamadas e voltou <b>${J.voltas}</b> vez${J.voltas===1?'':'es'}.</p><p>O <code>labirinto.c</code>, sempre tentando ${DIRS===2?'↓ antes de →':'↓, →, ↑ e ← nessa ordem'}, fez <b>${ref.cham}</b> chamadas e <b>${ref.voltas}</b> volta${ref.voltas===1?'':'s'}.</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px"><button class="btn" id="ovVer">🔍 Ver o C resolver</button><button class="btn pri" id="ovDe">⟲ De novo</button></div>`;
+  $('ov').classList.remove('hide');
+  $('ovVer').onclick=()=>{$('ov').classList.add('hide');trocaModo('ver');};
+  $('ovDe').onclick=()=>{if(mapaId==='aleat')M=LAB.aleatorio(6);iniciaJogo();};
+}
+
+/* ================= VER O C ================= */
+function iniciaVer(){ pausa(); F=LAB.gerar(M,DIRS).F; f=0; $('rng').max=F.length-1; desenhaVer(); }
+function desenhaVer(){
+  const Q=F[f]; LAB.grade($('grade'),M,Q);
+  setMsg(Q.msg,Q.ton); marca(Q.linha);
+  $('sCham').textContent=Q.cham; $('sVolta').textContent=Q.voltas; $('sBat').textContent='·';
+  $('pilha').innerHTML=Q.pilha.map(([x,y])=>`<div>solveMazeUtil(maze, ${x}, ${y}, sol)</div>`).join('')||'<span style="color:var(--muted)">vazia</span>';
+  LAB.matriz($('solmat'),Q.sol); $('rng').value=f; $('cont').textContent=`${f+1} / ${F.length}`;
+}
+const vai=k=>{f=Math.max(0,Math.min(F.length-1,k));desenhaVer();};
+function pausa(){clearInterval(timer);timer=null;$('bp').textContent='▶ Rodar';}
+$('b0').onclick=()=>{pausa();vai(0);}; $('bv').onclick=()=>{pausa();vai(f-1);}; $('ba').onclick=()=>{pausa();vai(f+1);};
+$('bp').onclick=()=>{if(timer)return pausa(); if(f>=F.length-1)vai(0); $('bp').textContent='⏸ Pausar'; timer=setInterval(()=>{if(f>=F.length-1)return pausa();vai(f+1);},650);};
+$('rng').oninput=()=>{pausa();vai(+$('rng').value);};
+
+/* ================= geral ================= */
+function trocaModo(m){
+  modo=m; document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.m===m));
+  $('ctrlJogo').classList.toggle('hide',m!=='jogar'); $('ctrlVer').classList.toggle('hide',m!=='ver');
+  pausa(); if(m==='jogar') iniciaJogo(); else iniciaVer();
+}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>trocaModo(t.dataset.m));
+$('mapa').onchange=()=>{mapaId=$('mapa').value; if(LAB.MAPAS[mapaId]) setDirs(LAB.MAPAS[mapaId].dirs); carrega();};
+document.querySelectorAll('#segDir button').forEach(b=>b.onclick=()=>{setDirs(+b.dataset.d);carrega();});
+$('novoAleat').onclick=carrega;
+document.addEventListener('contextmenu',e=>e.preventDefault());
+carrega();
+</script>
+<script>window.addEventListener('modo',()=>location.reload());</script>
+<script src="canto.js"></script>
+</body>
+</html>

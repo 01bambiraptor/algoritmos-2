@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · feito a partir do material da disciplina CI1056 (UFPR) · CC BY-NC-SA 4.0 · veja LICENSE.txt -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f5efe3">
+<title>Dominó do Backtracking (tablet)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f5efe3; --card:#fffaf0; --ink:#2d2a26; --muted:#7a7266;
+    --felt:#2f8f5b; --felt-dark:#257349; --wood:#b97a43; --wood-dark:#94602f;
+    --gold:#f0a81c; --red:#d84a3a; --ok:#2f9e5a; --blue:#2c6fb3;
+    --piece:#fffdf5; --piece-edge:#d9cfb9;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Fredoka',system-ui,sans-serif;font-size:16px}
+  header{padding:18px 22px 6px;display:flex;flex-wrap:wrap;align-items:center;gap:14px;justify-content:space-between}
+  h1{margin:0;font-size:1.7rem;font-weight:600;letter-spacing:.3px}
+  h1 span{color:var(--felt)}
+  .tabs{display:flex;gap:6px;background:#eadfcb;padding:5px;border-radius:14px}
+  .tab{border:0;background:transparent;font:inherit;padding:8px 16px;border-radius:10px;cursor:pointer;color:var(--muted);font-weight:500}
+  .tab.on{background:var(--card);color:var(--ink);box-shadow:0 2px 6px #0001}
+  .bar{padding:6px 22px 12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .bar select,.btn{font:inherit;border-radius:10px;border:2px solid #d8ccb4;background:var(--card);padding:7px 12px;cursor:pointer;color:var(--ink)}
+  .btn{font-weight:500;transition:transform .08s}
+  .btn:active{transform:scale(.96)}
+  .btn.main{background:var(--gold);border-color:#d8920f;color:#3a2600}
+  .btn.go{background:var(--ok);border-color:#24814a;color:#fff}
+  .btn.red{background:#fde7e3;border-color:#f0b4aa;color:#a3271a}
+  .btn:disabled{opacity:.45;cursor:default}
+  .desc{color:var(--muted);font-size:.95rem}
+  main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:18px;padding:0 22px 28px}
+  @media (max-width:900px){main{grid-template-columns:1fr}}
+  .mesa{background:radial-gradient(ellipse at 50% 30%,#38a46a,var(--felt) 60%,var(--felt-dark));border:10px solid var(--wood);border-radius:22px;box-shadow:inset 0 0 40px #0003,0 6px 18px #0002;padding:18px;min-height:250px;display:flex;flex-direction:column;gap:14px}
+  .mesa-label{color:#e6f6ec;font-size:.85rem;opacity:.85;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .fileira{display:flex;flex-wrap:wrap;gap:3px;align-items:center;min-height:56px;padding:6px 0}
+  .vazio{color:#d5efdf;opacity:.8;font-style:italic}
+  .fim{display:inline-flex;align-items:center;justify-content:center;background:#fff3;color:#fff;border:2px dashed #fff8;border-radius:10px;padding:6px 10px;margin-left:8px;font-weight:600;font-size:.9rem}
+  .msg{background:#0000002b;color:#fff;border-radius:12px;padding:10px 14px;font-size:1rem;min-height:44px}
+  .msg.bom{background:#ffffffe6;color:var(--ok)}
+  .msg.ruim{background:#ffffffe6;color:var(--red)}
+  .rack{background:linear-gradient(#c88a52,var(--wood-dark));border-radius:14px;padding:12px;box-shadow:0 5px 12px #0002}
+  .rack-label{color:#fff3e2;font-size:.85rem;margin-bottom:8px}
+  .mao{display:flex;flex-wrap:wrap;gap:10px;min-height:56px;align-items:flex-start}
+  .slot{display:flex;flex-direction:column;align-items:center;gap:4px}
+  .girar{font:inherit;font-size:.75rem;border:0;background:#fff3e2;border-radius:8px;padding:2px 8px;cursor:pointer;color:#6b4320}
+  svg.dom{display:block;filter:drop-shadow(0 2px 2px #0003);border-radius:7px}
+  .clicavel{cursor:pointer;transition:transform .12s}
+  .clicavel:hover{transform:translateY(-4px)}
+  .encaixa svg.dom{outline:3px solid #ffe08a;outline-offset:1px}
+  .tentando{opacity:.75;outline:3px dashed var(--gold);outline-offset:2px;border-radius:8px}
+  .saindo{animation:sai .5s forwards}
+  @keyframes sai{0%{transform:none;opacity:1}100%{transform:translateY(-14px) rotate(-8deg);opacity:.25}}
+  .novo{animation:pop .3s}
+  @keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:none;opacity:1}}
+  .shake{animation:shake .35s}
+  @keyframes shake{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  .saindo svg.dom rect.base{fill:#ffd9d3}
+  .lado{display:flex;flex-direction:column;gap:14px}
+  .card{background:var(--card);border-radius:16px;padding:14px 16px;box-shadow:0 2px 10px #0000000f;border:1px solid #ecdfc8}
+  .card h3{margin:0 0 8px;font-size:1.05rem;font-weight:600}
+  .stats{display:flex;gap:10px;flex-wrap:wrap}
+  .stat{flex:1;min-width:80px;background:#f6ecda;border-radius:12px;padding:8px 10px;text-align:center}
+  .stat b{display:block;font-size:1.5rem}
+  .stat small{color:var(--muted)}
+  .stat.v b{color:var(--red)}
+  pre.code{margin:0;font-family:'JetBrains Mono',monospace;font-size:.78rem;line-height:1.55;background:#fbf6ea;border-radius:10px;padding:8px 0;overflow-x:auto}
+  pre.code div{padding:0 12px;white-space:pre;border-left:4px solid transparent}
+  pre.code div.on{background:#ffe7a8;border-left-color:var(--gold)}
+  pre.code div.on.r{background:#ffd8d1;border-left-color:var(--red)}
+  pre.code div.on.g{background:#d4f2df;border-left-color:var(--ok)}
+  .cm{color:#9a8f7d}
+  .pilha{display:flex;flex-direction:column;gap:6px;max-height:330px;overflow:auto}
+  .nivel{display:flex;align-items:center;gap:8px;background:#f6ecda;border-radius:10px;padding:6px 8px;flex-wrap:wrap}
+  .nivel.topo{background:#fff1c9;box-shadow:inset 0 0 0 2px var(--gold)}
+  .nivel .nl{font-size:.78rem;color:var(--muted);min-width:64px}
+  .chip{display:inline-block;border-radius:6px;padding:1px}
+  .chip.atual{box-shadow:0 0 0 2px var(--gold)}
+  .chip.falhou{opacity:.3;filter:grayscale(1)}
+  .chip.falhou{position:relative}
+  .nada{color:var(--red);font-size:.85rem}
+  .diario{margin:0;padding-left:18px;font-size:.9rem;color:#4b453d;max-height:170px;overflow:auto}
+  .diario li{margin:2px 0}
+  .diario li:first-child{color:var(--ink);font-weight:500}
+  .ideia{font-size:.95rem;line-height:1.45}
+  .ideia ol{margin:6px 0 0;padding-left:20px}
+  .vel{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:.9rem}
+  .maqInfo{display:flex;flex-wrap:wrap;gap:4px;align-items:center;color:#e6f6ec;font-size:.9rem}
+  .monte{margin-left:auto;background:#0002;border-radius:8px;padding:3px 10px}
+  .ultima svg.dom{outline:3px solid var(--gold);outline-offset:1px}
+  .pens{font-size:.92rem;line-height:1.45}
+  .pens ol{margin:6px 0 0;padding-left:20px}
+  .pens li.escolhida{font-weight:600;color:var(--ok)}
+  .esc{display:flex;gap:4px}
+  .esc div{flex:1;text-align:center;background:#f6ecda;border-radius:8px;padding:4px 0;font-size:.75rem;color:var(--muted)}
+  .esc div b{display:block;font-size:1.1rem;color:var(--ink)}
+  .esc div.zero{background:#d4f2df}
+  .msg .btn{margin:6px 6px 0 0;font-size:.9rem;padding:5px 10px}
+  /* ---------- tablet ---------- */
+  html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+  h1{font-size:1.9rem}
+  .tab{padding:12px 20px;font-size:1.05rem}
+  .btn,.bar select{min-height:50px;padding:10px 18px;font-size:1.05rem}
+  .girar{padding:7px 16px;font-size:.95rem}
+  .clicavel:hover{transform:none}
+  @media (hover:hover){.clicavel:hover{transform:translateY(-4px)}}
+  .clicavel:active{transform:scale(.93)}
+  .mao{gap:14px;min-height:64px}
+  .msg{font-size:1.1rem}
+  .msg .btn{font-size:1.05rem;padding:10px 18px}
+  .vel input{width:170px;height:34px}
+  main{grid-template-columns:minmax(0,1.55fr) minmax(330px,1fr)}
+  .card h3{cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+  .card h3::after{content:'▾';color:var(--muted);font-size:1rem}
+  .card.fechado h3::after{content:'▸'}
+  .card.fechado>:not(h3){display:none!important}
+  .card.fechado h3{margin:0}
+  .pilha{max-height:none}
+  .diario{max-height:260px}
+  @media (orientation:portrait), (max-width:980px){
+    main{grid-template-columns:1fr;padding-bottom:110px}
+    #ctrlJogar,#ctrlAlgo,#ctrlPartida{position:fixed;left:0;right:0;bottom:0;z-index:10;justify-content:center;
+      background:#f5efe3f2;padding:12px 16px calc(12px + env(safe-area-inset-bottom))!important;box-shadow:0 -4px 14px #0002;backdrop-filter:blur(6px)}
+  }
+  .arv{list-style:none;padding-left:14px;margin:3px 0;border-left:2px dashed #e0d3bb}
+  .arv summary{cursor:pointer}
+  .arv li{margin:2px 0}
+  .v{font-weight:600}.v.ok{color:var(--ok)}.v.ruim{color:var(--red)}.v.emp{color:var(--muted)}
+  .linha{font-size:.85rem;color:#5b544a;margin:2px 0 6px}
+  .badge{display:inline-block;background:#d4f2df;color:#1f6e3f;border-radius:8px;padding:2px 8px;font-size:.85rem;font-weight:600}
+  .hide{display:none!important}
+</style>
+<script src="modo.js"></script>
+</head>
+<body>
+<header>
+  <a class="btn" href="index.html" style="text-decoration:none;display:inline-flex;align-items:center" >🕹 Início</a>
+  <h1>Dominó do <span>Backtracking</span></h1>
+  <div class="tabs">
+    <button class="tab on" data-modo="jogar">🧑 Você joga</button>
+    <button class="tab" data-modo="algo">🤖 O algoritmo joga</button>
+    <button class="tab" data-modo="partida">⚔️ Contra a máquina</button>
+  </div>
+</header>
+
+<div class="bar" id="barDesafio">
+  <select id="desafio"></select>
+  <span class="desc" id="desc"></span>
+</div>
+
+<div style="max-width:1200px;margin:0 auto;padding:0 18px 10px"><span id="modoSlot" data-ap='com 💡 dica e a máquina no nível que você escolher' data-esp='sem dica e a máquina sempre no difícil'></span></div>
+<main>
+  <section class="lado">
+    <div class="mesa">
+      <div class="mesa-label"><span id="mesaTxt">Mesa: monte uma fileira usando <b>todas</b> as peças, sempre encaixando os números.</span><span id="nivelInfo"></span></div>
+      <div class="maqInfo hide" id="maqInfo"></div>
+      <div class="fileira" id="fileira"></div>
+      <div class="msg" id="msg"></div>
+    </div>
+    <div class="rack">
+      <div class="rack-label" id="maoLabel">Sua mão</div>
+      <div class="mao" id="mao"></div>
+    </div>
+
+    <div class="bar" style="padding:0" id="ctrlJogar">
+      <button class="btn red" id="desfazer">↩ Desfazer última peça</button>
+      <button class="btn" id="reiniciarJ">⟲ Recomeçar</button>
+      <button class="btn main hide" id="verAlgo">🤖 Ver o algoritmo resolver este</button>
+    </div>
+    <div class="bar hide" style="padding:0" id="ctrlAlgo">
+      <button class="btn main" id="passo">▶| Um passo</button>
+      <button class="btn go" id="play">▶ Rodar</button>
+      <button class="btn" id="reiniciarA">⟲ Recomeçar</button>
+      <label class="vel">devagar <input type="range" id="vel" min="80" max="1600" value="700" style="direction:rtl"> rápido</label>
+    </div>
+    <div class="bar hide" style="padding:0" id="ctrlPartida">
+      <button class="btn main" id="comprar">🂠 Comprar do monte</button>
+      <button class="btn red" id="passar">⏭ Passar</button>
+      <button class="btn soAprender" id="dica">💡 Dica</button>
+      <select id="nivelM">
+        <option value="facil">Máquina fácil</option>
+        <option value="medio">Máquina média</option>
+        <option value="dificil" selected>Máquina difícil</option>
+      </select>
+      <button class="btn go" id="novaP">⟲ Nova partida</button>
+    </div>
+  </section>
+
+  <aside class="lado">
+    <div class="card" id="cardStats">
+      <div class="stats">
+        <div class="stat"><b id="sTent">0</b><small>peças colocadas</small></div>
+        <div class="stat v"><b id="sVolta">0</b><small>voltas</small></div>
+        <div class="stat"><b id="sMax">0</b><small>nível mais fundo</small></div>
+      </div>
+    </div>
+
+    <div class="card" id="cardIdeia">
+      <h3>💡 A ideia do backtracking</h3>
+      <div class="ideia">
+        É o jeito de resolver no "tenta e desfaz":
+        <ol>
+          <li><b>escolhe</b> uma peça que encaixa</li>
+          <li><b>segue</b> em frente com essa escolha</li>
+          <li>se <b>travar</b> (nenhuma peça encaixa), <b>desfaz</b> a última escolha e tenta outra</li>
+        </ol>
+        <p style="margin:8px 0 0">Cada vez que você aperta <b>Desfazer</b>, está fazendo exatamente o que o algoritmo faz. Repara no contador de voltas!</p>
+      </div>
+    </div>
+
+    <div class="card hide" id="cardPilha">
+      <h3>📚 Pilha de decisões <small class="desc">(topo em cima)</small></h3>
+      <div class="pilha" id="pilha"></div>
+    </div>
+
+    <div class="card hide" id="cardCodigo">
+      <h3>🧩 O código, linha por linha</h3>
+      <pre class="code" id="codigo"></pre>
+    </div>
+
+    <div class="card hide" id="cardPlacar">
+      <div class="stats">
+        <div class="stat"><b id="pH">0</b><small>você</small></div>
+        <div class="stat"><b id="pE">0</b><small>empates</small></div>
+        <div class="stat v"><b id="pM">0</b><small>máquina</small></div>
+      </div>
+    </div>
+
+    <div class="card hide" id="cardPens">
+      <h3>🧠 O que a máquina pensou</h3>
+      <div class="pens" id="pens"></div>
+    </div>
+
+    <div class="card hide" id="cardArvore">
+      <h3>🌳 Árvore de backtracking</h3>
+      <div class="pens" id="arvore"></div>
+    </div>
+
+    <div class="card hide" id="cardCabeca">
+      <h3>🔎 O que a máquina sabe de você</h3>
+      <div class="pens" id="cabeca"></div>
+      <div class="desc" style="margin:10px 0 4px;font-size:.85rem">Peças que ela <b>não consegue ver</b>, por número (estão na sua mão ou no monte):</div>
+      <div class="esc" id="escTab"></div>
+      <p class="desc" style="font-size:.82rem;margin:10px 0 0">Ela não vê a sua mão, então não dá pra calcular tudo como no backtracking. Ela deduz pelos seus passes e compras e aposta na probabilidade. Por isso dá pra ganhar dela!</p>
+    </div>
+
+    <div class="card hide" id="cardLogP">
+      <h3>📝 Partida</h3>
+      <ul class="diario" id="logP" style="list-style:none;padding-left:0"></ul>
+    </div>
+
+    <div class="card hide" id="cardDiario">
+      <h3>📝 Diário</h3>
+      <ol class="diario" id="diario" reversed></ol>
+    </div>
+  </aside>
+</main>
+
+<script>
+/* ---------- peças ---------- */
+const L=14,M=25,R=36;
+const PIPS={0:[],1:[[M,M]],2:[[L,L],[R,R]],3:[[L,L],[M,M],[R,R]],
+  4:[[L,L],[R,L],[L,R],[R,R]],5:[[L,L],[R,L],[M,M],[L,R],[R,R]],
+  6:[[L,L],[R,L],[L,M],[R,M],[L,R],[R,R]]};
+function dom(a,b,w=104){
+  const h=w/2; let p='';
+  for(const [x,y] of PIPS[a]) p+=`<circle cx="${x}" cy="${y}" r="4.3"/>`;
+  for(const [x,y] of PIPS[b]) p+=`<circle cx="${x+50}" cy="${y}" r="4.3"/>`;
+  return `<svg class="dom" width="${w}" height="${h}" viewBox="0 0 100 50" aria-label="${a}|${b}">
+    <rect class="base" x="1" y="1" width="98" height="48" rx="7" fill="var(--piece)" stroke="var(--piece-edge)" stroke-width="2"/>
+    <line x1="50" y1="7" x2="50" y2="43" stroke="#bfb39b" stroke-width="2"/>
+    <g fill="#2a2620">${p}</g></svg>`;
+}
+const nome=(a,b)=>`[${a}|${b}]`;
+
+/* ---------- desafios ---------- */
+function surpresa(){
+  // passeio aleatório garante que existe solução; depois embaralha e gira
+  for(;;){
+    const usadas=new Set(), seq=[]; let n=Math.floor(Math.random()*7);
+    for(let k=0;k<6;k++){
+      const op=[];
+      for(let m=0;m<=6;m++){const key=Math.min(n,m)+'-'+Math.max(n,m); if(!usadas.has(key)) op.push(m);}
+      if(!op.length) break;
+      const m=op[Math.floor(Math.random()*op.length)];
+      usadas.add(Math.min(n,m)+'-'+Math.max(n,m)); seq.push([n,m]); n=m;
+    }
+    if(seq.length<6) continue;
+    for(let i=seq.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[seq[i],seq[j]]=[seq[j],seq[i]];}
+    return seq.map(([a,b])=>Math.random()<.5?[a,b]:[b,a]);
+  }
+}
+const DESAFIOS=[
+  {nome:'1 · Aquecimento',desc:'Esse sai sem voltar nenhuma vez. Backtracking nem sempre precisa voltar!',pecas:[[1,2],[2,3],[3,4],[4,5],[5,6]]},
+  {nome:'2 · Armadilha',desc:'O caminho óbvio trava no meio. Vai precisar voltar.',pecas:[[0,1],[1,2],[2,0],[1,3],[3,5]]},
+  {nome:'3 · Impossível?',desc:'Será que dá? O algoritmo testa tudo pra ter certeza.',pecas:[[0,1],[0,2],[0,3],[1,4],[2,5]]},
+  {nome:'4 · Surpresa (sempre tem solução)',desc:'6 peças sorteadas. Existe solução, mas a ordem da mão pode enganar.',gera:surpresa},
+];
+const sel=document.getElementById('desafio');
+DESAFIOS.forEach((d,i)=>sel.insertAdjacentHTML('beforeend',`<option value="${i}">${d.nome}</option>`));
+let pecas=[];
+function carregaDesafio(){
+  const d=DESAFIOS[sel.value];
+  pecas=(d.gera?d.gera():d.pecas).map(p=>p.slice());
+  document.getElementById('desc').textContent=d.desc;
+  iniciaJogo(); iniciaAlgo();
+}
+
+/* ---------- elementos ---------- */
+const $=id=>document.getElementById(id);
+let modo='jogar';
+function setMsg(t,cls=''){const m=$('msg');m.innerHTML=t;m.className='msg '+cls;}
+function setStats(t,v,mx){$('sTent').textContent=t;$('sVolta').textContent=v;$('sMax').textContent=mx;}
+
+/* =========================================================
+   MODO 1: você joga
+   ========================================================= */
+let J;
+function iniciaJogo(){
+  J={mao:pecas.map((p,i)=>({i,a:p[0],b:p[1]})),fileira:[],tent:0,voltas:0,max:0,fim:false};
+  $('verAlgo').classList.add('hide');
+  if(modo==='jogar'){setMsg('Escolha a primeira peça. Dica: use ↻ pra girar antes de colocar.');desenhaJogo();}
+}
+const fimDaFileira=f=>f.length?f[f.length-1].b:null;
+function encaixa(p,fim){return fim===null||p.a===fim||p.b===fim;}
+function desenhaJogo(novo=false){
+  const fim=fimDaFileira(J.fileira);
+  const fil=$('fileira');
+  fil.innerHTML=J.fileira.length?J.fileira.map((p,k)=>`<span class="${novo&&k===J.fileira.length-1?'novo':''}">${dom(p.a,p.b)}</span>`).join('')
+    +`<span class="fim">fim: ${fim}</span>`:'<span class="vazio">mesa vazia</span>';
+  $('nivelInfo').textContent=`nível ${J.fileira.length} de ${pecas.length}`;
+  $('maoLabel').textContent=J.mao.length?'Sua mão (clique pra jogar; as que brilham encaixam)':'Sua mão está vazia!';
+  const mao=$('mao'); mao.innerHTML='';
+  J.mao.sort((x,y)=>x.i-y.i).forEach(p=>{
+    const s=document.createElement('div'); s.className='slot';
+    const ok=!J.fim&&J.fileira.length&&encaixa(p,fim);
+    s.innerHTML=`<div class="clicavel ${ok?'encaixa':''}">${dom(p.a,p.b)}</div>`+(J.fileira.length===0?`<button class="girar">↻ girar</button>`:'');
+    s.firstChild.onclick=()=>jogar(p,s.firstChild);
+    const g=s.querySelector('.girar'); if(g) g.onclick=()=>{[p.a,p.b]=[p.b,p.a];desenhaJogo();};
+    mao.appendChild(s);
+  });
+  $('desfazer').disabled=!J.fileira.length||J.fim;
+  setStats(J.tent,J.voltas,J.max);
+}
+function jogar(p,el){
+  if(J.fim) return;
+  const fim=fimDaFileira(J.fileira);
+  if(!encaixa(p,fim)){el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');setMsg(`${nome(p.a,p.b)} não encaixa no ${fim}.`,'ruim');return;}
+  if(fim!==null&&p.a!==fim) [p.a,p.b]=[p.b,p.a];
+  J.mao=J.mao.filter(q=>q!==p); J.fileira.push(p); J.tent++; J.max=Math.max(J.max,J.fileira.length);
+  if(!J.mao.length){
+    J.fim=true;
+    setMsg(J.voltas?`🎉 Conseguiu! Você precisou voltar ${J.voltas} ${J.voltas===1?'vez':'vezes'}. Isso foi backtracking feito à mão.`:'🎉 Conseguiu sem voltar nenhuma vez!','bom');
+    $('verAlgo').classList.remove('hide');
+  } else if(!J.mao.some(q=>encaixa(q,p.b))){
+    setMsg(`🚧 Travou! A fileira termina em ${p.b} e nada na mão encaixa. Beco sem saída: desfaz e tenta outro caminho.`,'ruim');
+    $('verAlgo').classList.remove('hide');
+  } else setMsg(`Boa. Agora precisa de uma peça com ${p.b}.`);
+  desenhaJogo(true);
+}
+$('desfazer').onclick=()=>{
+  const p=J.fileira.pop(); if(!p) return;
+  J.mao.push(p); J.voltas++;
+  setMsg(`↩ Voltou: ${nome(p.a,p.b)} saiu da mesa. Tenta outra escolha nesse ponto.`);
+  desenhaJogo();
+};
+$('reiniciarJ').onclick=iniciaJogo;
+$('verAlgo').onclick=()=>trocaModo('algo');
+
+/* =========================================================
+   MODO 2: o algoritmo joga (gerador = execução pausável)
+   ========================================================= */
+const CODIGO=[
+ '<c>/* no mesmo formato do solveKTUtil do cavalo.c */</c>',
+ 'int solveDomino(int nivel, int fim, int usada[]) {',
+ '    if (nivel == n)            <c>// usou todas as peças!</c>',
+ '        return 1;',
+ '    for (int k = 0; k < n; k++)',
+ '        for (int lado = 0; lado < 2; lado++)',
+ '            if (isSafe(k, lado, fim, usada)) {  <c>// na mão e encaixa?</c>',
+ '                usada[k] = 1;                  <c>// escolhe</c>',
+ '                if (solveDomino(nivel + 1, outraPonta(k, lado), usada) == 1)',
+ '                    return 1;',
+ '                else',
+ '                    usada[k] = 0;              <c>// backtracking</c>',
+ '            }',
+ '    return 0;                  <c>// beco sem saída</c>',
+ '}'];
+$('codigo').innerHTML=CODIGO.map((l,i)=>`<div data-l="${i}">${l.replace(/</g,'&lt;').replace(/&lt;c>/g,'<span class="cm">').replace(/&lt;\/c>/g,'</span>')}</div>`).join('');
+function marcaLinha(l,cor=''){
+  document.querySelectorAll('#codigo div').forEach(d=>d.className=(+d.dataset.l===l?'on '+cor:''));
+}
+
+let A, timer=null;
+function criaSolver(){
+  const n=pecas.length, usada=Array(n).fill(false), fileira=[], quadros=[];
+  const st={fileira,usada,quadros,tent:0,voltas:0,max:0};
+  function* rec(nivel){
+    yield {t:'entra',nivel};
+    if(nivel===n){yield {t:'resolvido'};return true;}
+    const fim=nivel?fileira[nivel-1].b:null, cands=[];
+    for(let i=0;i<n;i++){ if(usada[i]) continue;
+      const [a,b]=pecas[i];
+      for(let lado=0;lado<2;lado++){
+        if(lado===1&&a===b) continue;
+        const [x,y]=lado?[b,a]:[a,b];
+        if(fim===null||x===fim) cands.push({i,a:x,b:y});
+      }}
+    const q={nivel,fim,cands,idx:-1,falhou:new Set()}; quadros.push(q);
+    yield {t:'opcoes',nivel,fim,cands};
+    for(let k=0;k<cands.length;k++){
+      const c=cands[k]; q.idx=k;
+      yield {t:'tenta',c,nivel};
+      fileira.push(c); usada[c.i]=true; st.tent++; st.max=Math.max(st.max,fileira.length);
+      yield {t:'coloca',c,nivel};
+      if(yield* rec(nivel+1)) return true;
+      fileira.pop(); usada[c.i]=false; q.falhou.add(k); st.voltas++;
+      yield {t:'tira',c,nivel};
+    }
+    q.idx=-1;
+    yield {t:'beco',nivel,fim,vazio:!cands.length};
+    quadros.pop();
+    return false;
+  }
+  st.gen=(function*(){const ok=yield* rec(0); if(!ok) yield {t:'semSolucao'};})();
+  return st;
+}
+function iniciaAlgo(){
+  pausa(); A=criaSolver(); A.acabou=false; A.ev=null;
+  $('diario').innerHTML='';
+  if(modo==='algo'){setMsg('Aperte "Um passo" pra acompanhar com calma, ou "Rodar" pra ver tudo.');marcaLinha(-1);desenhaAlgo();}
+  $('passo').disabled=$('play').disabled=false;
+}
+function log(t){const d=$('diario');d.insertAdjacentHTML('afterbegin',`<li>${t}</li>`);while(d.children.length>40)d.lastChild.remove();}
+function passo(){
+  if(A.acabou) return;
+  const r=A.gen.next();
+  if(r.done){fim();return;}
+  const e=A.ev=r.value;
+  switch(e.t){
+    case 'entra': marcaLinha(2); setMsg(`Entrou no nível ${e.nivel}. Já usou todas as peças? ${e.nivel===pecas.length?'Sim!':'Ainda não.'}`); break;
+    case 'opcoes':
+      marcaLinha(4);
+      if(e.nivel===0) setMsg(`Nível 0: mesa vazia, qualquer peça pode começar. São ${e.cands.length} opções (cada peça dos dois lados).`);
+      else if(e.cands.length) setMsg(`Nível ${e.nivel}: a fileira termina em ${e.fim}. ${e.cands.length} ${e.cands.length===1?'opção encaixa':'opções encaixam'}.`);
+      else setMsg(`Nível ${e.nivel}: a fileira termina em ${e.fim} e nenhuma peça da mão encaixa.`,'ruim');
+      break;
+    case 'tenta': marcaLinha(6); setMsg(`isSafe: ${nome(e.c.a,e.c.b)} ainda está na mão e encaixa!`); break;
+    case 'coloca': marcaLinha(7); setMsg(`<code>usada[k] = 1</code>: coloca ${nome(e.c.a,e.c.b)} na mesa e chama <code>solveDomino(${e.nivel+1}, ${e.c.b}, usada)</code>: desce um nível.`); log(`nível ${e.nivel}: coloca ${nome(e.c.a,e.c.b)}`); break;
+    case 'tira': marcaLinha(11,'r'); setMsg(`↩ Voltou com 0: <code>usada[k] = 0; // backtracking</code>. Tira ${nome(e.c.a,e.c.b)} da mesa e tenta a próxima opção do nível ${e.nivel}.`,'ruim'); log(`<span style="color:var(--red)">nível ${e.nivel}: tira ${nome(e.c.a,e.c.b)} (volta)</span>`); break;
+    case 'beco': marcaLinha(13,'r'); setMsg(e.vazio?`🚧 Beco sem saída no nível ${e.nivel}: nenhum isSafe deu certo. <code>return 0</code> avisa o nível ${e.nivel-1} que esse caminho não serve.`:`🚧 Todas as opções do nível ${e.nivel} falharam. <code>return 0</code> pro nível ${e.nivel-1}.`,'ruim'); log(`<span style="color:var(--red)">nível ${e.nivel}: beco sem saída</span>`); break;
+    case 'resolvido': marcaLinha(3,'g'); setMsg(`🎉 Usou todas as peças! <code>return 1</code> e o 1 sobe de volta nível por nível. Colocou ${A.tent} peças e voltou ${A.voltas} ${A.voltas===1?'vez':'vezes'}.`,'bom'); log('<b style="color:var(--ok)">resolvido!</b>'); fim(); break;
+    case 'semSolucao': marcaLinha(13,'r'); setMsg(`O algoritmo testou todos os caminhos possíveis (${A.tent} peças colocadas, ${A.voltas} voltas) e nenhum usou todas. Então é impossível, e isso é uma prova!`,'ruim'); log('<b style="color:var(--red)">não existe solução</b>'); fim(); break;
+  }
+  desenhaAlgo();
+}
+function fim(){A.acabou=true;pausa();$('passo').disabled=$('play').disabled=true;}
+function desenhaAlgo(){
+  const e=A.ev||{};
+  // mesa
+  let html=A.fileira.map((p,k)=>`<span class="${e.t==='coloca'&&k===A.fileira.length-1?'novo':''}">${dom(p.a,p.b)}</span>`).join('');
+  if(e.t==='tenta') html+=`<span class="tentando">${dom(e.c.a,e.c.b)}</span>`;
+  if(e.t==='tira') html+=`<span class="saindo">${dom(e.c.a,e.c.b)}</span>`;
+  const fim=fimDaFileira(A.fileira);
+  html+=A.fileira.length?`<span class="fim">fim: ${fim}</span>`:'';
+  $('fileira').innerHTML=html||'<span class="vazio">mesa vazia</span>';
+  $('nivelInfo').textContent=`nível ${A.fileira.length} de ${pecas.length}`;
+  // mão
+  $('maoLabel').textContent='Mão do algoritmo';
+  $('mao').innerHTML=pecas.map((p,i)=>A.usada[i]?'':`<div class="slot"><div class="${e.c&&e.c.i===i&&e.t==='tenta'?'tentando':''}">${dom(p[0],p[1])}</div></div>`).join('')||'<span class="vazio" style="color:#fff3e2">vazia</span>';
+  // pilha
+  const pl=$('pilha');
+  pl.innerHTML=A.quadros.length?A.quadros.slice().reverse().map((q,k)=>{
+    const chips=q.cands.length?q.cands.map((c,j)=>`<span class="chip ${q.falhou.has(j)?'falhou':''} ${j===q.idx?'atual':''}" title="${q.falhou.has(j)?'já testou, falhou':j===q.idx?'escolha atual':'ainda vai testar'}">${dom(c.a,c.b,54)}</span>`).join(''):'<span class="nada">nenhuma encaixa ✗</span>';
+    return `<div class="nivel ${k===0?'topo':''}"><span class="nl">nível ${q.nivel}<br>${q.fim===null?'início':'fim: '+q.fim}</span>${chips}</div>`;
+  }).join(''):'<span class="desc">vazia (nenhuma chamada ativa)</span>';
+  setStats(A.tent,A.voltas,A.max);
+}
+function pausa(){clearTimeout(timer);timer=null;$('play').textContent='▶ Rodar';$('play').classList.add('go');}
+function roda(){passo(); if(!A.acabou) timer=setTimeout(roda,+$('vel').value);}
+$('passo').onclick=()=>{pausa();passo();};
+$('play').onclick=()=>{if(timer){pausa();}else{$('play').textContent='⏸ Pausar';roda();}};
+$('reiniciarA').onclick=iniciaAlgo;
+
+
+/* =========================================================
+   MODO 3: partida contra a máquina
+   ========================================================= */
+let P=null, timerM=null; const placar={h:0,m:0,e:0};
+const soma=p=>p.a+p.b;
+const NIVEL={facil:'fácil',medio:'média',dificil:'difícil'};
+function costas(){return `<svg class="dom" width="26" height="48" viewBox="0 0 50 100"><rect x="1" y="1" width="48" height="98" rx="7" fill="#c0392b" stroke="#8e2a20" stroke-width="2"/><rect x="9" y="9" width="32" height="82" rx="4" fill="none" stroke="#f6d27a" stroke-width="2"/><circle cx="25" cy="50" r="7" fill="#f6d27a"/></svg>`;}
+function embaralha(v){for(let i=v.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[v[i],v[j]]=[v[j],v[i]];}return v;}
+function logP(t){const d=$('logP');d.insertAdjacentHTML('afterbegin',`<li>${t}</li>`);}
+const pontas=()=>P.mesa.length?[P.mesa[0].a,P.mesa[P.mesa.length-1].b]:null;
+
+function novaPartida(){
+  clearTimeout(timerM);
+  const todas=[];for(let a=0;a<=6;a++)for(let b=a;b<=6;b++)todas.push({a,b});
+  embaralha(todas);
+  P={humano:todas.slice(0,7),maquina:todas.slice(7,14),monte:todas.slice(14),mesa:[],passes:0,fim:false,escolha:null,
+     naoTem:new Set(),talvezNao:new Set(),pens:'Esperando a primeira jogada.',arvore:'',nivel:$('nivelM').value,vez:'h'};
+  $('logP').innerHTML='';
+  const dupla=m=>Math.max(-1,...m.filter(p=>p.a===p.b).map(p=>p.a));
+  const dh=dupla(P.humano), dm=dupla(P.maquina);
+  if(dh!==dm) P.vez=dh>dm?'h':'m';
+  else P.vez=Math.max(...P.humano.map(soma))>=Math.max(...P.maquina.map(soma))?'h':'m';
+  const d=P.vez==='h'?dh:dm;
+  logP(`${P.vez==='h'?'Você começa':'A máquina começa'} (${d>=0?`tem a maior dupla [${d}|${d}]`:'tem a peça mais alta'}).`);
+  desenhaPartida();
+  if(P.vez==='m') agendaMaquina(); else setMsg('Sua vez! Qualquer peça pode abrir a mesa.');
+}
+function movimentos(mao){
+  const pt=pontas(), mv=[];
+  for(const p of mao){
+    if(!pt){mv.push({p,lado:'d'});continue;}
+    const [e,d]=pt;
+    if(p.a===e||p.b===e) mv.push({p,lado:'e'});
+    if((p.a===d||p.b===d)&&e!==d) mv.push({p,lado:'d'});
+  }
+  return mv;
+}
+function pontasDepois(m){
+  const pt=pontas(), p=m.p; if(!pt) return [p.a,p.b];
+  const [e,d]=pt;
+  return m.lado==='e'?[p.b===e?p.a:p.b,d]:[e,p.a===d?p.b:p.a];
+}
+function aplica(quem,m){
+  const mao=quem==='h'?P.humano:P.maquina, p=m.p, pt=pontas();
+  mao.splice(mao.indexOf(p),1);
+  let q;
+  if(!pt){q={a:p.a,b:p.b};P.mesa.push(q);}
+  else if(m.lado==='e'){q=p.b===pt[0]?{a:p.a,b:p.b}:{a:p.b,b:p.a};P.mesa.unshift(q);}
+  else {q=p.a===pt[1]?{a:p.a,b:p.b}:{a:p.b,b:p.a};P.mesa.push(q);}
+  P.ultima=q; P.passes=0;
+  if(!mao.length) fimPartida(quem,quem==='h'?'🎉 Você bateu! Ganhou da máquina.':'🤖 A máquina bateu. Ela ganhou essa.');
+}
+function clicaHumano(p,el){
+  if(P.fim||P.vez!=='h') return;
+  const mv=movimentos([p]);
+  if(!mv.length){el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');setMsg(`${nome(p.a,p.b)} não encaixa em nenhuma ponta.`,'ruim');return;}
+  if(mv.length===1) return jogaHumano(mv[0]);
+  P.escolha=p; desenhaPartida();
+}
+function jogaHumano(m){
+  P.escolha=null; P.arvore=''; P.talvezNao.delete(m.p.a); P.talvezNao.delete(m.p.b);
+  aplica('h',m); logP(`Você jogou ${nome(m.p.a,m.p.b)}.`);
+  if(!P.fim){P.vez='m';desenhaPartida();agendaMaquina();}
+}
+$('comprar').onclick=()=>{
+  if(P.fim||P.vez!=='h'||movimentos(P.humano).length||!P.monte.length) return;
+  const [e,d]=pontas(); P.talvezNao.add(e); P.talvezNao.add(d);
+  P.humano.push(P.monte.pop());
+  logP(`Você comprou. A máquina anotou: na hora, você não tinha ${e===d?e:e+' nem '+d}.`);
+  desenhaPartida(); avisaHumano();
+};
+$('passar').onclick=()=>{
+  if(P.fim||P.vez!=='h'||movimentos(P.humano).length||P.monte.length) return;
+  const [e,d]=pontas(); P.naoTem.add(e); P.naoTem.add(d); P.talvezNao.delete(e); P.talvezNao.delete(d);
+  P.passes++; logP(`Você passou. A máquina anotou: você não tem ${e===d?e:e+' nem '+d}, com certeza.`);
+  if(P.passes>=2) return travou();
+  P.vez='m'; desenhaPartida(); agendaMaquina();
+};
+function agendaMaquina(){clearTimeout(timerM);setMsg('🤖 A máquina está pensando...');timerM=setTimeout(turnoMaquina,1000);}
+function turnoMaquina(){
+  if(P.fim||modo!=='partida') return;
+  let mv=movimentos(P.maquina), c=0;
+  while(!mv.length&&P.monte.length){P.maquina.push(P.monte.pop());c++;mv=movimentos(P.maquina);}
+  if(c) logP(`A máquina comprou ${c} ${c===1?'peça':'peças'}.`);
+  if(!mv.length){
+    P.passes++; logP('A máquina passou.'); P.pens='Nenhuma peça minha encaixa e o monte acabou. Passo a vez.';
+    if(P.passes>=2) return travou();
+    P.vez='h'; desenhaPartida(); avisaHumano(); return;
+  }
+  let m=null;
+  if(P.nivel==='dificil'&&!P.monte.length){
+    const A=analisa('m');
+    P.arvore=htmlAnalise(A,'m','<span class="badge">🌳 backtracking ligado</span>');
+    if(!A.grande){
+      m=mv.find(x=>x.p.a+'-'+x.p.b===A.res[0].passo.p.a+'-'+A.res[0].passo.p.b&&x.lado===A.res[0].passo.lado)
+        ||mv.find(x=>(x.p.a===A.res[0].passo.p.a&&x.p.b===A.res[0].passo.p.b)||(x.p.a===A.res[0].passo.p.b&&x.p.b===A.res[0].passo.p.a));
+      P.pens=`<b>Difícil, fim de jogo:</b> o monte acabou, então não tem mais nada escondido. Parei de chutar e fiz backtracking em todas as jogadas possíveis (veja a árvore). Joguei ${nome(m.p.a,m.p.b)}: ${rotuloV(A.res[0].v,'m')}`;
+    }
+  }
+  if(!m) m=escolheMaquina(mv);
+  aplica('m',m); logP(`A máquina jogou ${nome(m.p.a,m.p.b)}.`);
+  if(!P.fim){P.vez='h';desenhaPartida();avisaHumano();}
+}
+function avisaHumano(){
+  if(movimentos(P.humano).length) setMsg('Sua vez! As peças que brilham encaixam.');
+  else if(P.monte.length) setMsg('Nenhuma peça sua encaixa. Compre do monte.','ruim');
+  else setMsg('Nenhuma peça encaixa e o monte acabou. Você precisa passar.','ruim');
+}
+
+/* ---------- fim de jogo: backtracking de verdade (minimax) ---------- */
+function analisa(quem){
+  // quem = quem vai jogar agora ('m' ou 'h'). Só funciona com o monte vazio:
+  // aí o que eu não vejo está todo na mão do outro, e não sobra nada escondido.
+  const M=P.maquina.map(p=>({a:p.a,b:p.b})), H=P.humano.map(p=>({a:p.a,b:p.b}));
+  const [e0,d0]=pontas(), CAP=300000; let nos=0, grava=false;
+  const somaM=v=>v.reduce((s,p)=>s+p.a+p.b,0);
+  function jogadas(mao,e,d){const r=[];mao.forEach((p,i)=>{if(p.a===e||p.b===e)r.push({i,lado:'e'});if((p.a===d||p.b===d)&&e!==d)r.push({i,lado:'d'});});return r;}
+  function rec(vez,e,d,passes){
+    if(++nos>CAP) throw 'grande';
+    if(!M.length) return {v:1,linha:[],fim:'🤖 bate'};
+    if(!H.length) return {v:-1,linha:[],fim:'🧑 bate'};
+    if(passes>=2){const sm=somaM(M),sh=somaM(H);return {v:sm<sh?1:sm>sh?-1:0,linha:[],fim:`travou (🤖 ${sm} × 🧑 ${sh} pontos)`};}
+    const mao=vez==='m'?M:H, outro=vez==='m'?'h':'m', js=jogadas(mao,e,d);
+    if(!js.length){const r=rec(outro,e,d,passes+1);return {v:r.v,linha:[{quem:vez,passa:true},...r.linha],fim:r.fim,kids:grava?[{quem:vez,passa:true,...r}]:null};}
+    let best=null; const kids=grava?[]:null;
+    for(const j of js){
+      const p=mao[j.i]; let ne=e,nd=d;
+      if(j.lado==='e') ne=p.a===e?p.b:p.a; else nd=p.a===d?p.b:p.a;
+      mao.splice(j.i,1);                         // escolhe
+      const r=rec(outro,ne,nd,0);                // desce um nível
+      mao.splice(j.i,0,p);                       // volta! desfaz
+      const passo={quem:vez,p:{a:p.a,b:p.b},lado:j.lado};
+      if(kids) kids.push({...passo,...r});
+      if(!best||(vez==='m'?r.v>best.v:r.v<best.v)) best={v:r.v,linha:[passo,...r.linha],fim:r.fim};
+    }
+    best.kids=kids; return best;
+  }
+  function raiz(){
+    const mao=quem==='m'?M:H, outro=quem==='m'?'h':'m';
+    return jogadas(mao,e0,d0).map(j=>{
+      const p=mao[j.i]; let ne=e0,nd=d0;
+      if(j.lado==='e') ne=p.a===e0?p.b:p.a; else nd=p.a===d0?p.b:p.a;
+      mao.splice(j.i,1); const r=rec(outro,ne,nd,0); mao.splice(j.i,0,p);
+      return {passo:{quem,p:{a:p.a,b:p.b},lado:j.lado},...r};
+    });
+  }
+  let res;
+  try{res=raiz();}catch(x){return {grande:true,nos};}
+  const total=nos;
+  if(total<=160){grava=true;nos=0;res=raiz();}
+  const bom=r=>quem==='m'?r.v:-r.v;
+  res.sort((x,y)=>bom(y)-bom(x));
+  return {res,total,arvore:grava,bom};
+}
+function rotuloV(v,quem){const b=quem==='m'?v:-v;return b>0?'<span class="v ok">vitória garantida ✔</span>':b<0?'<span class="v ruim">derrota se o outro jogar certo ✗</span>':'<span class="v emp">empate</span>';}
+function txtPasso(s){return s.passa?`${s.quem==='m'?'🤖':'🧑'} passa`:`${s.quem==='m'?'🤖':'🧑'} ${nome(s.p.a,s.p.b)} ${s.lado==='e'?'◀':'▶'}`;}
+function htmlArvore(kids,quem){
+  return '<ul class="arv">'+kids.map(k=>{
+    const lab=`${txtPasso(k)} · ${rotuloV(k.v,quem)}`;
+    return k.kids&&k.kids.length?`<li><details><summary>${lab}</summary>${htmlArvore(k.kids,quem)}</details></li>`:`<li>${lab} → 🏁 ${k.fim}</li>`;
+  }).join('')+'</ul>';
+}
+function htmlAnalise(A,quem,titulo){
+  if(A.grande) return `${titulo}<br>Passou de 300 mil situações e eu parei: o número de caminhos cresce exponencialmente! Nessa jogada ${quem==='m'?'eu volto pro palpite':'não dá pra calcular'}.`;
+  const oculto=quem==='m'?P.humano:P.maquina;
+  let h=`${titulo}<br>O monte acabou, então sei exatamente a mão ${quem==='m'?'sua':'da máquina'}: ${oculto.map(p=>nome(p.a,p.b)).join(' ')}. Testei cada jogada até o fim do jogo, voltando pra tentar as outras: <b>${A.total.toLocaleString('pt-BR')} ${A.total===1?'situação':'situações'}</b> exploradas.<ol>`;
+  h+=A.res.map((r,k)=>`<li class="${k===0?'escolhida':''}">${txtPasso(r.passo)}: ${rotuloV(r.v,quem)}<div class="linha">melhor sequência: ${[r.passo,...r.linha].map(txtPasso).join(' → ')} → 🏁 ${r.fim}</div></li>`).join('')+'</ol>';
+  if(A.arvore) h+=`<div class="desc" style="margin:6px 0 2px">Árvore completa (toque pra abrir os ramos):</div>`+htmlArvore(A.res.map(r=>({...r.passo,...r})),quem);
+  else h+=`<div class="desc">A árvore inteira é grande demais pra desenhar, então mostro só o melhor caminho de cada jogada.</div>`;
+  return h;
+}
+$('dica').onclick=()=>{
+  if(P.fim||P.vez!=='h'||P.monte.length) return;
+  if(!movimentos(P.humano).length){P.arvore='💡 Você não tem jogada: precisa passar.';desenhaPartida();return;}
+  const A=analisa('h');
+  P.arvore=htmlAnalise(A,'h','<span class="badge">💡 dica pra você</span>');
+  desenhaPartida(); $('cardArvore').classList.remove('fechado');
+  $('cardArvore').scrollIntoView({behavior:'smooth',block:'nearest'});
+};
+
+function escondidas(x){let v=0;for(const p of [...P.mesa,...P.maquina]) if(p.a===x||p.b===x) v++;return 7-v;}
+const ladoTxt=l=>l==='e'?'na esquerda':'na direita';
+function escolheMaquina(mv){
+  if(P.nivel==='facil'){
+    P.pens=`<b>Fácil:</b> jogo a primeira peça que encaixa, sem pensar.<br>→ ${nome(mv[0].p.a,mv[0].p.b)} ${ladoTxt(mv[0].lado)}`;
+    return mv[0];
+  }
+  if(P.nivel==='medio'){
+    let b=mv[0]; for(const m of mv) if(soma(m.p)>soma(b.p)) b=m;
+    P.pens=`<b>Média:</b> me livro da peça mais pesada, pra perder menos pontos se o jogo travar.<br>→ ${nome(b.p.a,b.p.b)} (${soma(b.p)} pontos)`;
+    return b;
+  }
+  const notas=mv.map(m=>{
+    const resto=P.maquina.filter(q=>q!==m.p), [e,d]=pontasDepois(m), ps=e===d?[e]:[e,d];
+    let nota=soma(m.p)*0.4+(m.p.a===m.p.b?1.5:0); const mot=[];
+    for(const x of ps){
+      const esc=escondidas(x), minhas=resto.filter(q=>q.a===x||q.b===x).length;
+      if(P.naoTem.has(x)){nota+=8;mot.push(`você não tem ${x}`);}
+      else if(P.talvezNao.has(x)){nota+=3;mot.push(`talvez não tenha ${x}`);}
+      else {nota-=esc*0.8;mot.push(`${esc} escondida${esc===1?'':'s'} com ${x}`);}
+      nota+=minhas*1.2; if(minhas) mot.push(`tenho mais ${minhas} com ${x}`);
+    }
+    return {m,nota,ps,mot};
+  }).sort((a,b)=>b.nota-a.nota);
+  P.pens='<b>Difícil:</b> dou uma nota pra cada jogada possível. Gosto de deixar pontas que você provavelmente não tem e que eu consigo continuar.<ol>'+
+    notas.slice(0,5).map((n,k)=>`<li class="${k===0?'escolhida':''}">${nome(n.m.p.a,n.m.p.b)} ${ladoTxt(n.m.lado)} → pontas ${n.ps.join(' e ')}: ${n.mot.join(', ')}. <b>nota ${n.nota.toFixed(1)}</b>${k===0?' ✔':''}</li>`).join('')+'</ol>';
+  return notas[0].m;
+}
+function fimPartida(v,txt){
+  P.fim=true; clearTimeout(timerM);
+  placar[v]++;
+  setMsg(txt,v==='h'?'bom':v==='m'?'ruim':'');
+  logP(`<b>${txt}</b>`); desenhaPartida(); setMsg(txt,v==='h'?'bom':v==='m'?'ruim':'');
+}
+function travou(){
+  const sh=P.humano.reduce((s,p)=>s+soma(p),0), sm=P.maquina.reduce((s,p)=>s+soma(p),0);
+  const v=sh<sm?'h':sm<sh?'m':'e';
+  fimPartida(v,`🔒 Jogo travado! Contagem: você ${sh} pontos, máquina ${sm}. ${v==='h'?'Menos pontos, você ganhou!':v==='m'?'A máquina ganhou nos pontos.':'Empate!'}`);
+}
+function desenhaPartida(){
+  const pt=pontas();
+  $('maqInfo').innerHTML=`<span>🤖 Máquina ${NIVEL[P.nivel]}:</span>`+
+    (P.fim?P.maquina.map(p=>dom(p.a,p.b,50)).join(''):P.maquina.map(costas).join(''))+
+    `<span class="monte">monte: ${P.monte.length}</span>`;
+  $('fileira').innerHTML=pt?`<span class="fim" style="margin:0 6px 0 0">◀ ${pt[0]}</span>`+
+    P.mesa.map(q=>`<span class="${q===P.ultima?'ultima novo':''}">${dom(q.a,q.b,74)}</span>`).join('')+
+    `<span class="fim">${pt[1]} ▶</span>`:'<span class="vazio">mesa vazia</span>';
+  $('nivelInfo').textContent=P.fim?'fim da partida':P.vez==='h'?'👉 sua vez':'🤖 vez da máquina';
+  $('maoLabel').textContent=`Sua mão (${P.humano.length} ${P.humano.length===1?'peça':'peças'})`;
+  const mao=$('mao'); mao.innerHTML='';
+  const jogaveis=new Set(P.vez==='h'&&!P.fim?movimentos(P.humano).map(m=>m.p):[]);
+  P.humano.forEach(p=>{
+    const s=document.createElement('div'); s.className='slot';
+    s.innerHTML=`<div class="clicavel ${jogaveis.has(p)?'encaixa':''} ${P.escolha===p?'tentando':''}">${dom(p.a,p.b)}</div>`;
+    s.firstChild.onclick=()=>clicaHumano(p,s.firstChild); mao.appendChild(s);
+  });
+  if(P.escolha&&pt){
+    $('msg').className='msg';
+    $('msg').innerHTML=`${nome(P.escolha.a,P.escolha.b)} encaixa nas duas pontas. Onde colocar?<br><button class="btn" id="ladoE">◀ esquerda (${pt[0]})</button><button class="btn" id="ladoD">direita (${pt[1]}) ▶</button>`;
+    $('ladoE').onclick=()=>jogaHumano({p:P.escolha,lado:'e'});
+    $('ladoD').onclick=()=>jogaHumano({p:P.escolha,lado:'d'});
+  }
+  const minha=P.vez==='h'&&!P.fim, temJogada=movimentos(P.humano).length>0;
+  $('comprar').disabled=!(minha&&!temJogada&&P.monte.length);
+  $('passar').disabled=!(minha&&!temJogada&&!P.monte.length);
+  $('pH').textContent=placar.h;$('pM').textContent=placar.m;$('pE').textContent=placar.e;
+  $('pens').innerHTML=P.pens;
+  $('arvore').innerHTML=P.arvore||'Aparece quando o <b>monte acabar</b>. Antes disso tem peça escondida e não dá pra calcular tudo. Depois, as peças que você não vê estão todas na mão do outro, e aí dá pra fazer backtracking de verdade: a máquina difícil faz isso sozinha, e você pode pedir uma <b>Dica</b>.';
+  $('dica').disabled=!(minha&&!P.monte.length);
+  $('dica').textContent=P.monte.length?'💡 Dica (quando o monte acabar)':'💡 Dica (backtracking)';
+  const nt=[...P.naoTem].sort(), tn=[...P.talvezNao].filter(x=>!P.naoTem.has(x)).sort();
+  $('cabeca').innerHTML=(nt.length?`Com certeza você <b>não tem</b>: ${nt.join(', ')} (você passou).<br>`:'')+
+    (tn.length?`Provavelmente não tem: ${tn.join(', ')} (você comprou nesses números).`:'')+
+    (!nt.length&&!tn.length?'Por enquanto nada. Ela fica de olho quando você compra ou passa.':'');
+  let h='';for(let x=0;x<=6;x++){const e=escondidas(x);h+=`<div class="${e===0?'zero':''}"><b>${e}</b>com ${x}</div>`;}
+  $('escTab').innerHTML=h;
+}
+$('novaP').onclick=novaPartida;
+$('nivelM').onchange=novaPartida;
+
+/* ---------- troca de modo ---------- */
+function trocaModo(m){
+  modo=m;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.modo===m));
+  const algo=m==='algo', part=m==='partida', jog=m==='jogar';
+  ['ctrlAlgo','cardPilha','cardCodigo','cardDiario'].forEach(id=>$(id).classList.toggle('hide',!algo));
+  ['ctrlJogar','cardIdeia'].forEach(id=>$(id).classList.toggle('hide',!jog));
+  ['ctrlPartida','cardPlacar','cardPens','cardArvore','cardCabeca','cardLogP','maqInfo'].forEach(id=>$(id).classList.toggle('hide',!part));
+  ['barDesafio','cardStats'].forEach(id=>$(id).classList.toggle('hide',part));
+  pausa(); clearTimeout(timerM);
+  $('mesaTxt').innerHTML=part?'Partida: 7 peças pra cada um. Encaixe nas pontas e ganhe quem <b>bater</b> primeiro.':'Mesa: monte uma fileira usando <b>todas</b> as peças, sempre encaixando os números.';
+  if(algo) iniciaAlgo(); else if(jog) iniciaJogo(); else novaPartida();
+}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>trocaModo(t.dataset.modo));
+sel.onchange=carregaDesafio;
+document.querySelectorAll('.card h3').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('fechado')));
+['cardDiario','cardLogP'].forEach(id=>$(id).classList.add('fechado'));
+document.addEventListener('contextmenu',e=>e.preventDefault());
+carregaDesafio();
+</script>
+<script>window.addEventListener('modo',()=>location.reload());</script>
+<script>if(ESP()){const s=document.getElementById('nivelM'); if(s){s.value='dificil'; s.disabled=true; s.title='no especialista a máquina joga sempre no difícil';}}</script>
+<script src="canto.js"></script>
+</body>
+</html>

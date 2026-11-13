@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · feito a partir do material da disciplina CI1056 (UFPR) · CC BY-NC-SA 4.0 · veja LICENSE.txt -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f2f7fb">
+<title>Simulado</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--titulo:#2f5d7c;--ceu:#e7f2fb;--gelo:#f2f7fb;--pessego:#ffd6b0;--rosa:#fdecef;--ink:#2b3440;--muted:#6b7785;--ok:#2f9e5a;--red:#d9485f;--borda:#d5e6f3}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+body{font-family:'Fredoka',system-ui,sans-serif;color:var(--ink);background:var(--gelo);font-size:17px;line-height:1.5}
+header{display:flex;align-items:center;gap:12px;padding:12px 18px;flex-wrap:wrap;background:#fff;border-bottom:2px solid var(--borda);position:sticky;top:0;z-index:10}
+header h1{margin:0;font-size:1.45rem;color:var(--titulo)}
+.voltar{font:inherit;font-weight:600;text-decoration:none;color:var(--titulo);background:var(--ceu);border-radius:12px;padding:8px 14px}
+main{max-width:820px;margin:0 auto;padding:18px 18px 60px}
+.card{background:#fff;border-radius:22px;border:1px solid var(--borda);padding:22px 24px;box-shadow:0 2px 10px #2f5d7c10}
+h2{color:var(--titulo);margin:0 0 8px}
+.escolha{margin:14px 0}
+.escolha .rot{font-weight:600;color:var(--titulo);margin-bottom:6px}
+.seg{display:inline-flex;background:var(--ceu);border-radius:12px;padding:4px;gap:4px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;font:inherit;padding:9px 14px;border-radius:9px;cursor:pointer;color:var(--muted);font-weight:600;min-height:44px}
+.seg button.on{background:#fff;color:var(--titulo);box-shadow:0 1px 4px #0001}
+.btn{font:inherit;font-weight:600;border-radius:14px;border:2px solid var(--borda);background:#fff;color:var(--titulo);min-height:52px;padding:10px 20px;cursor:pointer}
+.btn.pri{background:var(--titulo);border-color:var(--titulo);color:#fff}
+.btn:disabled{opacity:.4}
+.btn:active{transform:scale(.96)}
+.barra{height:10px;background:var(--ceu);border-radius:99px;overflow:hidden;margin-bottom:14px}
+.barra i{display:block;height:100%;background:var(--titulo);transition:width .3s}
+.topo{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:var(--muted);font-size:.92rem}
+.chip{background:#fff1e3;border:1.5px solid var(--pessego);color:#7a4b10;border-radius:999px;padding:2px 10px;font-weight:600;font-size:.85rem}
+.enun{font-size:1.1rem;margin:6px 0 14px}
+.ops{display:flex;flex-direction:column;gap:10px}
+.ops button{font:inherit;text-align:left;border-radius:14px;border:2px solid var(--borda);background:var(--gelo);padding:12px 14px;cursor:pointer;min-height:52px}
+.ops button.sel{border-color:var(--titulo);background:#e2eef8}
+.ops button.certa{border-color:var(--ok);background:#e2f5ea}
+.ops button.errada{border-color:var(--red);background:var(--rosa)}
+.fb{margin-top:12px;border-radius:14px;padding:12px 14px;display:none}
+.fb.on{display:block}
+.fb.bom{background:#e5f6ec;border:2px solid #a9dcbc}
+.fb.ruim{background:var(--rosa);border:2px solid #f3b8c3}
+.acoes{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+code{font-family:'JetBrains Mono',monospace;background:var(--gelo);border-radius:6px;padding:0 5px;font-size:.88em}
+pre{font-family:'JetBrains Mono',monospace;background:var(--gelo);border-radius:10px;padding:8px 12px;font-size:.9rem;margin:8px 0}
+.nota{font-size:3rem;font-weight:700;color:var(--titulo);line-height:1}
+.assunto{display:grid;grid-template-columns:1fr 120px 70px auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--borda)}
+@media (max-width:600px){.assunto{grid-template-columns:1fr 80px 50px}.assunto a{grid-column:1/-1}}
+.assunto .bar{height:10px;background:var(--rosa);border-radius:99px;overflow:hidden}
+.assunto .bar i{display:block;height:100%;background:var(--ok)}
+.assunto a{text-decoration:none;color:var(--titulo);font-weight:600;background:var(--ceu);border-radius:10px;padding:4px 10px;font-size:.9rem;white-space:nowrap}
+.errou{border-left:4px solid var(--red);padding:8px 12px;margin:10px 0;background:#fffafb;border-radius:0 12px 12px 0}
+.ultimo{color:var(--muted);font-size:.92rem;margin-top:10px}
+</style>
+</head>
+<body>
+<header><a class="voltar" href="index.html">← Início</a><h1>📝 Simulado</h1></header>
+<main><div class="card" id="tela"></div></main>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const AH='aula-heap.html', AB='aula-backtracking.html', AR='aula-recursao.html', AO='aula-ordenacao.html';
+const ASS={
+ quase:['Árvore quase completa',AH+'#c2'], vetor:['Árvore no vetor (índices)',AH+'#c3'], prop:['Propriedade de heap',AH+'#c4'],
+ mh:['max-heapify',AH+'#c5'], build:['build-max-heap',AH+'#c6'], hs:['heapsort',AH+'#c7'], ins:['insere (heap.c)',AH+'#c8'], altH:['Alterações no heap',AH+'#c10'],
+ vb:['Vetores binários',AB+'#c3'], sub:['Subconjuntos',AB+'#c5'], poda:['Poda e alterações',AB+'#c6'], cav:['Passeio do cavalo',AB+'#c7'], lab:['Labirinto',AB+'#c9'],
+ rec:['Recursão e pilha',AR+'#c2'], fib:['Fibonacci',AR+'#c4'], minb:['Mínimo e Busca',AR+'#c5'], bb:['Busca binária',AR+'#c7'], recor:['Recorrências',AR+'#c8'],
+ oins:['Inserção',AO+'#c2'], osel:['Seleção',AO+'#c3'], omer:['Intercala e mergesort',AO+'#c4'], oqui:['Particiona e quicksort',AO+'#c6'],
+};
+const P1=new Set(['rec','fib','minb','bb','recor','oins','osel','omer','oqui']);
+const Q=[
+ {a:'quase',e:'Uma árvore binária quase completa tem <b>12</b> nós. Qual a altura?',o:['2','3','4','12'],c:1,x:'h = ⌊lg 12⌋ = 3, porque 2³ = 8 ≤ 12 ≤ 15.'},
+ {a:'quase',e:'Quantos nós tem uma árvore binária <b>completa</b> de altura 3?',o:['8','15','16','7'],c:1,x:'n = 2<sup>h+1</sup> − 1 = 2⁴ − 1 = 15.'},
+ {a:'quase',e:'Uma árvore quase completa tem altura 4. Qual o <b>mínimo</b> de nós que ela pode ter?',o:['15','16','31','5'],c:1,x:'Pelo teorema, n ≥ 2<sup>h</sup> = 16: cheia até o nível 3 (15 nós) mais pelo menos um nó no nível 4.'},
+ {a:'vetor',e:'Índice 1 (notas). Quem é o pai do nó 11? E os filhos do nó 6?',o:['pai 5; filhos 12 e 13','pai 5; filhos 13 e 14','pai 6; filhos 12 e 13','pai 4; filhos 11 e 12'],c:0,x:'pai(11) = 11 / 2 = 5. Filhos de 6: 12 e 13.'},
+ {a:'vetor',e:'No <code>heap.c</code> (índice 0): quanto valem <code>pai(7)</code> e <code>esquerda(3)</code>?',o:['3 e 6','3 e 7','2 e 7','4 e 6'],c:1,x:'pai(7) = (7 − 1)/2 = 3; esquerda(3) = 2·3 + 1 = 7.'},
+ {a:'vetor',e:'Índice 1, heap com <b>n = 10</b>. Quais posições são folhas?',o:['6 a 10','5 a 10','8 a 10','1 a 5'],c:0,x:'Quem tem filho é até ⌊n/2⌋ = 5. Daí pra frente (6 a 10) ninguém tem filho.'},
+ {a:'prop',e:'Índice 1. <code>v = 50 30 40 35 10</code> é heap de máximo?',o:['Sim','Não: 35 é maior que o pai 30','Não: 40 é maior que 30','Não: 10 é o menor'],c:1,x:'O 35 está na posição 4, cujo pai é a posição 2 (30). 40 e 30 são irmãos, isso não importa.'},
+ {a:'prop',e:'Num heap de máximo com 7 elementos distintos, onde <b>pode</b> estar o menor?',o:['Só na posição 7','Na raiz','Em qualquer folha (4 a 7)','Em qualquer posição'],c:2,x:'O menor não pode ser pai de ninguém, então é folha. Qualquer folha serve.'},
+ {a:'mh',e:'No pior caso, quantas comparações o <code>max-heapify</code> faz num nó de altura 3?',o:['3','6','8','2'],c:1,x:'C(k) = 2 + C(k − 1), C(0) = 0 → C(k) = 2k = 6.'},
+ {a:'mh',e:'Índice 1, <code>v = 2 9 8 5 7</code>. Como fica depois de <code>max-heapify(v, 1, 5)</code>?',o:['9 2 8 5 7','9 7 8 5 2','9 8 2 5 7','9 5 8 2 7'],c:1,x:'O 2 troca com o 9 (maior filho) → 9 2 8 5 7. A recursão desce: o 2 agora tem filhos 5 e 7, troca com o 7 → 9 7 8 5 2. A primeira opção esqueceu a recursão.'},
+ {a:'build',e:'Índice 1. Como fica <code>v = 3 9 2 1 4 5</code> depois do <code>build-max-heap</code>?',o:['9 3 5 1 4 2','9 4 5 1 3 2','9 5 4 3 1 2','9 4 5 3 1 2'],c:1,x:'i = 3: 2 ↔ 5. i = 2: ok. i = 1: 3 ↔ 9, e a recursão: 3 ↔ 4. Resultado 9 4 5 1 3 2.'},
+ {a:'build',e:'Por que o <code>build-max-heap</code> começa em ⌊n/2⌋?',o:['Pra gastar menos memória','Porque depois disso só tem folha, e folha já é heap','Porque a raiz fica no meio','É só otimização de tempo'],c:1,x:'Os nós de ⌊n/2⌋ + 1 até n não têm filhos: já satisfazem a propriedade.'},
+ {a:'build',e:'Segundo a aula 13, o <code>build-max-heap</code> faz no máximo quantas comparações?',o:['n lg n','4n','2 lg n','n²/2'],c:1,x:'Somando 2(h − i) comparações por nó de cada nível, dá no máximo 4n.'},
+ {a:'hs',e:'No heapsort, depois de <code>troca(v[1], v[n])</code>, por que v[n] já está no lugar certo?',o:['Ainda pode mudar','Era o máximo do heap, e o máximo vai no fim','O max-heapify vai arrumar','Porque é folha'],c:1,x:'v[1] era o maior de todos; na ordem crescente ele é o último.'},
+ {a:'hs',e:'Qual o custo do heapsort no pior caso, segundo a aula?',o:['≈ n²/2','≤ 2n lg n + 4n','4n','lg n'],c:1,x:'n − 1 max-heapify na raiz (2⌊lg i⌋ cada) mais o build (4n).'},
+ {a:'hs',e:'No heapsort em C (índice 0), depois de <code>troca(&v[0], &v[i])</code>, a chamada certa é:',o:['maxheapify(v, 0, n)','maxheapify(v, 0, i)','maxheapify(v, i, n)','maxheapify(v, 0, i + 1)'],c:1,x:'O heap agora tem i elementos (posições 0 a i − 1). Com n, ele bagunçaria a parte já ordenada.'},
+ {a:'ins',e:'<code>heap.c</code>, heap <code>90 70 45 25 35</code>. Depois de <code>insere(v, 80, &n)</code>, fica:',o:['90 80 45 25 35 70','90 70 80 25 35 45','80 90 45 25 35 70','90 70 45 25 35 80'],c:1,x:'80 entra na posição 5, cujo pai é a 2 (45). 45 &lt; 80: troca. O novo pai é a 0 (90): para.'},
+ {a:'ins',e:'Por que o <code>insere</code> coloca o valor novo em <code>v[*n]</code> (no fim)?',o:['Porque é mais rápido escrever no fim','Pra árvore continuar quase completa','Porque o fim é a raiz','Pra não precisar de troca'],c:1,x:'Colocar na primeira posição livre mantém a árvore sem buracos. Depois ele sobe até o lugar certo.'},
+ {a:'altH',e:'Pra virar heap de <b>mínimo</b>, o que muda no <code>maxheapify</code>?',o:['A ordem das chamadas','As duas comparações com os filhos viram &lt;','O build começa em n','Trocar esquerda por direita'],c:1,x:'A estrutura é a mesma; só o critério muda: procura o menor dos três.'},
+ {a:'altH',e:'E no <code>insere</code>, pra heap de mínimo, o while fica:',o:['while (i != 0 && v[pai(i)] > v[i])','while (i != 0 && v[pai(i)] < v[i])','while (i == 0 && v[pai(i)] > v[i])','while (i != 0 && v[i] < 0)'],c:0,x:'O valor sobe enquanto for MENOR que o pai.'},
+ {a:'vb',e:'Com <code>n = 2</code>, o que <code>vetores_binarios</code> imprime, na ordem?',o:['00 01 10 11','00 10 01 11','11 10 01 00','01 10 11 00'],c:0,x:'O ramo do 0 é explorado inteiro antes do ramo do 1.'},
+ {a:'vb',e:'Quantas chamadas de <code>vetores_binarios</code> acontecem com <code>n = 3</code>?',o:['8','15','16','7'],c:1,x:'1 + 2 + 4 + 8 = 15 = 2<sup>n+1</sup> − 1.'},
+ {a:'vb',e:'Com <code>n = 4</code>, qual o máximo de chamadas empilhadas ao mesmo tempo?',o:['4','5','16','31'],c:1,x:'A pilha é um galho da raiz até a folha: i = 0..4, ou seja n + 1.'},
+ {a:'vb',e:'Se o código fizer <code>v[i] = 1</code> e chamar <b>antes</b> do <code>v[i] = 0</code>, qual a primeira linha com n = 3?',o:['0 0 0','1 1 1','1 0 0','0 0 1'],c:1,x:'Desce sempre pelo ramo do 1 primeiro.'},
+ {a:'sub',e:'<code>all-subsets.c</code> com <code>set = {23, 10, 20}</code>. O que sai quando <code>v = 0 1 1</code>?',o:['{23}','{10, 20}','{23, 10}','{20}'],c:1,x:'v[i] = 1 quer dizer que set[i] entra: set[1] = 10 e set[2] = 20.'},
+ {a:'sub',e:'O <code>main</code> do <code>all-subsets.c</code> usa um set com 7 elementos. Quantas linhas ele imprime?',o:['7','49','128','127'],c:2,x:'2⁷ = 128 subconjuntos, contando o vazio (que sai como linha vazia).'},
+ {a:'poda',e:'Na poda "sem 1 1", por que o teste é <code>i == 0 || v[i-1] == 0</code> e não só <code>v[i-1] == 0</code>?',o:['Pra ficar mais rápido','Pra não ler v[-1] na primeira posição','Porque i começa em 1','Tanto faz'],c:1,x:'Com i = 0 não existe posição anterior. O || testa i == 0 primeiro e nem olha v[-1].'},
+ {a:'poda',e:'Quantos vetores de tamanho 3 <b>não</b> têm dois 1 seguidos?',o:['4','5','6','8'],c:1,x:'000, 001, 010, 100, 101.'},
+ {a:'cav',e:'Por que o <code>cavalo.c</code> precisa do <code>sol[next_x][next_y] = -1</code>, e o <code>vetores_binarios</code> não precisa desfazer?',o:['Porque o cavalo usa matriz','Porque o isSafe lê outras casas: uma marca esquecida bloquearia caminhos','Porque o cavalo tem 8 saltos','Não precisa, é só organização'],c:1,x:'No vetor binário ninguém lê v[i] antes de ele ser escrito de novo. No cavalo, o isSafe olha a matriz inteira.'},
+ {a:'cav',e:'No <code>solveKTUtil</code>, quem marca a casa nova com <code>movei</code>?',o:['A própria chamada da casa nova, no começo','Quem chama, antes de chamar','O isSafe','O main'],c:1,x:'<code>sol[next_x][next_y] = movei;</code> fica dentro do for, antes da chamada recursiva.'},
+ {a:'lab',e:'Qual <code>sol</code> o <code>labirinto.c</code> imprime para o labirinto do main?<pre>1 0 0 0\n1 1 0 1\n0 1 0 0\n1 1 1 1</pre>',o:['1000 / 1100 / 0100 / 0111','1000 / 1101 / 0100 / 1111','1000 / 1100 / 0100 / 1111','1100 / 0100 / 0100 / 0111'],c:0,x:'Caminho: (0,0) ↓ (1,0) → (1,1) ↓ (2,1) ↓ (3,1) → (3,2) → (3,3).'},
+ {a:'lab',e:'Com só ↓ e →, quando <code>if (sol[x][y] == 1) return false;</code> é verdadeiro?',o:['Ao bater na parede','Nunca: o rato nunca volta numa casa','No último passo','Na saída'],c:1,x:'x + y cresce a cada passo. A linha só trabalha na alteração com 4 direções.'},
+ {a:'lab',e:'Onde o <code>solveMazeUtil</code> testa se a casa serve?',o:['Antes de chamar, como o cavalo','Dentro da chamada, no começo (isSafe(maze, x, y))','No main','Não testa'],c:1,x:'Ele chama até pra parede e pra fora; essas chamadas morrem no isSafe e devolvem false.'},
+ {a:'rec',e:'O que <code>count_down_up(3)</code> imprime?',o:['3, 2, 1','3, 2, 1, 2, 3','1, 2, 3','3, 2, 1, 1, 2, 3'],c:1,x:'O printf de antes imprime na ida (3, 2), a base imprime 1, e o printf de depois imprime na volta (2, 3).'},
+ {a:'rec',e:'Se apagarmos <code>if (n == 0) return 1;</code> do fatorial, o que acontece com f(3)?',o:['Devolve 0','Devolve 6 do mesmo jeito','Não para: as chamadas continuam até estourar a pilha','Erro de compilação'],c:2,x:'Sem base, f(0) chama f(−1), que chama f(−2)... até o stack overflow.'},
+ {a:'rec',e:'Quantas multiplicações o fatorial recursivo faz pra calcular f(n)?',o:['n − 1','n','n²','2n'],c:1,x:'m(n) = 1 + m(n − 1), m(0) = 0, então m(n) = n.'},
+ {a:'fib',e:'Quantas chamadas a versão recursiva faz pra F(5)?',o:['5','8','15','25'],c:2,x:'2·F(n + 1) − 1 = 2·8 − 1 = 15.'},
+ {a:'fib',e:'Quantas adições a versão recursiva de F(6) faz?',o:['6','12','13','25'],c:1,x:'Teorema da aula 2: F(n + 1) − 1 = F(7) − 1 = 13 − 1 = 12.'},
+ {a:'minb',e:"Com v = 16 23 4 42 15 8 4, o que <code>Minimo'(v, 1, 7)</code> devolve?",o:['3','7','4','1'],c:0,x:"Os dois 4 empatam, e o passo usa &lt; estrito: o índice 7 não substitui o 3. Devolve 3."},
+ {a:'minb',e:'Com v = 16 23 4 42 15 8 4, o que <code>Busca(4, v, 1, 7)</code> devolve?',o:['3','7','não','4'],c:1,x:'A Busca olha primeiro v[b] = v[7] = 4: achou de cara, devolve 7.'},
+ {a:'minb',e:'Com v = 4 8 8 15 16 16 23 42, o que <code>BuscaSequencial(16, v, 1, 8)</code> devolve?',o:['5','6','4','não'],c:1,x:'O maior índice com v[m] ≤ 16 é o 6.'},
+ {a:'bb',e:'Com v = 4 7 8 15 16 17 23 42, quantas comparações <code>BuscaBinaria(20, v, 1, 8)</code> faz?',o:['2','3','4','8'],c:1,x:'m = 4 (15): vai pra direita [5..8]. m = 6 (17): direita [7..8]. m = 7 (23): esquerda [7..6], vazio. 3 comparações e devolve NÃO.'},
+ {a:'bb',e:'No pior caso, quantas comparações a busca binária faz em um vetor de 100 elementos?',o:['6','7','50','100'],c:1,x:'⌊lg 100⌋ + 1 = 6 + 1 = 7.'},
+ {a:'recor',e:"Qual a solução de C'(n) = 1 + C'(n − 1), com C'(1) = 0?",o:['n','n − 1','n²/2','lg n'],c:1,x:"Abrindo: C'(n) = (n − 1) + C'(1) = n − 1."},
+ {a:'oins',e:'Quantas comparações a inserção faz no pior caso com n = 6?',o:['5','15','21','36'],c:1,x:'n(n − 1)/2 = 15, com o vetor em ordem invertida.'},
+ {a:'osel',e:'A seleção sempre faz quantas comparações com n = 6?',o:['5','6','15','depende do vetor'],c:2,x:'n(n − 1)/2 = 15 sempre: o Mínimo varre o trecho inteiro em toda chamada.'},
+ {a:'omer',e:'Ao intercalar [4, 5, 6 | 1, 2, 3], quantas vezes entra no <code>Senão</code>?',o:['0','3','6','1'],c:1,x:'1, 2 e 3 vêm da direita. Depois a direita acaba e o resto vem da esquerda.'},
+ {a:'omer',e:'Qual o custo do mergesort, segundo a aula 9?',o:['≈ n²/2','≈ n lg n','≈ n','≈ lg n'],c:1,x:'C(n) = 2C(n/2) + n: são lg n níveis, cada um somando n.'},
+ {a:'oqui',e:'Com v = 6 10 13 5 8 3, quanto devolve <code>Particiona(v, 1, 6, 8)</code>?',o:['3','4','5','1'],c:1,x:'Os ≤ 8 são 6, 5, 8 e 3: quatro elementos, então m = 4. O vetor fica 6 5 8 3 13 10.'},
+ {a:'oqui',e:'Quando o quicksort atinge o pior caso?',o:['Vetor aleatório','Vetor já ordenado (partes de tamanho 0 e n − 1)','Vetor com todos diferentes','Nunca: é sempre n lg n'],c:1,x:'Com o pivô sendo v[b] e o vetor já ordenado, toda partição deixa um lado vazio: C(n) = C(n − 1) + n ≈ n²/2.'},
+];
+let modo='treino', qtd=10, cont='P2', lista=[], k=0, resp=[], escolhida=null;
+function embaralha(v){for(let i=v.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[v[i],v[j]]=[v[j],v[i]];}return v;}
+function inicio(){
+  let ult=null; try{ult=JSON.parse(localStorage.getItem('sim-alg2')||'null');}catch(e){}
+  $('tela').innerHTML=`<h2>Simulado</h2><p>Questões sorteadas de todas as aulas, no estilo das provas: ler o código e saber o que ele faz. No fim você vê em quais assuntos foi pior, com o link pra revisar.</p>
+   <div class="escolha"><div class="rot">Modo</div><div class="seg" id="sModo"><button data-v="treino" class="on">Treino (vê a resposta na hora)</button><button data-v="prova">Prova (só no fim)</button></div></div>
+   <div class="escolha"><div class="rot">Conteúdo</div><div class="seg" id="sCont"><button data-v="P2" class="on">P2 (árvores, heap, backtracking)</button><button data-v="P1">P1 (recursão e ordenação)</button><button data-v="tudo">Tudo</button></div></div>
+   <div class="escolha"><div class="rot">Quantas questões</div><div class="seg" id="sQtd"><button data-v="10" class="on">10</button><button data-v="20">20</button><button data-v="999">Todas</button></div></div>
+   <div class="acoes" style="justify-content:flex-start"><button class="btn pri" id="bIni">Começar ▸</button></div>
+   ${ult?`<div class="ultimo">Último simulado: ${ult.ac}/${ult.tot} (${ult.modo}).</div>`:''}`;
+  const seg=(id,f)=>$(id).querySelectorAll('button').forEach(b=>b.onclick=()=>{$(id).querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));f(b.dataset.v);});
+  seg('sModo',v=>modo=v); seg('sCont',v=>cont=v); seg('sQtd',v=>qtd=+v);
+  $('bIni').onclick=()=>{lista=embaralha(Q.map((q,i)=>i).filter(i=>cont==='tudo'||(cont==='P1')===P1.has(Q[i].a))).slice(0,qtd).map(i=>({...Q[i],ord:embaralha(Q[i].o.map((_,j)=>j))}));k=0;resp=[];questao();};
+}
+function questao(){
+  const q=lista[k]; escolhida=null;
+  $('tela').innerHTML=`<div class="barra"><i style="width:${k/lista.length*100}%"></i></div>
+   <div class="topo"><span>Questão ${k+1} de ${lista.length}</span><span class="chip">${ASS[q.a][0]}</span></div>
+   <div class="enun">${q.e}</div><div class="ops">${q.ord.map(j=>`<button data-j="${j}">${q.o[j]}</button>`).join('')}</div>
+   <div class="fb" id="fb"></div><div class="acoes"><button class="btn pri" id="bProx" disabled>${k<lista.length-1?'Próxima ▸':'Ver resultado ▸'}</button></div>`;
+  const bs=$('tela').querySelectorAll('.ops button');
+  bs.forEach(b=>b.onclick=()=>{
+    if(modo==='treino'&&escolhida!==null) return;
+    escolhida=+b.dataset.j; bs.forEach(x=>x.classList.toggle('sel',x===b)); $('bProx').disabled=false;
+    if(modo==='treino'){ bs.forEach(x=>x.classList.remove('sel'));
+      $('tela').querySelector(`.ops button[data-j="${q.c}"]`).classList.add('certa'); if(escolhida!==q.c) b.classList.add('errada');
+      const fb=$('fb'); fb.className='fb on '+(escolhida===q.c?'bom':'ruim'); fb.innerHTML=(escolhida===q.c?'✅ <b>Isso!</b> ':'❌ <b>Não.</b> ')+q.x; }
+  });
+  $('bProx').onclick=()=>{resp.push(escolhida); k++; if(k<lista.length) questao(); else resultado();};
+}
+function resultado(){
+  const ac=resp.filter((r,i)=>r===lista[i].c).length;
+  try{localStorage.setItem('sim-alg2',JSON.stringify({ac,tot:lista.length,modo}));}catch(e){}
+  const por={}; lista.forEach((q,i)=>{(por[q.a]=por[q.a]||{ac:0,tot:0}).tot++; if(resp[i]===q.c) por[q.a].ac++;});
+  const ord=Object.entries(por).sort((a,b)=>a[1].ac/a[1].tot-b[1].ac/b[1].tot);
+  const pct=Math.round(ac/lista.length*100);
+  const erradas=lista.map((q,i)=>({q,r:resp[i]})).filter(x=>x.r!==x.q.c);
+  $('tela').innerHTML=`<div class="barra"><i style="width:100%"></i></div><h2>Resultado</h2>
+   <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap"><span class="nota">${ac}/${lista.length}</span><span style="color:var(--muted)">${pct}% · ${pct>=80?'mandou bem! 🎉':pct>=60?'tá no caminho, revisa os vermelhos':'vale voltar nas aulas dos assuntos abaixo'}</span></div>
+   <h3 style="color:var(--titulo);margin:22px 0 4px">Por assunto <small style="color:var(--muted);font-weight:400">(do pior pro melhor)</small></h3>
+   ${ord.map(([a,v])=>`<div class="assunto"><span>${ASS[a][0]}</span><span class="bar"><i style="width:${v.ac/v.tot*100}%"></i></span><span>${v.ac}/${v.tot}</span><a href="${ASS[a][1]}">revisar ▸</a></div>`).join('')}
+   ${erradas.length?`<h3 style="color:var(--titulo);margin:22px 0 4px">O que você errou</h3>${erradas.map(({q,r})=>`<div class="errou"><div>${q.e}</div><div style="margin-top:6px">Você: <b>${r===null?'(em branco)':q.o[r]}</b> · Certa: <b>${q.o[q.c]}</b></div><div style="margin-top:6px;color:var(--muted)">${q.x}</div></div>`).join('')}`:''}
+   <div class="acoes"><button class="btn" id="bVolta">⟲ Outro simulado</button></div>`;
+  $('bVolta').onclick=inicio;
+}
+document.addEventListener('contextmenu',e=>e.preventDefault());
+inicio();
+</script>
+<script src="canto.js"></script>
+</body>
+</html>

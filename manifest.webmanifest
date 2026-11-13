@@ -1,0 +1,16 @@
+{
+  "name": "Algoritmos II · aulas, jogos e animações",
+  "short_name": "Alg II",
+  "description": "Material visual de apoio feito a partir da disciplina CI1056 (UFPR).",
+  "lang": "pt-BR",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1d4ed8",
+  "icons": [
+    {"src": "icone-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icone-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icone-mask-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

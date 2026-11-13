@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · feito a partir do material da disciplina CI1056 (UFPR) · CC BY-NC-SA 4.0 · veja LICENSE.txt -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f2f7fb">
+<title>Aula 9: Mergesort</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--titulo:#2f5d7c;--ceu:#e7f2fb;--gelo:#f2f7fb;--pessego:#ffd6b0;--rosa:#fdecef;--ink:#2b3440;--muted:#6b7785;--ok:#2f9e5a;--red:#d9485f;--gold:#f0a81c;--borda:#d5e6f3}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:'Fredoka',system-ui,sans-serif;color:var(--ink);background:var(--gelo);font-size:17px;line-height:1.55;touch-action:manipulation}
+header{position:sticky;top:0;z-index:20;background:#fffffff0;backdrop-filter:blur(6px);border-bottom:2px solid var(--borda)}
+.top{display:flex;align-items:center;gap:12px;padding:10px 18px;flex-wrap:wrap}
+.top h1{margin:0;font-size:1.45rem;color:var(--titulo)}
+.top .aula{color:var(--muted);font-size:.95rem}
+.voltar{font:inherit;font-weight:600;text-decoration:none;color:var(--titulo);background:var(--ceu);border-radius:12px;padding:8px 14px}
+nav.caps{display:flex;gap:6px;overflow-x:auto;padding:0 18px 10px;scrollbar-width:none}
+nav.caps a{white-space:nowrap;text-decoration:none;color:var(--titulo);background:var(--gelo);border:2px solid var(--borda);border-radius:999px;padding:5px 12px;font-size:.92rem;font-weight:500}
+nav.caps a.on{background:var(--titulo);color:#fff;border-color:var(--titulo)}
+main{max-width:1080px;margin:0 auto;padding:10px 18px 60px}
+section{background:#fff;border-radius:22px;padding:22px 24px;margin:18px 0;box-shadow:0 2px 10px #2f5d7c10;border:1px solid var(--borda);scroll-margin-top:110px}
+section h2{margin:0 0 6px;color:var(--titulo);font-size:1.5rem}
+section h2 .n{display:inline-flex;width:34px;height:34px;border-radius:50%;background:var(--pessego);color:var(--titulo);align-items:center;justify-content:center;margin-right:8px;font-size:1.1rem}
+.lead{color:var(--muted);margin-top:0}
+.caixa{background:var(--ceu);border-radius:16px;padding:14px 18px;margin:12px 0}
+.caixa.pessego{background:#fff1e3;border:2px solid var(--pessego)}
+.caixa.rosa{background:var(--rosa)}
+.prof{display:flex;gap:12px;align-items:flex-start;background:#fff8ef;border:2px dashed var(--pessego);border-radius:16px;padding:12px 16px;margin:12px 0}
+.prof .av{font-size:1.8rem;line-height:1}
+code,.mono{font-family:'JetBrains Mono',monospace;font-size:.88em;background:var(--ceu);border-radius:6px;padding:1px 6px}
+.dois{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:860px){.dois{grid-template-columns:1fr}}
+/* código clicável */
+.codigo{font-family:'JetBrains Mono',monospace;font-size:.86rem;background:#f8fbfe;border:2px solid var(--borda);border-radius:14px;padding:8px 0;overflow-x:auto}
+.codigo div{white-space:pre;padding:2px 14px;border-left:5px solid transparent;min-height:1.4em}
+.codigo div.cl{cursor:pointer}
+.codigo div.cl:hover{background:#eef6fd}
+.codigo div.sel{background:#fff1e3;border-left-color:var(--gold)}
+.codigo div.on{background:#ffe7a8;border-left-color:var(--gold)}
+.codigo div.on.r{background:#e2f5ea;border-left-color:var(--ok)}
+.codigo .cm{color:#8a9aa8}
+.codigo .kw{color:#2f5d7c;font-weight:600}
+.explica{background:#fff8ef;border:2px solid var(--pessego);border-radius:14px;padding:12px 16px;min-height:120px}
+.explica h4{margin:0 0 4px;color:var(--titulo)}
+/* animação */
+.anim{border:2px solid var(--borda);border-radius:18px;padding:14px;background:var(--gelo);margin-top:12px}
+.anim .palco{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(250px,1fr);gap:14px}
+@media (max-width:860px){.anim .palco{grid-template-columns:1fr}}
+.arvore{background:#fff;border-radius:14px;border:1px solid var(--borda);overflow:auto;min-height:300px}
+.arvore svg{display:block;margin:0 auto}
+.narra{font-size:1.05rem;background:#fff;border-radius:14px;border:2px solid var(--borda);padding:12px 14px;min-height:72px;margin-bottom:10px}
+.narra.bom{border-color:#a9dcbc;background:#effaf3}
+.narra.ruim{border-color:#f3b8c3;background:var(--rosa)}
+.ctrl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.btn{font:inherit;font-weight:600;border-radius:12px;border:2px solid var(--borda);background:#fff;color:var(--titulo);min-height:48px;min-width:48px;padding:8px 14px;cursor:pointer}
+.btn:active{transform:scale(.95)}
+.btn.pri{background:var(--titulo);border-color:var(--titulo);color:#fff}
+.btn:disabled{opacity:.4}
+.ctrl input[type=range]{flex:1;min-width:140px;height:34px;accent-color:var(--titulo)}
+.ctrl .cont{color:var(--muted);font-size:.85rem;min-width:70px;text-align:right}
+.painel{display:flex;flex-direction:column;gap:10px}
+.mini{background:#fff;border-radius:14px;border:1px solid var(--borda);padding:10px 12px}
+.mini h5{margin:0 0 6px;color:var(--titulo);font-size:.92rem}
+.vet{display:flex;gap:4px;flex-wrap:wrap}
+.vet div{width:42px;text-align:center;border:2px solid var(--borda);border-radius:9px;background:#fff;padding:2px 0}
+.vet div small{display:block;font-size:.7rem;color:var(--muted)}
+.vet div b{font-family:'JetBrains Mono',monospace;font-size:1.1rem}
+.vet div.cur{border-color:var(--gold);background:#fff4d6}
+.vet div.lixo b{color:#b9c4ce}
+.pilha{display:flex;flex-direction:column-reverse;gap:3px;font-family:'JetBrains Mono',monospace;font-size:.8rem}
+.pilha div{background:var(--gelo);border-radius:8px;padding:3px 8px;border:1px solid var(--borda)}
+.pilha div:last-child{background:#fff1e3;border-color:var(--gold);font-weight:600}
+.saida{font-family:'JetBrains Mono',monospace;font-size:.85rem;background:#f8fbfe;border-radius:8px;padding:6px 8px;min-height:30px;max-height:150px;overflow:auto;white-space:pre}
+.legenda{display:flex;gap:12px;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin-top:8px}
+.legenda i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:4px;vertical-align:-1px}
+.toggle{font-size:.88rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+.toggle input{width:20px;height:20px;accent-color:var(--titulo)}
+/* quiz */
+.q{border:2px solid var(--borda);border-radius:16px;padding:14px 16px;margin:12px 0;background:#fff}
+.q .enun{font-weight:500;margin-bottom:8px}
+.q .ops{display:flex;flex-wrap:wrap;gap:8px}
+.q .ops button{font:inherit;border-radius:12px;border:2px solid var(--borda);background:var(--gelo);padding:8px 14px;cursor:pointer;min-height:46px;font-family:'JetBrains Mono',monospace;font-size:.92rem}
+.q .ops button.certa{background:#e2f5ea;border-color:var(--ok)}
+.q .ops button.errada{background:var(--rosa);border-color:var(--red)}
+.q .fb{margin-top:8px;display:none}
+.q .fb.on{display:block}
+.placar{font-weight:600;color:var(--titulo)}
+/* praticar */
+.jogos{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.jogo{display:block;text-decoration:none;color:inherit;border-radius:18px;padding:16px;border:2px solid var(--borda);background:var(--gelo)}
+.jogo h3{margin:0 0 4px;color:var(--titulo)}
+.jogo .ir{display:inline-block;margin-top:8px;background:var(--titulo);color:#fff;border-radius:10px;padding:6px 14px;font-weight:600}
+table.map{border-collapse:collapse;width:100%;font-size:.95rem}
+table.map td,table.map th{border:1px solid var(--borda);padding:7px 10px;text-align:left;vertical-align:top}
+table.map th{background:var(--ceu);color:var(--titulo)}
+
+
+.vetLinha{display:flex;gap:4px;flex-wrap:wrap;margin-top:10px;justify-content:center}
+.vetLinha .cel,.ulin .cel{width:46px;border:2px solid var(--borda);border-radius:10px;background:#fff;padding:2px 0;text-align:center}
+.cel small{display:block;font-size:.7rem;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.cel b{font-family:'JetBrains Mono',monospace;font-size:1rem}
+.cel i{display:block;font-style:normal;font-weight:700;font-size:.72rem;color:#b5532b;min-height:1.1em}
+.cel.vaz{opacity:.35}.cel.sel{border-color:var(--gold);background:#fff4d6}.cel.ordC{background:#e2f5ea;border-color:#a9dcbc}
+.arvore{padding:8px;text-align:center;min-height:120px}
+.abre{font-family:'JetBrains Mono',monospace;font-size:.95rem;background:#f8fbfe;border:2px solid var(--borda);border-radius:14px;padding:10px 14px}
+.abre div{padding:3px 6px;border-radius:8px;white-space:pre-wrap}.abre .nova{background:#fff4d6}
+.abre .fim{margin-top:6px;font-family:'Fredoka';background:#e2f5ea;border:2px solid #a9dcbc}
+.barras{display:flex;gap:6px;align-items:flex-end;justify-content:center;background:#fff;border:1px solid var(--borda);border-radius:14px;padding:14px 8px 6px;flex-wrap:nowrap;overflow-x:auto}
+.bar{width:50px;flex:none;text-align:center}
+.bar .col{height:114px;display:flex;align-items:flex-end;justify-content:center}
+.bar .col span{width:36px;background:#bcd3e6;border-radius:7px 7px 2px 2px;transition:height .3s,background .3s}
+.bar b{display:block;font-family:'JetBrains Mono',monospace}
+.bar small{display:block;font-size:.7rem;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.bar i{display:block;font-style:normal;font-weight:700;font-size:.78rem;color:#b5532b;min-height:1.2em;white-space:nowrap}
+.bar.fora{opacity:.32}.bar.meta1 .col span{background:#9fd3d0}.bar.cp .col span{background:#6aa6e0}.bar.okk .col span{background:#8fd1a8}.bar.tr .col span{background:#f0a81c}
+.ulin{display:flex;gap:4px;align-items:center;justify-content:center;margin-top:8px;flex-wrap:wrap}.uro{font:700 1rem 'JetBrains Mono',monospace;color:var(--titulo);margin-right:4px}
+.seg{display:inline-flex;flex-wrap:wrap;background:var(--ceu);border-radius:12px;padding:3px;gap:3px;margin-top:6px}
+.seg button{border:0;background:transparent;font:inherit;font-size:.9rem;padding:7px 12px;border-radius:9px;cursor:pointer;color:var(--muted);font-weight:600}
+.seg button.on{background:#fff;color:var(--titulo);box-shadow:0 1px 4px #0001}
+.codigo div.mud{background:var(--rosa);border-left-color:var(--red)}
+.tab{border-collapse:collapse;margin:8px 0;font-size:.95rem}.tab td,.tab th{border:1px solid var(--borda);padding:5px 10px;text-align:center}.tab th{background:var(--ceu);color:var(--titulo)}
+.leg{display:flex;gap:12px;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin-top:6px}.leg span::before{content:'';display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:4px;vertical-align:-1px;background:var(--c)}
+</style>
+</head>
+<body data-arquivo="a09.html" data-secoes="c4,c5" data-titulo="Mergesort" data-num="9" data-resumo="Duas metades ordenadas viram uma só, sempre pegando o menor dos topos." data-selo="🧩" data-ordem='[["a02.html", "Recursão"], ["a03.html", "Mínimo de um vetor"], ["a04-05.html", "Busca em vetor"], ["a06.html", "Busca binária"], ["rev-recursao.html", "Recorrências e revisão"], ["a07.html", "Ordenação por inserção"], ["a08.html", "Ordenação por seleção"], ["a09.html", "Mergesort"], ["a10.html", "Quicksort"], ["rev-ordenacao.html", "Revisão de ordenação"], ["a11.html", "Árvores quase completas e heap"], ["a12.html", "max-heapify e build-max-heap"], ["a13.html", "Heapsort e heap.c"], ["rev-heap.html", "Revisão de heap"], ["bt-vetores.html", "Vetores binários e subconjuntos"], ["bt-cavalo.html", "Passeio do cavalo"], ["bt-labirinto.html", "Labirinto do rato"], ["rev-backtracking.html", "Revisão de backtracking"]]'>
+<header>
+  <div class="top">
+    <a class="voltar" href="index.html#portas">← Portas</a>
+    <h1>📖 Intercala e mergesort</h1>
+    <span class="aula">aula 9 · dividir, ordenar e juntar · conteúdo da P1</span>
+  </div>
+  <nav class="caps" id="caps">
+    <a href="#c1">1 · O problema</a><a href="#c2">2 · Inserção</a><a href="#c3">3 · Seleção</a><a href="#c4">4 · Intercala</a><a href="#c5">5 · Mergesort</a><a href="#c6">6 · Particiona</a><a href="#c7">7 · Quicksort</a><a href="#c8">8 · Comparando</a><a href="#c9">9 · Ler o código</a><a href="#c10">10 · Alterar</a><a href="#c11">🎮 Praticar</a>
+  </nav>
+</header>
+<main>
+
+<section id="c1">
+  <h2><span class="n">1</span>O problema da ordenação</h2>
+  <p class="lead">Ordenar é rearranjar um conjunto em ordem crescente (ou decrescente). Serve pra organizar os dados e facilitar o uso deles: a busca binária da aula 6, por exemplo, só funciona com o vetor ordenado.</p>
+  <div class="dois">
+    <div>
+      <div class="caixa"><b>Instância:</b> (v, a, b), com v indexado por [a..b].<br><b>Resposta:</b> o vetor v modificado de modo que v[a..b] fique ordenado, ou seja, v[i] ≤ v[i + 1] pra todo a ≤ i &lt; b.</div>
+      <p>O vetor de exemplo das aulas é <code>42 15 23 8 4 16</code>, que ordenado fica <code>4 8 15 16 23 42</code>.</p>
+      <div class="prof"><div class="av">🧑‍🏫</div><div>As quatro ordenações desta aula são <b>recursivas</b> e reaproveitam o que você já viu: a <b>inserção</b> usa a BuscaSequencial, a <b>seleção</b> usa o Mínimo, e o <b>mergesort</b> e o <b>quicksort</b> usam "divisão e conquista", parecido com a busca binária.</div></div>
+    </div>
+    <div>
+      <div class="caixa pessego"><b>Como ler as animações desta aula:</b><br>
+        <div class="leg" style="margin-top:6px"><span style="--c:#bcd3e6">elemento</span><span style="--c:#6aa6e0">sendo comparado</span><span style="--c:#f0a81c">sendo trocado</span><span style="--c:#8fd1a8">já no lugar final</span><span style="--c:#9fd3d0">metade esquerda (merge)</span></div>
+        <p style="margin:8px 0 0">Elementos apagados estão <b>fora</b> do trecho [a..b] da chamada atual. As letrinhas embaixo são os ponteiros (i, j, m...).</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="c2">
+  <h2><span class="n">2</span>Ordenação por inserção</h2>
+  <p class="lead">Aula 7. Como arrumar cartas na mão: as primeiras já estão em ordem, você pega a próxima e <b>insere</b> no lugar certo entre elas.</p>
+  <div class="dois">
+    <div class="codigo" id="codIns"></div>
+    <div>
+      <div class="explica" id="expIns"><h4>👆 Toque numa linha</h4>A recursão aqui é: ordena tudo menos o último, depois insere o último no lugar.</div>
+      <div class="prof"><div class="av">🧑‍🏫</div><div>C(n) = C(n − 1) + C<sub>I</sub>(n), e o Insere custa o que a Busca custa num vetor de n − 1.<br><b>Pior caso</b> (vetor invertido): 1 + 2 + ... + (n − 1) = <b>n(n − 1)/2 ≈ n²/2</b>.<br><b>Melhor caso</b> (já ordenado): a busca acha de primeira, <b>n − 1</b>.</div></div>
+    </div>
+  </div>
+  <div id="escIns"></div>
+</section>
+
+<section id="c3">
+  <h2><span class="n">3</span>Ordenação por seleção</h2>
+  <p class="lead">Aula 8. Ao contrário da inserção: <b>seleciona</b> o menor de todos, coloca na primeira posição, e ordena o resto.</p>
+  <div class="dois">
+    <div class="codigo" id="codSel"></div>
+    <div>
+      <div class="explica" id="expSel"><h4>👆 Toque numa linha</h4>A chamada recursiva vem por último e encolhe pelo <b>a</b>.</div>
+      <div class="prof"><div class="av">🧑‍🏫</div><div>Comparações: C(n) = C(n − 1) + C<sub>M</sub>(n), com C<sub>M</sub>(n) = n − 1 (o Mínimo). Dá <b>n(n − 1)/2</b> <b>sempre</b>, não importa o vetor.<br>Trocas: T(n) = 1 + T(n − 1), ou seja, <b>n − 1</b> trocas (e 3n − 3 cópias de memória). Poucas trocas é a vantagem da seleção.</div></div>
+    </div>
+  </div>
+  <div id="escSel"></div>
+</section>
+
+<section id="c4">
+  <h2><span class="n">4</span>Intercala: juntando dois vetores ordenados</h2>
+  <p class="lead">Aula 9. Antes do mergesort, uma peça: v[a..m] e v[m+1..b] já estão ordenados cada um. Como juntar num só, ordenado?</p>
+  <div class="dois">
+    <div>
+      <div class="caixa">É como juntar duas filas de pessoas já organizadas por altura: olha a primeira de cada fila, a mais baixa sai e vai pra fila nova. Repete até acabar.</div>
+      <p>O <b>i</b> anda na metade esquerda, o <b>j</b> na direita, e o <b>k</b> no vetor auxiliar <b>u</b>. No fim, u é copiado de volta pra v.</p>
+      <div class="prof"><div class="av">🧑‍🏫</div><div>Cada volta do <code>Para</code> faz uma comparação, e são n voltas: <b>C<sub>I</sub>(n) = n</b>. Repara na condição <code>j &gt; b ou (...)</code>: quando a metade direita acaba, o resto da esquerda vai direto.</div></div>
+    </div>
+    <div class="codigo" id="codInt"></div>
+  </div>
+  <div id="escInt"></div>
+</section>
+
+<section id="c5">
+  <h2><span class="n">5</span>Mergesort: divisão e conquista</h2>
+  <p class="lead">Divide o vetor no meio, ordena cada metade (recursivamente!) e intercala as duas. A base é o trecho de um elemento só, que já está ordenado.</p>
+  <div class="dois">
+    <div class="codigo" id="codMerge"></div>
+    <div class="prof"><div class="av">🧑‍🏫</div><div>C(n) = C(⌈n/2⌉) + C(⌊n/2⌋) + n.<br>Supondo n = 2<sup>k</sup> (pra sumir com chão e teto): C(n) = 2C(n/2) + n. Abrindo: cada "andar" da árvore de chamadas soma n comparações, e são lg n andares. Resultado: <b>C(n) ≈ n lg n</b>.<br>Pra n = 1.000: inserção no pior caso faz ~500.000; mergesort ~10.000.</div></div>
+  </div>
+  <div id="escMerge"></div>
+</section>
+
+<section id="c6">
+  <h2><span class="n">6</span>Particiona: separar os pequenos dos grandes</h2>
+  <p class="lead">Aula 10. Dado um valor x (o <b>pivô</b>), rearranjar v[a..b] de modo que os ≤ x fiquem todos à esquerda e os &gt; x à direita. Devolve m, o último índice da parte "≤ x".</p>
+  <div class="dois">
+    <div class="codigo" id="codPart"></div>
+    <div>
+      <div class="caixa">Pensa no <b>m</b> como a fronteira do "cercadinho dos pequenos". O <b>i</b> passa por todo mundo; quando acha um ≤ x, aumenta o cercadinho (m + 1) e traz o pequeno pra dentro com uma troca.</div>
+      <div class="prof"><div class="av">🧑‍🏫</div><div><b>Importante:</b> quando x = v[b], depois do Particiona o pivô fica exatamente na posição em que estaria se o vetor estivesse ordenado. O laço roda n vezes: <b>C<sub>P</sub>(n) = n</b>.</div></div>
+    </div>
+  </div>
+  <div id="escPart"></div>
+</section>
+
+<section id="c7">
+  <h2><span class="n">7</span>Quicksort</h2>
+  <p class="lead">Particiona usando o último elemento como pivô. O pivô cai no lugar certo; depois ordena (recursivamente) o que ficou à esquerda e o que ficou à direita dele.</p>
+  <div class="dois">
+    <div class="codigo" id="codQuick"></div>
+    <div class="prof"><div class="av">🧑‍🏫</div><div>C(n) = C(k) + C(n − k − 1) + n, onde k e n − k − 1 são os tamanhos das partes.<br><b>Pior caso</b> (vetor já ordenado: partes de tamanho 0 e n − 1): C(n) = C(n − 1) + n ≈ <b>n²/2</b>.<br><b>Melhor caso</b> (partes do mesmo tamanho): ≈ <b>n lg n</b>.<br>Na prática é um dos mais rápidos; na teoria, o pior caso é igual aos simples.</div></div>
+  </div>
+  <div id="escQuick"></div>
+</section>
+
+<section id="c8">
+  <h2><span class="n">8</span>Comparando os quatro</h2>
+  <p class="lead">Escolha um tipo de vetor e o tamanho, e veja quantas comparações cada algoritmo faz (contando como nas aulas).</p>
+  <div class="ctrl"><div class="seg" id="tipoV"><button class="on" data-t="ale">aleatório</button><button data-t="ord">já ordenado</button><button data-t="inv">invertido</button></div>
+    <span>n =</span><input type="range" id="nV" min="4" max="64" value="16" style="max-width:240px"><b id="nVout"></b></div>
+  <div id="corrida" style="margin-top:10px"></div>
+  <div class="caixa" style="margin-top:12px"><b>Tabela da aula 8</b> (aproximada, melhor — pior):
+    <table class="tab"><tr><th></th><th>comparações</th><th>trocas</th></tr>
+    <tr><td>Inserção</td><td>n — n²/2</td><td>0 — n²/2</td></tr>
+    <tr><td>Seleção</td><td>n²/2 (sempre)</td><td>0 — n</td></tr>
+    <tr><td>Mergesort</td><td>≈ n lg n</td><td>(usa vetor auxiliar)</td></tr>
+    <tr><td>Quicksort</td><td>n lg n — n²/2</td><td>—</td></tr></table></div>
+</section>
+
+<section id="c9">
+  <h2><span class="n">9</span>Ler o código <span class="placar" id="placarQ"></span></h2>
+  <p class="lead">Faça no papel antes de clicar. Simular à mão é exatamente o que a prova pede.</p>
+  <div id="quiz"></div>
+</section>
+
+<section id="c10">
+  <h2><span class="n">10</span>Alterar: ordem decrescente</h2>
+  <div class="caixa rosa"><b>Alteração no estilo da prova:</b> "Altere o algoritmo para ordenar em ordem <b>decrescente</b>." Em todos, a estrutura fica igual; só o sentido da comparação muda.</div>
+  <div id="escAlt"></div>
+</section>
+
+<section id="c11">
+  <h2><span class="n">🎮</span>Agora pratique</h2>
+  <div class="jogos">
+    <a class="jogo" href="torre.html"><h3>🧱 Torre da Recursão</h3>Seja a pilha de chamadas do Mínimo' e da busca binária, as peças que a seleção e o mergesort usam.<br><span class="ir">Jogar ▸</span></a>
+    <a class="jogo" href="simulado.html"><h3>📝 Simulado</h3>Questões de leitura de código pra treinar no formato de prova.<br><span class="ir">Abrir ▸</span></a>
+    <a class="jogo" href="a02.html"><h3>📖 Voltar: Recursão e Busca</h3>Se a pilha de chamadas ainda está confusa, revise a aula anterior.<br><span class="ir">Abrir ▸</span></a>
+  </div>
+</section>
+</main>
+<script src="aula-core.js"></script>
+<script>
+const V0=[42,15,23,8,4,16];
+/* ===== 2: inserção ===== */
+const LINS=[
+ ['Ordenaᵢ(v, a, b)',['Protótipo','Ordena v[a..b] no próprio vetor.']],
+ ['  Se a ≥ b',['Base','Zero ou um elemento: já está ordenado.']],
+ ['    Devolva v',null],
+ ['  Ordenaᵢ(v, a, b − 1)',['Recursão primeiro','Ordena tudo menos o último. Quando voltar, v[a..b−1] está em ordem.']],
+ ['  Insere(v, a, b)',['O passo','Põe o v[b] no lugar certo dentro de v[a..b−1].']],
+ ['  Devolva v',null],
+ ['',null],
+ ['Insere(v, a, b)',['Inserção em vetor ordenado','Recebe v[a..b−1] ordenado e o v[b] "solto".']],
+ ['  p ← Busca(v[b], v, a, b − 1)',['Onde ele entra?','É a BuscaSequencial da aula 5: o maior índice p com v[p] ≤ v[b]. O lugar dele é p + 1.']],
+ ['  i ← b',null],
+ ['  Enquanto i > p + 1',['Escorrega pra esquerda','Enquanto não chegou em p + 1, troca com o vizinho da esquerda.']],
+ ['    Troca(v, i, i − 1)',null],['    i ← i − 1',null],['  Devolva v',null]];
+montaCodigo('codIns',LINS,'expIns');
+function insercao(S,a,b){
+  S.push(`Ordenaᵢ(v,${a},${b})`,a,b); S.ln(1,`Trecho v[${a}..${b}].`);
+  if(a>=b){S.ln(2,'Um elemento só: já ordenado. Base.');S.pop();return;}
+  S.ln(3,`Primeiro ordena v[${a}..${b-1}] (recursão).`); insercao(S,a,b-1);
+  S.ln(4,`Voltou: v[${a}..${b-1}] está ordenado. Agora insere o <b>${S.v[b]}</b>.`,{ptr:{b}});
+  const x=S.v[b]; let p=b-1;
+  while(p>=a){S.comp();const t=x>=S.v[p];S.ln(8,`Busca: ${x} ≥ v[${p}] = ${S.v[p]}? ${t?'Sim, para aqui.':'Não, continua pra esquerda.'}`,{ptr:{p,b},cmp:[p,b]});if(t)break;p--;}
+  if(p<a)S.ln(8,`Passou do começo: p = a − 1 = ${p}. O ${x} é o menor até agora.`,{ptr:{b}});
+  let i=b; S.ln(9,`p = ${p}. O ${x} tem que ir pra posição ${p+1}.`,{ptr:{i}});
+  while(i>p+1){S.troca(i,i-1);S.ln(11,`Troca v[${i}] com v[${i-1}].`,{troca:[i,i-1],ptr:{i:i-1}});i--;}
+  S.ln(13,`v[${a}..${b}] ordenado: <code>${S.v.slice(a,b+1).join(' ')}</code>.`); S.pop();
+}
+const vets={'42 15 23 8 4 16':V0,'já ordenado':[4,8,15,16,23,42],'invertido':[42,23,16,15,8,4]};
+const opsV=Object.entries(vets).map(([nome,v])=>({nome,v}));
+escolhas($('escIns'),opsV,(el,o)=>vetAnim(el,{vetor:o.v,codigo:LINS.map(l=>l[0]),run:S=>insercao(S,1,o.v.length),fim:c=>`Ordenado com ${c.comp} comparações e ${c.troca} trocas (n = 6: pior caso 15, melhor 5).`}));
+
+/* ===== 3: seleção ===== */
+const LSEL=[
+ ['Ordenaₛ(v, a, b)',['Protótipo','Ordena v[a..b].']],
+ ['  Se a ≥ b',['Base','Zero ou um elemento.']],['    Devolva v',null],
+ ['  Troca(v, a, Minimo(v, a, b))',['Seleciona e coloca','Acha o índice do menor de v[a..b] (o Mínimo da aula 3, versão com laço) e troca ele com v[a]. Agora v[a] está no lugar final.']],
+ ['  Devolva Ordenaₛ(v, a + 1, b)',['Recursão no resto','O v[a] já está certo; ordena só v[a+1..b].']],
+ ['',null],
+ ['Minimo(v, a, b)',null],['  m ← i ← a',null],['  Enquanto i < b',null],['    i ← i + 1',null],['    Se v[i] < v[m]',null],['      m ← i',null],['  Devolva m',null]];
+montaCodigo('codSel',LSEL,'expSel');
+function selecao(S,a,b){
+  S.push(`Ordenaₛ(v,${a},${b})`,a,b); S.ln(1,`Trecho v[${a}..${b}].`);
+  if(a>=b){S.ln(2,'Um elemento: base.');S.ok(a);S.pop();return;}
+  let m=a,i=a; S.ln(7,`Procura o menor de v[${a}..${b}]. Começa com m = ${a}.`,{ptr:{m}});
+  while(i<b){i++;S.comp();const t=S.v[i]<S.v[m];S.ln(10,`v[${i}] = ${S.v[i]} &lt; v[${m}] = ${S.v[m]}? ${t?'Sim, m ← '+i+'.':'Não.'}`,{ptr:{m:t?i:m,i},cmp:[i,m]});if(t)m=i;}
+  S.ln(3,`O menor é v[${m}] = ${S.v[m]}. Troca com v[${a}].`,{ptr:{m,a},troca:[a,m]}); S.troca(a,m); S.ok(a);
+  S.ln(3,`v[${a}] = ${S.v[a]} está no lugar final.`,{ptr:{a}});
+  S.ln(4,`Chama pro resto: v[${a+1}..${b}].`); selecao(S,a+1,b); S.pop();
+}
+escolhas($('escSel'),opsV,(el,o)=>vetAnim(el,{vetor:o.v,codigo:LSEL.map(l=>l[0]),run:S=>selecao(S,1,o.v.length),vel:700,fim:c=>`Ordenado: ${c.comp} comparações (n(n − 1)/2 = 15, sempre) e ${c.troca} trocas reais (o algoritmo chama Troca n − 1 = 5 vezes; quando o menor já está no lugar ela troca com ele mesmo).`}));
+
+/* ===== 4: intercala ===== */
+const LINT=['Intercala(v, a, m, b)','  Se a ≥ b','    Devolva v','  i ← a','  j ← m + 1','  Para k ← 0 até b − a','    Se j > b ou (i ≤ m e v[i] ≤ v[j])','      u[k] ← v[i]','      i ← i + 1','    Senão','      u[k] ← v[j]','      j ← j + 1','  v[a..b] ← u[0..b − a]','  Devolva v'];
+montaCodigo('codInt',LINT.map(t=>[t]));
+function intercala(S,a,m,b,off=0,desc){
+  const L=k=>k+off;
+  S.meio(m); if(a>=b){S.ln(L(1),'Um elemento: nada a intercalar.');return;}
+  let i=a,j=m+1; const u=Array(b-a+1).fill(null); S.u(u);
+  S.ln(L(4),`Metade esquerda v[${a}..${m}], direita v[${m+1}..${b}]. i = ${a}, j = ${m+1}.`,{ptr:{i,j}});
+  for(let k=0;k<=b-a;k++){
+    S.u(u,k); S.comp();
+    const pegaI=j>b||(i<=m&&(desc?S.v[i]>=S.v[j]:S.v[i]<=S.v[j]));
+    const exp=j>b?`j = ${j} &gt; b: a direita acabou, vem da esquerda.`:i>m?`A esquerda acabou (i &gt; m), vem da direita.`:`v[i] = ${S.v[i]} ${desc?'≥':'≤'} v[j] = ${S.v[j]}? ${pegaI?'Sim':'Não'}.`;
+    S.ln(L(6),`k = ${k}. ${exp}`,{ptr:{i,j},cmp:[i,j].filter(x=>x<=b&&x>=a&&(x===i?i<=m:true))});
+    if(pegaI){u[k]=S.v[i];S.u(u,k);S.ln(L(7),`u[${k}] ← ${S.v[i]}, i avança.`,{ptr:{i,j}});i++;}
+    else{u[k]=S.v[j];S.u(u,k);S.ln(L(10),`u[${k}] ← ${S.v[j]}, j avança.`,{ptr:{i,j}});j++;}
+  }
+  for(let k=0;k<=b-a;k++)S.v[a+k]=u[k];
+  S.ln(L(12),`Copia u de volta: v[${a}..${b}] = <code>${u.join(' ')}</code>.`); S.semU(); S.meio(null);
+}
+escolhas($('escInt'),[[2,7,15,3,5,20],[4,5,6,1,2,3],[1,2,3,4,5,6]].map(v=>({nome:`[${v.slice(0,3).join(', ')} | ${v.slice(3).join(', ')}]`,v})),
+  (el,o)=>vetAnim(el,{vetor:o.v,codigo:LINT,run:S=>{S.push('Intercala(v,1,3,6)',1,6);intercala(S,1,3,6);S.pop();},fim:c=>`Intercalado com ${c.comp} comparações: n = 6, sempre.`}));
+
+/* ===== 5: mergesort ===== */
+const LMS=['Ordenaₘ(v, a, b)','  Se a ≥ b','    Devolva v','  m ← ⌊(a + b) / 2⌋','  Ordenaₘ(v, a, m)','  Ordenaₘ(v, m + 1, b)','  Devolva Intercala(v, a, m, b)','',...LINT];
+montaCodigo('codMerge',LMS.slice(0,7).map(t=>[t]));
+function merge(S,a,b){
+  S.push(`Ordenaₘ(v,${a},${b})`,a,b); S.ln(1,`Trecho v[${a}..${b}].`);
+  if(a>=b){S.ln(2,'Um elemento: já ordenado.');S.pop();return;}
+  const m=Math.floor((a+b)/2); S.meio(m); S.ln(3,`m = ⌊(${a} + ${b})/2⌋ = ${m}. Esquerda v[${a}..${m}], direita v[${m+1}..${b}].`,{ptr:{a,m,b}});
+  S.ln(4,'Ordena a metade esquerda.'); merge(S,a,m); S.meio(m);
+  S.ln(5,'Ordena a metade direita.',{ptr:{m}}); merge(S,m+1,b); S.meio(m);
+  S.ln(6,`As duas metades estão ordenadas. Intercala.`,{ptr:{a,m,b}}); intercala(S,a,m,b,8); S.pop();
+}
+escolhas($('escMerge'),opsV,(el,o)=>vetAnim(el,{vetor:o.v,codigo:LMS,run:S=>merge(S,1,o.v.length),vel:650,fim:c=>`Ordenado com ${c.comp} comparações (contando n por intercalação, como na aula).`}));
+
+/* ===== 6/7: particiona e quicksort ===== */
+const LPART=['Particiona(v, a, b, x)','  m ← a − 1','  Para i ← a até b','    Se v[i] ≤ x','      m ← m + 1','      Troca(v, m, i)','  Devolva m'];
+montaCodigo('codPart',LPART.map(t=>[t]));
+function particiona(S,a,b,x,off=0,desc){
+  const L=k=>k+off; let m=a-1;
+  S.ln(L(1),`Pivô x = ${x}. m = a − 1 = ${m}: o cercadinho dos pequenos começa vazio.`,{ptr:{m}});
+  for(let i=a;i<=b;i++){
+    S.comp(); const t=desc?S.v[i]>=x:S.v[i]<=x;
+    S.ln(L(3),`i = ${i}: v[${i}] = ${S.v[i]} ${desc?'≥':'≤'} ${x}? ${t?'Sim.':'Não, fica onde está.'}`,{ptr:{m,i},cmp:[i]});
+    if(t){m++;S.troca(m,i);S.ln(L(5),`m ← ${m}, troca v[${m}] com v[${i}].`,{ptr:{m,i},troca:[m,i]});}
+  }
+  S.ln(L(6),`Devolve m = ${m}. v[${a}..${m}] ${desc?'≥':'≤'} ${x} e v[${m+1}..${b}] ${desc?'&lt;':'&gt;'} ${x}.`,{ptr:{m}});
+  return m;
+}
+escolhas($('escPart'),[{nome:'v = 6 10 13 5 8 3, x = v[6]',v:[6,10,13,5,8,3],x:3},{nome:'mesmo v, x = 8',v:[6,10,13,5,8,3],x:8},{nome:'42 15 23 8 4 16, x = v[6]',v:V0,x:16}],
+  (el,o)=>vetAnim(el,{vetor:o.v,codigo:LPART,run:S=>{S.push(`Particiona(v,1,6,${o.x})`,1,6);particiona(S,1,6,o.x);S.pop();},fim:(c,v)=>`Resultado: <code>${v.slice(1).join(' ')}</code>, com ${c.comp} comparações (n = 6).`}));
+const LQ=['Ordenaq(v, a, b)','  Se a ≥ b','    Devolva v','  m ← Particiona(v, a, b, v[b])','  Ordenaq(v, a, m − 1)','  Ordenaq(v, m + 1, b)','',...LPART];
+montaCodigo('codQuick',LQ.slice(0,6).map(t=>[t]));
+function quick(S,a,b,desc){
+  S.push(`Ordenaq(v,${a},${b})`,a,b); S.ln(1,a>b?`Trecho vazio (a = ${a} &gt; b = ${b}).`:`Trecho v[${a}..${b}].`);
+  if(a>=b){if(a===b)S.ok(a);S.ln(2,'Base: nada a fazer.');S.pop();return;}
+  S.ln(3,`Particiona com pivô v[${b}] = ${S.v[b]}.`,{ptr:{b}}); const m=particiona(S,a,b,S.v[b],7,desc); S.ok(m);
+  S.ln(3,`O pivô ${S.v[m]} caiu na posição ${m}: é o lugar final dele.`,{ptr:{m}});
+  S.ln(4,`Ordena a esquerda v[${a}..${m-1}].`); quick(S,a,m-1,desc);
+  S.ln(5,`Ordena a direita v[${m+1}..${b}].`); quick(S,m+1,b,desc); S.pop();
+}
+escolhas($('escQuick'),opsV,(el,o)=>vetAnim(el,{vetor:o.v,codigo:LQ,run:S=>quick(S,1,o.v.length),vel:650,fim:c=>`Ordenado com ${c.comp} comparações.${o.nome==='já ordenado'?' Esse é o pior caso: (n² + n − 2)/2 = 20.':''}`}));
+
+/* ===== 8: corrida ===== */
+(function(){
+  let tipo='ale';
+  function conta(alg,v0){const v=[null,...v0];let c=0;const tr=(i,j)=>{[v[i],v[j]]=[v[j],v[i]];};
+    if(alg==='ins'){(function o(a,b){if(a>=b)return;o(a,b-1);const x=v[b];let p=b-1;while(p>=a){c++;if(x>=v[p])break;p--;}for(let i=b;i>p+1;i--)tr(i,i-1);})(1,v0.length);}
+    if(alg==='sel'){(function o(a,b){if(a>=b)return;let m=a;for(let i=a+1;i<=b;i++){c++;if(v[i]<v[m])m=i;}tr(a,m);o(a+1,b);})(1,v0.length);}
+    if(alg==='mer'){(function o(a,b){if(a>=b)return;const m=(a+b)>>1;o(a,m);o(m+1,b);const u=[];let i=a,j=m+1;for(let k=0;k<=b-a;k++){c++;if(j>b||(i<=m&&v[i]<=v[j]))u.push(v[i++]);else u.push(v[j++]);}u.forEach((x,k)=>v[a+k]=x);})(1,v0.length);}
+    if(alg==='qui'){(function o(a,b){if(a>=b)return;const x=v[b];let m=a-1;for(let i=a;i<=b;i++){c++;if(v[i]<=x){m++;tr(m,i);}}o(a,m-1);o(m+1,b);})(1,v0.length);}
+    return c;}
+  function up(){const n=+$('nV').value;$('nVout').textContent=n;
+    let v=[...Array(n)].map((_,i)=>i+1); if(tipo==='inv')v.reverse(); if(tipo==='ale'){let s=7;for(let i=n-1;i>0;i--){s=(s*9301+49297)%233280;const j=Math.floor(s/233280*(i+1));[v[i],v[j]]=[v[j],v[i]];}}
+    const R=[['Inserção','ins'],['Seleção','sel'],['Mergesort','mer'],['Quicksort','qui']].map(([nm,k])=>[nm,conta(k,v)]);
+    const mx=Math.max(...R.map(r=>r[1]),1);
+    $('corrida').innerHTML=R.map(([nm,c])=>`<div style="display:flex;align-items:center;gap:10px;margin:6px 0"><b style="width:100px">${nm}</b><div style="flex:1;background:#eef4f9;border-radius:8px;height:26px"><div style="width:${c/mx*100}%;height:100%;background:#6aa6e0;border-radius:8px;min-width:4px"></div></div><b style="width:60px;text-align:right">${c}</b></div>`).join('')+
+      `<p style="color:var(--muted);margin:6px 0 0">Referências pra n = ${n}: n²/2 ≈ ${Math.round(n*n/2)}, n lg n ≈ ${Math.round(n*Math.log2(n))}.</p>`;}
+  $('nV').oninput=up; $('tipoV').querySelectorAll('button').forEach(b=>b.onclick=()=>{tipo=b.dataset.t;$('tipoV').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));up();}); up();
+})();
+
+/* ===== 9: quiz ===== */
+quiz($('quiz'),[
+ {e:'1. Com v = 6 10 13 5 8 3, como fica o vetor e quanto devolve <code>Particiona(v, 1, 6, 8)</code>?',o:['6 5 8 3 13 10, devolve 4','6 5 8 10 13 3, devolve 3','3 5 6 8 10 13, devolve 4','6 10 13 5 8 3, devolve 4'],c:0,x:'i = 1: 6 ≤ 8, m = 1 (troca com ele mesmo). i = 4: 5 ≤ 8, m = 2, troca → 6 5 13 10 8 3. i = 5: 8 ≤ 8, m = 3 → 6 5 8 10 13 3. i = 6: 3 ≤ 8, m = 4 → 6 5 8 3 13 10. Devolve 4.'},
+ {e:'2. Quantas comparações a inserção faz no pior caso com n = 6?',o:['5','6','15','36'],c:2,x:'Pior caso (vetor invertido): n(n − 1)/2 = 6·5/2 = 15.'},
+ {e:'3. Quantas vezes a seleção chama <code>Troca</code> com n = 6, em qualquer vetor?',o:['0','5','6','15'],c:1,x:'Uma por chamada que não é base: T(n) = 1 + T(n − 1), T(1) = 0, então n − 1 = 5.'},
+ {e:'4. No mergesort de v = 42 15 23 8 16 4, como está o vetor logo depois que <code>Ordenaₘ(v, 1, 3)</code> termina?',o:['15 23 42 8 16 4','15 42 23 8 16 4','4 8 15 16 23 42','42 15 23 4 8 16'],c:0,x:'A primeira metade (índices 1 a 3) fica ordenada: 15 23 42. A segunda ainda não foi mexida.'},
+ {e:'5. Ao intercalar [4, 5, 6 | 1, 2, 3], quantas vezes o algoritmo entra no <code>Senão</code>?',o:['0','3','6','1'],c:1,x:'Os três primeiros u[k] vêm da direita (1, 2, 3), entrando no Senão. Depois j &gt; b e o resto vem da esquerda.'},
+ {e:'6. Quantas comparações o quicksort faz num vetor <b>já ordenado</b> de 6 elementos?',o:['15','20','21','6'],c:1,x:'Pior caso: C(n) = C(n − 1) + n com C(1) = 0, dá 6 + 5 + 4 + 3 + 2 = 20 = (n² + n − 2)/2.'},
+ {e:'7. Quantas comparações a inserção faz num vetor já ordenado com n = 6?',o:['0','5','6','15'],c:1,x:'Melhor caso: cada Busca acha de primeira (o v[b] já é ≥ o anterior). n − 1 = 5.'},
+ {e:'8. Qual delas faz o <b>mesmo</b> número de comparações não importa o vetor de entrada?',o:['Inserção','Seleção','Quicksort','Nenhuma'],c:1,x:'A seleção sempre roda o Mínimo inteiro: n(n − 1)/2. (O mergesort também, contando como na aula, n por intercalação; mas ele não está nas opções.)'},
+ {e:'9. Depois de <code>Particiona(v, a, b, v[b])</code>, onde fica o pivô?',o:['Em v[a]','Em v[b]','Na posição m devolvida, que é o lugar final dele','Em qualquer lugar da parte esquerda'],c:2,x:'O último elemento examinado é o próprio pivô (v[b] ≤ x), então ele é trocado pra posição m. Tudo à esquerda é ≤ e à direita é &gt;: é o lugar dele no vetor ordenado.'}
+]);
+
+/* ===== 10: alterar ===== */
+escolhas($('escAlt'),[
+ {nome:'Quicksort decrescente',cod:['Ordenaq(v, a, b)','  Se a ≥ b','    Devolva v','  m ← Particiona(v, a, b, v[b])','  Ordenaq(v, a, m − 1)','  Ordenaq(v, m + 1, b)','','Particiona(v, a, b, x)','  m ← a − 1','  Para i ← a até b','    Se v[i] ≥ x','      m ← m + 1','      Troca(v, m, i)','  Devolva m'],mud:[10],
+  t:'Só o Particiona muda: o cercadinho da esquerda passa a juntar os <b>maiores ou iguais</b> ao pivô.',run:S=>quick(S,1,6,true)},
+ {nome:'Mergesort decrescente',cod:LMS.map(t=>t.replace('v[i] ≤ v[j]','v[i] ≥ v[j]')),mud:[14],t:'Só o Intercala muda: sai primeiro o <b>maior</b> das duas frentes.',run:S=>{(function mg(a,b){S.push(`Ordenaₘ(v,${a},${b})`,a,b);S.ln(1,`Trecho v[${a}..${b}].`);if(a>=b){S.ln(2,'Base.');S.pop();return;}const m=Math.floor((a+b)/2);S.meio(m);S.ln(3,`m = ${m}.`,{ptr:{a,m,b}});mg(a,m);mg(m+1,b);S.meio(m);S.ln(6,'Intercala (decrescente).');intercala(S,a,m,b,8,true);S.pop();})(1,6);}}
+],(el,o)=>{el.innerHTML=`<div class="caixa" style="margin-top:10px">${o.t}</div><div class="codigo cAlt" style="max-width:560px"></div><div class="aAlt"></div>`;
+  montaCodigo(el.querySelector('.cAlt'),o.cod.map((t,k)=>[t,null,o.mud.includes(k)?'mud':'']));
+  vetAnim(el.querySelector('.aAlt'),{vetor:V0,codigo:o.cod,run:o.run,vel:650});});
+navCaps();
+</script>
+<script src="aula-fatia.js"></script>
+</body>
+</html>

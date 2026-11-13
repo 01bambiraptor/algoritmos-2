@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · feito a partir do material da disciplina CI1056 (UFPR) · CC BY-NC-SA 4.0 · veja LICENSE.txt -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#e7f2fb">
+<title>Bolhas da Pilha · removendo a recursão</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--p:#2f5d7c;--p2:#1f4560;--ci:#22b8e6;--pe:#ff9f5a;--ok:#1f9d63;--rd:#d9485f;--gold:#f0b429;--tx:#24303c;--mu:#6b7785;--bg:#eef5fb;--sf:#ffffff;--sf2:#f2f6fa;--ln:#dfe9f1}
+html.escuro{--p:#9fd3f2;--p2:#cfe8f8;--tx:#dde7ef;--mu:#93a4b3;--bg:#0f1a24;--sf:#15222e;--sf2:#1a2b39;--ln:#25384a;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{overflow-x:clip}
+body{margin:0;font-family:Inter,system-ui,sans-serif;color:var(--tx);background:var(--bg);min-height:100vh}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;max-width:1180px;margin:0 auto;padding:14px 18px 6px}
+header h1{margin:0;font:800 1.45rem/1.1 Inter,sans-serif;letter-spacing:-.02em;color:var(--p2)}
+header .sub{color:var(--mu);font-size:.9rem}
+.voltar,.chip,.btn{font:600 .9rem Inter,sans-serif;border:0;border-radius:12px;padding:9px 14px;background:var(--sf);color:var(--p2);cursor:pointer;text-decoration:none;box-shadow:0 1px 2px #1f456014,0 4px 14px #1f456010}
+.chip{border-radius:999px}
+.chip.on,.btn.pri{background:#1f4560;color:#fff}
+html.escuro .chip.on,html.escuro .btn.pri{background:#2f6d93}
+.dir{margin-left:auto;display:flex;gap:8px}
+main{max-width:1180px;margin:0 auto;padding:6px 18px 40px}
+.barra{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0 12px}
+.barra small{color:var(--mu)}
+.palco{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
+.palco>div{min-width:0}
+@media (max-width:900px){.palco{grid-template-columns:1fr}}
+.jogo{position:relative;border-radius:24px;overflow:hidden;box-shadow:0 1px 2px #1f456014,0 14px 44px #1f45601f;background:#dbeaf5;touch-action:none}
+canvas{display:block;width:100%;height:auto;cursor:crosshair}
+.hud{display:flex;justify-content:space-between;pointer-events:none;gap:6px;padding:9px 10px;background:linear-gradient(180deg,#cfe6f7,#cfe6f7);flex-wrap:wrap}
+html.escuro .hud{background:#1d3550}
+.hud span{font:700 clamp(.7rem,2.6vw,.82rem) Inter,sans-serif;background:#ffffffd9;color:#1f4560;border-radius:999px;padding:5px 11px;backdrop-filter:blur(6px)}
+.msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:#eef5fbe6;backdrop-filter:blur(4px);padding:24px;gap:10px}
+html.escuro .msg{background:#0f1a24e6}
+.msg h2{margin:0;font:800 1.7rem Inter,sans-serif;color:var(--p2)}
+.msg p{margin:0;max-width:440px;color:var(--mu);line-height:1.5}
+.msg .est{font-size:2rem;letter-spacing:6px}
+.esc{display:none!important}
+.lado{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--sf);border-radius:18px;padding:12px 14px;box-shadow:0 1px 2px #1f456014,0 8px 26px #1f456010}
+.card h4{margin:0 0 8px;font:700 .72rem Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--mu)}
+.cod{font:500 .8rem/1.7 'JetBrains Mono',monospace;overflow-x:auto}
+.cod div{white-space:pre;padding:0 8px;border-radius:7px;transition:background .25s}
+.cod div.on{background:#e3f6fc;box-shadow:inset 3px 0 0 var(--ci)}
+html.escuro .cod div.on{background:#12384a}
+.vars{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.vars span{font:700 .82rem 'JetBrains Mono',monospace;background:var(--sf2);border-radius:9px;padding:4px 9px;color:var(--p2)}
+.tubo{position:relative;height:210px;border-radius:16px;background:linear-gradient(90deg,#ffffff00,#ffffff66 40%,#ffffff00),linear-gradient(180deg,#e7f2fb,#d6e8f5);border:2px solid #bcd6e9;
+  display:flex;flex-direction:column-reverse;gap:6px;padding:10px;overflow:hidden}
+html.escuro .tubo{background:linear-gradient(180deg,#18293a,#132130);border-color:#2b4459}
+.tubo .cap{font:700 .86rem 'JetBrains Mono',monospace;text-align:center;border-radius:999px;padding:7px;background:linear-gradient(180deg,#ffffff,#e6f0f7);color:#1f4560;
+  box-shadow:0 2px 6px #1f45601f;animation:cai .35s cubic-bezier(.3,1.4,.5,1)}
+.tubo .cap:last-child{background:linear-gradient(135deg,#ffd27a,#ff9f5a);color:#4a2a00}
+.tubo .vazio{margin:auto;color:var(--mu);font-size:.85rem;text-align:center}
+@keyframes cai{from{transform:translateY(-40px);opacity:0}to{transform:none;opacity:1}}
+.decide{display:flex;gap:8px;flex-wrap:wrap}
+.decide .btn{flex:1;min-width:130px}
+.narra{background:var(--sf);border-radius:14px;padding:10px 14px;margin-top:12px;line-height:1.45;min-height:3em;box-shadow:0 1px 2px #1f456014}
+.narra b{color:var(--p2)}
+.narra.ruim{background:#fdecef}.narra.bom{background:#e9f8f0}
+html.escuro .narra.ruim{background:#3a2430}html.escuro .narra.bom{background:#16342a}
+.rod{text-align:center;color:var(--mu);font-size:.86rem;margin-top:24px;line-height:1.6}
+.rod i{color:var(--p)}
+</style>
+<script src="modo.js"></script>
+</head>
+<body>
+<header>
+  <a class="voltar" href="index.html">← Início</a>
+  <div><h1>🫧 Bolhas da Pilha</h1><div class="sub">removendo a recursão · aula 14 e quicksort iterativo</div></div>
+  <div class="dir"><button class="chip" id="tema">🌙 escuro</button></div>
+</header>
+<main>
+  <div class="barra"><span id="modoSlot"></span></div>
+  <div class="barra" id="fases"></div>
+  <div class="palco">
+    <div>
+      <div class="jogo" id="jogo"><div class="hud"><span id="hVida"></span><span id="hNivel"></span><span id="hPts"></span></div><canvas id="cv" width="640" height="720"></canvas>
+        <div class="msg" id="msg"></div>
+      </div>
+      <div class="narra" id="narra"></div>
+    </div>
+    <div class="lado">
+      <div class="card"><h4 id="codTit">código</h4><div class="cod" id="cod"></div><div class="vars soAprender" id="vars"></div></div>
+      <div class="card" id="cardDecide"><h4>sua decisão</h4><div class="decide" id="decide"></div></div>
+      <div class="card"><h4 id="tuboTit">pilha explícita</h4><div class="tubo" id="tubo"></div></div>
+      <div class="card"><h4>como jogar</h4><div id="ajuda" style="font-size:.88rem;line-height:1.5;color:var(--mu)"></div></div>
+    </div>
+  </div>
+  <p class="rod">Feito a partir do material da disciplina CI1056 · Algoritmos e Estruturas de Dados II · UFPR<br>
+  Este material não substitui o material do professor: é uma ferramenta visual de apoio ao entendimento.<br>
+  <i>“Ninguém nasce feito, é experimentando-nos no mundo que nós nos fazemos.”</i> Paulo Freire, <i>Política e educação</i></p>
+</main>
+
+<script>
+"use strict";
+/* =========================================================
+   Bolhas da Pilha
+   Fase 1 · cauda vira laço: busca binária iterativa (valores escondidos)
+   Fase 2 · quicksort iterativo: pilha explícita de intervalos [a, b]
+   ========================================================= */
+const $=id=>document.getElementById(id);
+const cv=$('cv'), ctx=cv.getContext('2d'), W=640, H=720;
+const reduz=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let semente=Date.now()%100000; const rnd=()=>{semente=(semente*16807)%2147483647;return semente/2147483647;};
+const ri=(a,b)=>a+Math.floor(rnd()*(b-a+1));
+
+/* ---------- tema ---------- */
+let tema='claro'; try{tema=localStorage.getItem('tema-alg2')||'claro';}catch(e){}
+function aplicaTema(){document.documentElement.classList.toggle('escuro',tema==='escuro');$('tema').textContent=tema==='escuro'?'☀️ claro':'🌙 escuro';}
+$('tema').onclick=()=>{tema=tema==='escuro'?'claro':'escuro';try{localStorage.setItem('tema-alg2',tema);}catch(e){}aplicaTema();};
+aplicaTema();
+
+/* ---------- níveis ---------- */
+const NIVEIS={
+  1:[{n:11,vidro:3,alvos:3,nome:'Morno'},{n:17,vidro:5,alvos:3,nome:'Quente'},{n:23,vidro:7,alvos:4,nome:'Fervendo'}],
+  2:[{n:7,vidro:3,nome:'Morno'},{n:9,vidro:5,nome:'Quente'},{n:11,vidro:7,nome:'Fervendo'}]
+};
+let fase=1, nivel=0, G=null;
+
+/* ---------- bolhas: cor pelo valor ---------- */
+const PAL=['#ff6b6b','#ffa94d','#ffd43b','#69db7c','#38d9a9','#4dabf7','#748ffc','#da77f2','#f783ac'];
+function bolha(x,y,r,cor,txt,o={}){
+  ctx.save(); ctx.globalAlpha=o.alfa??1;
+  ctx.shadowColor='rgba(31,69,96,.25)'; ctx.shadowBlur=r*.5; ctx.shadowOffsetY=r*.18;
+  const g=ctx.createRadialGradient(x-r*.35,y-r*.45,r*.1,x,y,r);
+  g.addColorStop(0,'#ffffff'); g.addColorStop(.18,o.claro||cor); g.addColorStop(.75,cor); g.addColorStop(1,o.borda||shade(cor,-.35));
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fill(); ctx.shadowColor='transparent';
+  ctx.fillStyle='rgba(255,255,255,.55)'; ctx.beginPath(); ctx.ellipse(x-r*.32,y-r*.42,r*.32,r*.18,-.6,0,7); ctx.fill();
+  if(o.anel){ctx.lineWidth=3;ctx.strokeStyle=o.anel;ctx.beginPath();ctx.arc(x,y,r+4,0,7);ctx.stroke();}
+  if(txt!=null){ctx.fillStyle=o.corTxt||'#fff';ctx.font=`800 ${Math.max(10,r*.78)}px Inter,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.lineWidth=3;ctx.strokeStyle='rgba(0,0,0,.18)';ctx.strokeText(txt,x,y+1);ctx.fillText(txt,x,y+1);}
+  ctx.restore();
+}
+function shade(h,k){const n=parseInt(h.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const f=k<0?0:255,t=Math.abs(k);r=Math.round((f-r)*t+r);g=Math.round((f-g)*t+g);b=Math.round((f-b)*t+b);return '#'+((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1);}
+
+/* ---------- canhão e mira ---------- */
+const CX=W/2, CY=H-58, VEL=17;
+let mira=-Math.PI/2, tiro=null, part=[], textos=[], tremor=0, ocupado=false;
+function ang(e){const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;let a=Math.atan2(y-CY,x-CX);if(a>-0.12)a=a>Math.PI/2?-Math.PI+0.12:-0.12;return Math.max(-Math.PI+0.12,Math.min(-0.12,a));}
+cv.addEventListener('pointermove',e=>{mira=ang(e);});
+cv.addEventListener('pointerdown',e=>{mira=ang(e);cv.setPointerCapture(e.pointerId);});
+cv.addEventListener('pointerup',e=>{mira=ang(e);atira();});
+function trajetoria(){ // pontinhos até o primeiro obstáculo, com uma tabela na parede
+  let x=CX,y=CY,vx=Math.cos(mira),vy=Math.sin(mira),pts=[],d=0;
+  while(d<620&&y>40){x+=vx*6;y+=vy*6;d+=6;if(x<14||x>W-14){vx=-vx;x=Math.max(14,Math.min(W-14,x));}
+    if(G&&(G.vidros.some(v=>!v.q&&Math.hypot(v.x-x,v.y-y)<v.r+6)||y<G.yTeto+G.r))break; if(d%24<6)pts.push([x,y]);}
+  return pts;
+}
+function atira(){
+  if(tiro||ocupado||!G||G.fim||!$('msg').classList.contains('esc')) return;
+  tiro={x:CX,y:CY,vx:Math.cos(mira)*VEL,vy:Math.sin(mira)*VEL,r:G.r,cor:G.municao.cor,txt:G.municao.txt};
+  G.tiros++;
+}
+function alvoEm(x,y){ // as bolhas do teto estão numa fileira só: vale a coluna onde o tiro chega
+  if(y>G.yTeto+G.r*1.05) return -2;
+  const esp=(W-30-2*G.r)/Math.max(1,G.n-1); let i=Math.round((x-15-G.r)/esp); i=Math.max(0,Math.min(G.n-1,i));
+  if(Math.abs(G.pos(i).x-x)>Math.max(esp/2,G.r)) return -2;
+  return G.visivel(i)?i:-1;   // -1: chegou num buraco (bolha já descartada)
+}
+function passoTiro(){
+  if(!tiro) return;
+  for(let s=0;s<3;s++){
+    tiro.x+=tiro.vx/3; tiro.y+=tiro.vy/3;
+    if(tiro.x<tiro.r){tiro.x=tiro.r;tiro.vx*=-1;} if(tiro.x>W-tiro.r){tiro.x=W-tiro.r;tiro.vx*=-1;}
+    const v=G.vidros.find(v=>!v.q&&Math.hypot(v.x-tiro.x,v.y-tiro.y)<v.r+tiro.r*.8);
+    if(v){ v.q=true; estoura(v.x,v.y,'#bfe3f5',14); flutua(v.x,v.y,'−10','#6b7785'); G.pts=Math.max(0,G.pts-10);
+      narra('O vidro estourou, mas gastou o tiro. Tente <b>tabelar na parede</b> pra desviar.'); tiro=null; return; }
+    const i=alvoEm(tiro.x,tiro.y);
+    if(i>=0){ const t=tiro; tiro=null; G.acerto(i,t); return; }
+    if(i===-1||tiro.y<G.yTeto-G.r){ tiro=null; G.pts=Math.max(0,G.pts-20); flutua(CX,300,'passou! −20','#d9485f'); narra('O tiro passou entre as bolhas sem acertar nada.','ruim'); return; }
+  }
+}
+function estoura(x,y,cor,n=18){ if(reduz) return; for(let k=0;k<n;k++){const a=rnd()*6.28,s=2+rnd()*5;part.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-2,v:1,cor,r:2+rnd()*4});} }
+function flutua(x,y,t,cor){ textos.push({x,y,t,cor,v:1}); }
+function erro(t){ if(ESP()) G.vidas--; tremor=14; narra(t,'ruim'); if(G.vidas<=0){ G.fim=true; setTimeout(()=>mostra('perdeu'),700);} }
+
+/* ---------- desenho ---------- */
+function fundo(){
+  const esc=tema==='escuro';
+  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,esc?'#1d3550':'#cfe6f7'); g.addColorStop(.55,esc?'#16283a':'#e7f2fb'); g.addColorStop(1,esc?'#3a2a48':'#ffe8d6');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=esc?'rgba(255,255,255,.035)':'rgba(255,255,255,.35)'; for(let k=0;k<7;k++){ctx.beginPath();ctx.arc((k*137)%W,(k*211)%H,40+k*9,0,7);ctx.fill();}
+  // brilho do canhão
+  const r=ctx.createRadialGradient(CX,CY,10,CX,CY,170); r.addColorStop(0,esc?'rgba(255,159,90,.35)':'rgba(255,190,140,.55)'); r.addColorStop(1,'rgba(255,190,140,0)'); ctx.fillStyle=r; ctx.fillRect(0,H-260,W,260);
+}
+function desenha(){
+  ctx.save(); if(tremor>0){ctx.translate((rnd()-.5)*tremor,(rnd()-.5)*tremor);tremor*=.85;if(tremor<.5)tremor=0;}
+  fundo();
+  if(G){
+    G.desenhaTeto();
+    G.vidros.forEach(v=>{ if(v.q) return; ctx.save(); ctx.globalAlpha=.9; bolha(v.x,v.y,v.r,'#cfe9f7',null,{claro:'#ffffff',borda:'#8fbad4'});
+      ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(v.x-5,v.y-2);ctx.lineTo(v.x+3,v.y+5);ctx.lineTo(v.x+7,v.y-1);ctx.stroke(); ctx.restore(); });
+    // mira
+    if(!tiro&&!ocupado&&!G.fim){ ctx.fillStyle=tema==='escuro'?'rgba(255,255,255,.75)':'rgba(31,69,96,.55)'; trajetoria().forEach(([x,y],k)=>{ctx.globalAlpha=1-k/30;ctx.beginPath();ctx.arc(x,y,3.2,0,7);ctx.fill();}); ctx.globalAlpha=1; }
+    // canhão
+    ctx.save(); ctx.translate(CX,CY); ctx.rotate(mira+Math.PI/2);
+    ctx.fillStyle=tema==='escuro'?'#2b4459':'#ffffff'; ctx.beginPath(); ctx.roundRect(-13,-58,26,50,10); ctx.fill(); ctx.restore();
+    ctx.fillStyle=tema==='escuro'?'#1a2b39':'#ffffff'; ctx.beginPath(); ctx.arc(CX,CY+6,40,0,7); ctx.fill();
+    if(!tiro) bolha(CX,CY,G.r*1.15,G.municao.cor,G.municao.txt,{anel:G.municao.anel});
+    if(tiro) bolha(tiro.x,tiro.y,tiro.r,tiro.cor,tiro.txt);
+  }
+  part=part.filter(p=>p.v>0); part.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.25;p.v-=.025;ctx.globalAlpha=Math.max(0,p.v);ctx.fillStyle=p.cor;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();});
+  textos=textos.filter(t=>t.v>0); textos.forEach(t=>{t.y-=1.1;t.v-=.016;ctx.globalAlpha=Math.max(0,t.v);ctx.fillStyle=t.cor;ctx.font='800 22px Inter,sans-serif';ctx.textAlign='center';ctx.fillText(t.t,t.x,t.y);});
+  ctx.globalAlpha=1; ctx.restore();
+}
+function laco(){ passoTiro(); desenha(); if(G) G.anima&&G.anima(); hud(); requestAnimationFrame(laco); }
+
+/* ---------- painel ---------- */
+function hud(){ if(!G) return; $('hVida').textContent=ESP()?'❤️'.repeat(Math.max(0,G.vidas))+'🤍'.repeat(Math.max(0,3-G.vidas)):'🌱'; $('hNivel').textContent=`fase ${fase} · nível ${nivel+1} · ${NIVEIS[fase][nivel].nome}`; $('hPts').textContent=`${G.pts} pts`; }
+function narra(t,c){ const e=$('narra'); e.innerHTML=t; e.className='narra'+(c?' '+c:''); }
+function codigo(linhas){ $('cod').innerHTML=linhas.map(l=>`<div>${l.replace(/</g,'&lt;')}</div>`).join(''); }
+function acende(i){ [...$('cod').children].forEach((d,k)=>d.classList.toggle('on',k===i)); }
+function vars(o){ $('vars').innerHTML=Object.entries(o).map(([k,v])=>`<span>${k} = ${v}</span>`).join(''); }
+function decide(bs){ $('cardDecide').classList.toggle('esc',!bs.length); $('decide').innerHTML=''; bs.forEach(([t,f,c])=>{const b=document.createElement('button');b.className='btn'+(c?' pri':'');b.textContent=t;b.onclick=f;$('decide').appendChild(b);}); }
+function tubo(lista){ $('tubo').innerHTML=lista.length?lista.map(([a,b])=>`<div class="cap">[${a}, ${b}]</div>`).join(''):`<div class="vazio">${fase===1?'vazia o tempo todo:<br>recursão de cauda vira laço,<br>não precisa guardar nada':'vazia'}</div>`; }
+function mostra(tipo){
+  const m=$('msg'); m.classList.remove('esc'); const N=NIVEIS[fase][nivel];
+  if(tipo==='inicio') m.innerHTML=fase===1?`<h2>Fase 1 · cauda vira laço</h2><p>Busca binária <b>sem recursão</b>: um <code>while</code> que só atualiza <b>a</b> e <b>b</b>. Os valores estão escondidos, como no algoritmo: você só descobre v[m] quando compara. Acerte sempre o <b>meio</b> e decida o lado.</p><p>Nível ${nivel+1} · ${N.nome}: ${N.n} bolhas, ${N.alvos} buscas, ${N.vidro} vidros no caminho.</p><button class="btn pri" id="go">Começar ▸</button>`
+    :`<h2>Fase 2 · quicksort iterativo</h2><p>Sem recursão: uma <b>pilha explícita</b> de intervalos. Desempilha [a, b], acerta o <b>pivô</b> (o último, v[b]) e depois atira o pivô na <b>casa onde ele vai parar</b> depois do particiona. Os dois pedaços vão pra pilha.</p><p>Nível ${nivel+1} · ${N.nome}: ${N.n} bolhas, ${N.vidro} vidros.</p><button class="btn pri" id="go">Começar ▸</button>`;
+  if(tipo==='ganhou'){ const esp=ESP(), est=G.vidas===3&&G.erros===0?3:G.vidas>=2?2:1; if(esp) salva(est); else salva(0);
+    m.innerHTML=`${esp?`<div class="est">${'⭐'.repeat(est)}${'☆'.repeat(3-est)}</div>`:'<div class="est">🌱</div>'}${esp?'':'<p style="margin:0">Concluído no modo aprender. No 🏆 especialista as variáveis somem e as estrelas contam.</p>'}<h2>${fase===2?'Vetor ordenado!':'Todas as buscas feitas!'}</h2><p>${G.pts} pontos · ${G.tiros} tiros · ${G.erros} erros.</p>
+    <div style="display:flex;gap:8px">${nivel<2?'<button class="btn pri" id="prox">Próximo nível ▸</button>':fase===1?'<button class="btn pri" id="prox">Ir pra fase 2 ▸</button>':''}<button class="btn" id="de">Jogar de novo</button></div>`; }
+  if(tipo==='perdeu') m.innerHTML=`<h2>Acabaram as vidas</h2><p>${G.ultimaDica||'Respira e tenta de novo: o erro mostra exatamente qual passo do algoritmo escapou.'}</p><div style="display:flex;gap:8px"><button class="btn" onclick="setModo('aprender')">🌱 Rever no aprender</button><button class="btn pri" id="de">Tentar de novo</button></div>`;
+  const go=$('go'),de=$('de'),pr=$('prox');
+  if(go) go.onclick=()=>{m.classList.add('esc');};
+  if(de) de.onclick=()=>{carrega(fase,nivel);m.classList.add('esc');};
+  if(pr) pr.onclick=()=>{ if(nivel<2) carrega(fase,nivel+1); else carrega(2,0); mostra('inicio'); };
+}
+function salva(est){ try{const k='bolhas-melhor',b=JSON.parse(localStorage.getItem(k)||'{}'),id=fase+'-'+nivel; if(!b[id]||est>b[id]) b[id]=est; localStorage.setItem(k,JSON.stringify(b));
+  const f=JSON.parse(localStorage.getItem('fliperama-alg2')||'{}'); f.bolhas=1; localStorage.setItem('fliperama-alg2',JSON.stringify(f));}catch(e){} fasesBar(); }
+function vidros(qtd,r){ const v=[]; let t=0; while(v.length<qtd&&t<500){t++; const x=60+rnd()*(W-120), y=200+rnd()*300;
+  if(Math.abs(x-CX)<40&&y>420) continue; if(v.some(o=>Math.hypot(o.x-x,o.y-y)<56)) continue; v.push({x,y,r:20,q:false}); } return v; }
+
+/* =================== FASE 1: busca binária iterativa =================== */
+function fase1(N){
+  const n=N.n, r=Math.min(26,(W-30)/(n*2)), yT=78;
+  const V=[]; let x0=ri(2,9); for(let i=0;i<n;i++){x0+=ri(1,9);V.push(x0);}
+  // buscas: algumas que estão, pelo menos uma que não está
+  const alvos=[]; for(let k=0;k<N.alvos;k++){ if(k===N.alvos-1){ let x; do{x=ri(V[0],V[n-1]);}while(V.includes(x)); alvos.push(x);} else alvos.push(V[ri(0,n-1)]); }
+  alvos.sort(()=>rnd()-.5);
+  const g={V,alvos,n,r,yTeto:yT,vidas:3,pts:0,tiros:0,erros:0,fim:false,vidros:vidros(N.vidro),
+    revel:new Set(),fora:new Set(),k:0,a:0,b:n-1,m:null,esperaLado:false,municao:{cor:'#4dabf7',txt:null},
+    pos:i=>({x:15+r+i*((W-30-2*r)/Math.max(1,n-1)),y:yT}),
+    visivel(i){return !this.fora.has(i);},
+    desenhaTeto(){
+      ctx.fillStyle=tema==='escuro'?'rgba(255,255,255,.06)':'rgba(255,255,255,.55)'; ctx.fillRect(0,0,W,yT+r+18);
+      for(let i=0;i<n;i++){ if(this.fora.has(i)) continue; const p=this.pos(i), dentro=i>=this.a&&i<=this.b, rv=this.revel.has(i);
+        bolha(p.x,p.y,r,rv?PAL[(V[i]*7)%PAL.length]:(dentro?'#7aa9d6':'#b9c8d6'),rv?V[i]:'?',{anel:this.m===i?'#ff9f5a':null,alfa:dentro?1:.45});
+        ctx.fillStyle=tema==='escuro'?'#93a4b3':'#6b7785'; ctx.font=`700 ${Math.max(9,r*.55)}px 'JetBrains Mono',monospace`; ctx.textAlign='center'; ctx.fillText(i,p.x,p.y+r+12); }
+      // marcadores a e b
+      const pa=this.pos(Math.min(this.a,n-1)), pb=this.pos(Math.max(this.b,0));
+      if(this.a<=this.b){ ctx.fillStyle='#1f9d63'; ctx.font='800 13px Inter,sans-serif'; ctx.fillText('a',pa.x,yT-r-8); ctx.fillStyle='#d9485f'; ctx.fillText('b',pb.x,yT-r-8); }
+      // alvo
+      ctx.fillStyle=tema==='escuro'?'#cfe8f8':'#1f4560'; ctx.font='800 20px Inter,sans-serif'; ctx.textAlign='left'; ctx.fillText(`procurando x = ${alvos[this.k]}`,18,H-20);
+      ctx.textAlign='right'; ctx.fillText(`busca ${this.k+1} de ${alvos.length}`,W-18,H-20);
+    },
+    acerto(i,t){
+      if(this.esperaLado){ narra('Primeiro decida o lado, nos botões ao lado.','ruim'); return; }
+      const m=Math.floor((this.a+this.b)/2);
+      if(i<this.a||i>this.b){ this.erros++; this.ultimaDica=`A bolha ${i} está fora do intervalo [${this.a}, ${this.b}]. Só o que está entre a e b ainda pode ter o x.`; erro(`A bolha <b>${i}</b> está fora do intervalo [${this.a}, ${this.b}]. Essa parte já foi descartada.`); return; }
+      if(i!==m){ this.erros++; this.ultimaDica=`O meio de [${this.a}, ${this.b}] é ⌊(${this.a} + ${this.b}) / 2⌋ = ${m}. O chão arredonda pra baixo.`; erro(`Não é o meio. m = ⌊(${this.a} + ${this.b}) / 2⌋ = <b>${m}</b>, não ${i}.`); return; }
+      this.m=m; this.revel.add(m); const p=this.pos(m); estoura(p.x,p.y,'#ffd27a',10); acende(2); vars({a:this.a,b:this.b,m}); const x=alvos[this.k];
+      if(V[m]===x){ this.pts+=150; flutua(p.x,p.y+40,'achou! +150','#1f9d63'); acende(3); narra(`v[${m}] = ${V[m]} = x. <b>Achou!</b> Devolve ${m}.`,'bom'); ocupado=true; setTimeout(()=>{ocupado=false;this.proxima();},1300); return; }
+      this.pts+=100; flutua(p.x,p.y+40,'+100','#1f9d63'); this.esperaLado=true;
+      narra(`v[${m}] = <b>${V[m]}</b>. E agora: o x = ${x} só pode estar de que lado?`);
+      decide([[`x < ${V[m]}: b ← m − 1`,()=>this.lado(x<V[m]?'esq':'erro','esq')],[`x > ${V[m]}: a ← m + 1`,()=>this.lado(x>V[m]?'dir':'erro','dir')]]);
+    },
+    lado(res,qual){
+      const m=this.m, x=alvos[this.k];
+      if(res==='erro'){ this.erros++; this.ultimaDica=`Compare x com v[m]: se x é menor, ele só pode estar à esquerda do meio (vetor ordenado).`; erro(`x = ${x} e v[${m}] = ${V[m]}: x é ${x<V[m]?'menor':'maior'}, então o lado certo é o outro.`); return; }
+      this.esperaLado=false; decide([]);
+      const sai=[]; if(qual==='esq'){ for(let i=m;i<=this.b;i++) sai.push(i); this.b=m-1; acende(4); } else { for(let i=this.a;i<=m;i++) sai.push(i); this.a=m+1; acende(5); }
+      ocupado=true; sai.forEach((i,k)=>setTimeout(()=>{ const p=this.pos(i); estoura(p.x,p.y,'#9fc7e8',8); this.fora.add(i); },k*45));
+      setTimeout(()=>{ ocupado=false; this.m=null; vars({a:this.a,b:this.b});
+        if(this.a>this.b){ acende(6); this.pts+=120; flutua(CX,300,'a > b: NÃO está! +120','#1f9d63'); narra(`Agora <b>a = ${this.a} > b = ${this.b}</b>: o intervalo ficou vazio e o laço termina. Devolve <b>NÃO</b>: o ${x} não está no vetor.`,'bom'); ocupado=true; setTimeout(()=>{ocupado=false;this.proxima();},1700); }
+        else { acende(1); narra(`O laço continua: a = ${this.a}, b = ${this.b}. Ache o novo meio. Repare: a pilha continua vazia.`); }
+      }, sai.length*45+250);
+    },
+    proxima(){ this.k++; if(this.k>=alvos.length){ this.fim=true; mostra('ganhou'); return; }
+      this.a=0; this.b=n-1; this.m=null; this.fora.clear(); this.revel.clear(); this.vidros=vidros(N.vidro); acende(0); vars({a:0,b:n-1}); narra(`Nova busca: x = ${alvos[this.k]}. Começa com a = 0 e b = ${n-1}.`); }
+  };
+  codigo(['BuscaBinariaI(x, v, a, b)','  enquanto a ≤ b','    m ← ⌊(a + b) / 2⌋','    se x = v[m]: devolva m','    se x < v[m]: b ← m − 1','    senão: a ← m + 1','  devolva NÃO']);
+  $('codTit').textContent='busca binária sem recursão'; $('tuboTit').textContent='pilha explícita';
+  $('ajuda').innerHTML='Mire com o mouse ou o dedo e solte pra atirar. Acerte sempre a bolha do <b>meio</b> do intervalo [a, b] (os números embaixo são os índices). Quando o valor aparecer, decida o lado. Vidros no caminho gastam o tiro: tabele na parede.';
+  acende(0); vars({a:0,b:n-1}); tubo([]); decide([]);
+  narra(`Procurando x = ${alvos[0]} num vetor ordenado de ${n} números. Acerte o meio de [0, ${n-1}].`);
+  return g;
+}
+
+/* =================== FASE 2: quicksort iterativo =================== */
+function fase2(N){
+  const n=N.n, r=Math.min(30,(W-30)/(n*2)), yT=86;
+  const V=[]; const pool=[]; for(let i=1;i<=40;i++) pool.push(i); pool.sort(()=>rnd()-.5); for(let i=0;i<n;i++) V.push(pool[i]);
+  const cor=v=>PAL[(v*5)%PAL.length];
+  const g={V,n,r,yTeto:yT,vidas:3,pts:0,tiros:0,erros:0,fim:false,vidros:vidros(N.vidro),
+    pilha:[[0,n-1]],atual:null,etapa:'pivo',fixo:new Set(),mov:null,municao:{cor:'#ffffff',txt:null,anel:null},
+    pos:i=>({x:15+r+i*((W-30-2*r)/Math.max(1,n-1)),y:yT}),
+    visivel(){return true;},
+    desenhaTeto(){
+      ctx.fillStyle=tema==='escuro'?'rgba(255,255,255,.06)':'rgba(255,255,255,.55)'; ctx.fillRect(0,0,W,yT+r+22);
+      const [a,b]=this.atual||[-1,-2];
+      if(this.atual){ const pa=this.pos(a),pb=this.pos(b); ctx.fillStyle='rgba(255,159,90,.22)'; ctx.beginPath(); ctx.roundRect(pa.x-r-6,yT-r-6,pb.x-pa.x+2*r+12,2*r+12,r+6); ctx.fill(); }
+      for(let i=0;i<n;i++){ let p=this.pos(i); if(this.mov&&this.mov[i]){const q=this.mov[i];p={x:q.x,y:q.y};}
+        if(this.etapa==='casa'&&i===b&&!this.mov) continue; // o pivô está no canhão
+        const fix=this.fixo.has(i), dentro=i>=a&&i<=b;
+        bolha(p.x,p.y,r,fix?'#f0b429':cor(V[i]),V[i],{anel:fix?'#fff3b0':null,alfa:fix||dentro||!this.atual?1:.5,claro:fix?'#fff6cf':null});
+        ctx.fillStyle=tema==='escuro'?'#93a4b3':'#6b7785'; ctx.font=`700 ${Math.max(9,r*.45)}px 'JetBrains Mono',monospace`; ctx.textAlign='center'; ctx.fillText(i,this.pos(i).x,yT+r+14); }
+      ctx.fillStyle=tema==='escuro'?'#cfe8f8':'#1f4560'; ctx.font='800 17px Inter,sans-serif'; ctx.textAlign='left';
+      ctx.fillText(this.atual?(this.etapa==='pivo'?`intervalo [${a}, ${b}] · acerte o pivô v[${b}]`:`onde o pivô ${V[b]} vai parar?`):'',18,H-20);
+      ctx.textAlign='right'; ctx.fillText(`${this.fixo.size}/${n} no lugar`,W-18,H-20);
+    },
+    proximo(){
+      while(this.pilha.length){ const [a,b]=this.pilha.pop(); tubo(this.pilha); acende(3);
+        if(a<b){ this.atual=[a,b]; this.etapa='pivo'; this.municao={cor:'#ffffff',txt:null}; acende(4); vars({a,b}); tubo(this.pilha);
+          narra(`Desempilhou <b>[${a}, ${b}]</b>. Tem mais de um elemento, então particiona. Acerte o pivô: o último, <b>v[${b}] = ${V[b]}</b>.`); return; }
+        if(a===b){ this.fixo.add(a); const p=this.pos(a); estoura(p.x,p.y,'#ffd27a',8); }
+        narra(`Desempilhou [${a}, ${b}]: ${a===b?'um elemento só, já está no lugar.':'vazio, nada a fazer.'}`);
+      }
+      this.atual=null; acende(2); tubo([]); this.fim=true; this.pts+=200; setTimeout(()=>mostra('ganhou'),900);
+    },
+    acerto(i,t){
+      const [a,b]=this.atual;
+      if(this.etapa==='pivo'){
+        if(i!==b){ this.erros++; this.ultimaDica='Na partição da aula o pivô é o último elemento do intervalo, v[b].'; erro(`O pivô é o <b>último</b> do intervalo: v[${b}] = ${V[b]}.`); return; }
+        this.pts+=80; const p=this.pos(b); estoura(p.x,p.y,'#ffd27a',10); flutua(p.x,p.y+44,'+80','#1f9d63');
+        this.etapa='casa'; this.municao={cor:cor(V[b]),txt:V[b],anel:'#f0b429'}; acende(5);
+        narra(`O pivô <b>${V[b]}</b> está no canhão. Particiona joga pra esquerda os menores que ele. Em que índice ele vai parar? Atire nessa casa.`); return;
+      }
+      // etapa 'casa': atirar o pivô na posição final
+      const menores=V.slice(a,b).filter(v=>v<V[b]).length, m=a+menores;
+      if(i!==m){ this.erros++; this.ultimaDica=`Conte quantos do intervalo são menores que o pivô: são ${menores}, então ele para em a + ${menores} = ${m}.`; erro(`Ainda não. Em [${a}, ${b}] há <b>${menores}</b> menores que ${V[b]}, então ele para em ${a} + ${menores} = <b>${m}</b>.`); return; }
+      this.pts+=150; flutua(this.pos(m).x,yT+70,'+150','#1f9d63'); this.particiona(a,b,m);
+    },
+    particiona(a,b,m){ // particiona da aula: pivô = v[b], menores vão pra esquerda
+      const antes=V.slice(), p=V[b]; let k=a; for(let j=a;j<b;j++){ if(V[j]<p){ [V[k],V[j]]=[V[j],V[k]]; k++; } } [V[k],V[b]]=[V[b],V[k]];
+      // animação: cada valor desliza da posição antiga pra nova
+      const de={}; for(let i=a;i<=b;i++){ const j=antes.indexOf(V[i],a); de[i]=j; }
+      ocupado=true; this.mov={}; const t0=performance.now(), dur=reduz?1:700;
+      this.anima=()=>{ const u=Math.min(1,(performance.now()-t0)/dur), e=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
+        for(let i=a;i<=b;i++){ const P=this.pos(de[i]),Q=this.pos(i); this.mov[i]={x:P.x+(Q.x-P.x)*e,y:yT-Math.sin(u*Math.PI)*(i===k?0:-26)}; }
+        if(u>=1){ this.anima=null; this.mov=null; this.fixo.add(k); const q=this.pos(k); estoura(q.x,q.y,'#ffd27a',16);
+          this.pilha.push([a,k-1]); this.pilha.push([k+1,b]); tubo(this.pilha); acende(6); vars({a,b,m:k});
+          narra(`Particionou: menores que ${p} à esquerda, maiores à direita, e o ${p} travado na casa <b>${k}</b>. Empilha [${a}, ${k-1}] e [${k+1}, ${b}].`,'bom');
+          setTimeout(()=>{ ocupado=false; if(!this.fim) this.proximo(); },1500); } };
+      this.municao={cor:'#ffffff',txt:null};
+    }
+  };
+  codigo(['QuicksortI(v, a, b)','  empilha([a, b])','  enquanto a pilha não está vazia','    [a, b] ← desempilha()','    se a < b','      m ← Particiona(v, a, b)  // pivô v[b]','      empilha([a, m − 1]); empilha([m + 1, b])']);
+  $('codTit').textContent='quicksort sem recursão'; $('tuboTit').textContent='pilha explícita · intervalos [a, b] · topo embaixo do laranja';
+  $('ajuda').innerHTML='Acerte o <b>pivô</b> (o último do intervalo aceso). Ele vai pro canhão: atire nele na <b>casa onde vai parar</b>, que é a + (quantos são menores que ele). O jogo particiona e empilha os dois pedaços; o próximo intervalo é sempre o do <b>topo</b> da pilha. Neste jogo, empilhamos a parte da esquerda e depois a da direita.';
+  acende(1); vars({a:0,b:n-1}); decide([]); tubo(g.pilha);
+  setTimeout(()=>g.proximo(),50);
+  return g;
+}
+
+/* ---------- carregar ---------- */
+function carrega(f,nv){ fase=f; nivel=nv; semente=(Date.now()+f*97+nv*13)%2147483646+1; tiro=null; part=[]; textos=[]; ocupado=false;
+  G=(f===1?fase1:fase2)(NIVEIS[f][nv]); fasesBar(); }
+function fasesBar(){ let b={}; try{b=JSON.parse(localStorage.getItem('bolhas-melhor')||'{}');}catch(e){}
+  $('fases').innerHTML=[1,2].map(f=>NIVEIS[f].map((N,k)=>`<button class="chip${f===fase&&k===nivel?' on':''}" data-f="${f}" data-k="${k}">${f===1?'Busca':'Quicksort'} ${k+1}${b[f+'-'+k]?' '+'⭐'.repeat(b[f+'-'+k]):''}</button>`).join('')).join('<small>·</small>');
+  document.querySelectorAll('#fases .chip').forEach(c=>c.onclick=()=>{carrega(+c.dataset.f,+c.dataset.k);mostra('inicio');}); }
+// abre direto na fase pedida no endereço (?fase=2)
+const qf=+(new URLSearchParams(location.search).get('fase'))||1;
+carrega(qf===2?2:1,0); mostra('inicio'); laco();
+window.addEventListener('modo',()=>{ carrega(fase,nivel); mostra('inicio'); });
+window.__bolhas={get G(){return G;},carrega,atira,setMira:a=>mira=a};
+window.__oc=()=>ocupado; // pra testes
+</script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · feito a partir do material da disciplina CI1056 (UFPR) · CC BY-NC-SA 4.0 · veja LICENSE.txt -->
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tópico 19: Quicksort Iterativo</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>:root{--titulo:#2f5d7c;--ceu:#e7f2fb;--gelo:#f2f7fb;--pessego:#ffd6b0;--rosa:#fdecef;--ink:#2b3440;--muted:#6b7785;--borda:#d5e6f3}
+body{margin:0;font-family:'Fredoka',system-ui,sans-serif;color:var(--ink);background:var(--gelo);font-size:17px;line-height:1.55}
+header{position:sticky;top:0;z-index:20;background:#fffffff0;border-bottom:2px solid var(--borda)}
+.top{display:flex;align-items:center;gap:12px;padding:10px 18px;flex-wrap:wrap}.top h1{margin:0;font-size:1.45rem;color:var(--titulo)}
+.voltar,.btn{font:inherit;font-weight:600;text-decoration:none;color:var(--titulo);background:var(--ceu);border-radius:12px;padding:8px 14px;display:inline-block}
+.btn.pri{background:#1f4560;color:#fff}
+main{max-width:1080px;margin:0 auto;padding:10px 18px 60px}
+section{background:#fff;border-radius:22px;padding:22px 24px;margin:18px 0;border:1px solid var(--borda)}
+section h2{color:var(--titulo);margin:0 0 8px}
+.cod{font-family:'JetBrains Mono',monospace;font-size:.86rem;white-space:pre;background:#f8fbfe;border:2px solid var(--borda);border-radius:14px;padding:12px 16px;overflow-x:auto;line-height:1.6}
+.cod i{color:#8a9aa8;font-style:normal}</style></head>
+<body data-arquivo="t19.html" data-eu="../19-quicksort-iterativo/index.html" data-titulo="Quicksort Iterativo" data-topico="19" data-ordem='[["../01-introducao-a-recursao/index.html", "Introdução à Recursão"], ["../02-minimo-de-vetor/index.html", "Mínimo de Vetor"], ["../03-busca-em-vetor/index.html", "Busca em Vetor"], ["../04-busca-em-vetor-ordenado/index.html", "Busca em Vetor Ordenado"], ["../05-busca-binaria/index.html", "Busca Binária"], ["../06-insertion-sort/index.html", "Insertion Sort"], ["../07-selection-sort/index.html", "Selection Sort"], ["../08-merge-sort/index.html", "Merge Sort"], ["../09-quick-sort/index.html", "Quick Sort"], ["../10-arvores-binarias-quase-completas/index.html", "Árvores Binárias (Quase) Completas"], ["../11-heap-binario/index.html", "Heap Binário"], ["../12-heapsort/index.html", "Análise do Heap Binário e HeapSort"], ["../13-implementacao-do-heap/index.html", "Implementação do Heap Binário"], ["../14-todos-vetores-binarios/index.html", "Todos Vetores Binários"], ["../15-todos-subconjuntos/index.html", "Todos Subconjuntos"], ["../16-passeio-do-cavalo/index.html", "Passeio do Cavalo"], ["../17-labirinto/index.html", "Labirinto"], ["../18-removendo-recursividade/index.html", "Removendo Recursividade"], ["../19-quicksort-iterativo/index.html", "Quicksort Iterativo"]]'>
+<header><div class="top"><a class="voltar" href="../index.html">← Tópicos</a><h1>📖 Quicksort Iterativo</h1></div></header>
+<main><section><h2>Quicksort sem recursão</h2>
+<p>O quicksort recursivo particiona e chama a si mesmo duas vezes, pra esquerda e pra direita do pivô. Na versão iterativa, cada chamada pendente vira um <b>intervalo [a, b]</b> guardado numa pilha explícita:</p>
+<div class="cod">QuicksortI(v, a, b)
+  empilha([a, b])
+  enquanto a pilha não está vazia
+    [a, b] ← desempilha()
+    se a &lt; b
+      m ← Particiona(v, a, b)        <i>// pivô = v[b], o último</i>
+      empilha([a, m − 1]); empilha([m + 1, b])</div>
+<p>Intervalos com um elemento ou vazios são desempilhados e descartados: já estão no lugar. Quando a pilha esvazia, o vetor está ordenado.</p>
+<p><a class="btn pri" href="../bolhas.html?fase=2">🫧 Jogar: Bolhas da Pilha, fase 2 (quicksort iterativo) ▸</a></p></section>
+<section><h2>Material da disciplina</h2><p><a class="btn" href="http://www.inf.ufpr.br/vignatti/v/cursos/ci1056/codigos/quicksort-iterativo-e-recursivo.c">código ↗</a> </p><p style="font-size:.9rem">A ordem em que os dois pedaços são empilhados pode variar entre implementações; confira no código da aula.</p></section></main>
+<script src="../aula-fatia.js"></script></body></html>

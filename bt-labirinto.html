@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · feito a partir do material da disciplina CI1056 (UFPR) · CC BY-NC-SA 4.0 · veja LICENSE.txt -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f2f7fb">
+<title>Labirinto do rato</title>
+<script src="labirinto-core.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--titulo:#2f5d7c;--ceu:#e7f2fb;--gelo:#f2f7fb;--pessego:#ffd6b0;--rosa:#fdecef;--ink:#2b3440;--muted:#6b7785;--ok:#2f9e5a;--red:#d9485f;--gold:#f0a81c;--borda:#d5e6f3}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:'Fredoka',system-ui,sans-serif;color:var(--ink);background:var(--gelo);font-size:17px;line-height:1.55;touch-action:manipulation}
+header{position:sticky;top:0;z-index:20;background:#fffffff0;backdrop-filter:blur(6px);border-bottom:2px solid var(--borda)}
+.top{display:flex;align-items:center;gap:12px;padding:10px 18px;flex-wrap:wrap}
+.top h1{margin:0;font-size:1.45rem;color:var(--titulo)}
+.top .aula{color:var(--muted);font-size:.95rem}
+.voltar{font:inherit;font-weight:600;text-decoration:none;color:var(--titulo);background:var(--ceu);border-radius:12px;padding:8px 14px}
+nav.caps{display:flex;gap:6px;overflow-x:auto;padding:0 18px 10px;scrollbar-width:none}
+nav.caps a{white-space:nowrap;text-decoration:none;color:var(--titulo);background:var(--gelo);border:2px solid var(--borda);border-radius:999px;padding:5px 12px;font-size:.92rem;font-weight:500}
+nav.caps a.on{background:var(--titulo);color:#fff;border-color:var(--titulo)}
+main{max-width:1080px;margin:0 auto;padding:10px 18px 60px}
+section{background:#fff;border-radius:22px;padding:22px 24px;margin:18px 0;box-shadow:0 2px 10px #2f5d7c10;border:1px solid var(--borda);scroll-margin-top:110px}
+section h2{margin:0 0 6px;color:var(--titulo);font-size:1.5rem}
+section h2 .n{display:inline-flex;width:34px;height:34px;border-radius:50%;background:var(--pessego);color:var(--titulo);align-items:center;justify-content:center;margin-right:8px;font-size:1.1rem}
+.lead{color:var(--muted);margin-top:0}
+.caixa{background:var(--ceu);border-radius:16px;padding:14px 18px;margin:12px 0}
+.caixa.pessego{background:#fff1e3;border:2px solid var(--pessego)}
+.caixa.rosa{background:var(--rosa)}
+.prof{display:flex;gap:12px;align-items:flex-start;background:#fff8ef;border:2px dashed var(--pessego);border-radius:16px;padding:12px 16px;margin:12px 0}
+.prof .av{font-size:1.8rem;line-height:1}
+code,.mono{font-family:'JetBrains Mono',monospace;font-size:.88em;background:var(--ceu);border-radius:6px;padding:1px 6px}
+.dois{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:860px){.dois{grid-template-columns:1fr}}
+/* código clicável */
+.codigo{font-family:'JetBrains Mono',monospace;font-size:.86rem;background:#f8fbfe;border:2px solid var(--borda);border-radius:14px;padding:8px 0;overflow-x:auto}
+.codigo div{white-space:pre;padding:2px 14px;border-left:5px solid transparent;min-height:1.4em}
+.codigo div.cl{cursor:pointer}
+.codigo div.cl:hover{background:#eef6fd}
+.codigo div.sel{background:#fff1e3;border-left-color:var(--gold)}
+.codigo div.on{background:#ffe7a8;border-left-color:var(--gold)}
+.codigo div.on.r{background:#e2f5ea;border-left-color:var(--ok)}
+.codigo .cm{color:#8a9aa8}
+.codigo .kw{color:#2f5d7c;font-weight:600}
+.explica{background:#fff8ef;border:2px solid var(--pessego);border-radius:14px;padding:12px 16px;min-height:120px}
+.explica h4{margin:0 0 4px;color:var(--titulo)}
+/* animação */
+.anim{border:2px solid var(--borda);border-radius:18px;padding:14px;background:var(--gelo);margin-top:12px}
+.anim .palco{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(250px,1fr);gap:14px}
+@media (max-width:860px){.anim .palco{grid-template-columns:1fr}}
+.arvore{background:#fff;border-radius:14px;border:1px solid var(--borda);overflow:auto;min-height:300px}
+.arvore svg{display:block;margin:0 auto}
+.narra{font-size:1.05rem;background:#fff;border-radius:14px;border:2px solid var(--borda);padding:12px 14px;min-height:72px;margin-bottom:10px}
+.narra.bom{border-color:#a9dcbc;background:#effaf3}
+.narra.ruim{border-color:#f3b8c3;background:var(--rosa)}
+.ctrl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.btn{font:inherit;font-weight:600;border-radius:12px;border:2px solid var(--borda);background:#fff;color:var(--titulo);min-height:48px;min-width:48px;padding:8px 14px;cursor:pointer}
+.btn:active{transform:scale(.95)}
+.btn.pri{background:var(--titulo);border-color:var(--titulo);color:#fff}
+.btn:disabled{opacity:.4}
+.ctrl input[type=range]{flex:1;min-width:140px;height:34px;accent-color:var(--titulo)}
+.ctrl .cont{color:var(--muted);font-size:.85rem;min-width:70px;text-align:right}
+.painel{display:flex;flex-direction:column;gap:10px}
+.mini{background:#fff;border-radius:14px;border:1px solid var(--borda);padding:10px 12px}
+.mini h5{margin:0 0 6px;color:var(--titulo);font-size:.92rem}
+.vet{display:flex;gap:4px;flex-wrap:wrap}
+.vet div{width:42px;text-align:center;border:2px solid var(--borda);border-radius:9px;background:#fff;padding:2px 0}
+.vet div small{display:block;font-size:.7rem;color:var(--muted)}
+.vet div b{font-family:'JetBrains Mono',monospace;font-size:1.1rem}
+.vet div.cur{border-color:var(--gold);background:#fff4d6}
+.vet div.lixo b{color:#b9c4ce}
+.pilha{display:flex;flex-direction:column-reverse;gap:3px;font-family:'JetBrains Mono',monospace;font-size:.8rem}
+.pilha div{background:var(--gelo);border-radius:8px;padding:3px 8px;border:1px solid var(--borda)}
+.pilha div:last-child{background:#fff1e3;border-color:var(--gold);font-weight:600}
+.saida{font-family:'JetBrains Mono',monospace;font-size:.85rem;background:#f8fbfe;border-radius:8px;padding:6px 8px;min-height:30px;max-height:150px;overflow:auto;white-space:pre}
+.legenda{display:flex;gap:12px;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin-top:8px}
+.legenda i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:4px;vertical-align:-1px}
+.toggle{font-size:.88rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+.toggle input{width:20px;height:20px;accent-color:var(--titulo)}
+/* quiz */
+.q{border:2px solid var(--borda);border-radius:16px;padding:14px 16px;margin:12px 0;background:#fff}
+.q .enun{font-weight:500;margin-bottom:8px}
+.q .ops{display:flex;flex-wrap:wrap;gap:8px}
+.q .ops button{font:inherit;border-radius:12px;border:2px solid var(--borda);background:var(--gelo);padding:8px 14px;cursor:pointer;min-height:46px;font-family:'JetBrains Mono',monospace;font-size:.92rem}
+.q .ops button.certa{background:#e2f5ea;border-color:var(--ok)}
+.q .ops button.errada{background:var(--rosa);border-color:var(--red)}
+.q .fb{margin-top:8px;display:none}
+.q .fb.on{display:block}
+.placar{font-weight:600;color:var(--titulo)}
+/* praticar */
+.jogos{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.jogo{display:block;text-decoration:none;color:inherit;border-radius:18px;padding:16px;border:2px solid var(--borda);background:var(--gelo)}
+.jogo h3{margin:0 0 4px;color:var(--titulo)}
+.jogo .ir{display:inline-block;margin-top:8px;background:var(--titulo);color:#fff;border-radius:10px;padding:6px 14px;font-weight:600}
+table.map{border-collapse:collapse;width:100%;font-size:.95rem}
+table.map td,table.map th{border:1px solid var(--borda);padding:7px 10px;text-align:left;vertical-align:top}
+table.map th{background:var(--ceu);color:var(--titulo)}
+</style>
+</head>
+<body data-arquivo="bt-labirinto.html" data-secoes="c9" data-titulo="Labirinto do rato" data-num="" data-resumo="O rato marca o caminho e apaga a marca quando volta do beco." data-selo="🐭" data-ordem='[["a02.html", "Recursão"], ["a03.html", "Mínimo de um vetor"], ["a04-05.html", "Busca em vetor"], ["a06.html", "Busca binária"], ["rev-recursao.html", "Recorrências e revisão"], ["a07.html", "Ordenação por inserção"], ["a08.html", "Ordenação por seleção"], ["a09.html", "Mergesort"], ["a10.html", "Quicksort"], ["rev-ordenacao.html", "Revisão de ordenação"], ["a11.html", "Árvores quase completas e heap"], ["a12.html", "max-heapify e build-max-heap"], ["a13.html", "Heapsort e heap.c"], ["rev-heap.html", "Revisão de heap"], ["bt-vetores.html", "Vetores binários e subconjuntos"], ["bt-cavalo.html", "Passeio do cavalo"], ["bt-labirinto.html", "Labirinto do rato"], ["rev-backtracking.html", "Revisão de backtracking"]]'>
+<header>
+  <div class="top">
+    <a class="voltar" href="index.html#portas">← Portas</a>
+    <h1>📖 Labirinto do rato</h1>
+    <span class="aula">backtracking · labirinto.c · conteúdo da P2</span>
+  </div>
+  <nav class="caps" id="caps">
+    <a href="#c1">1 · A ideia</a><a href="#c2">2 · O código</a><a href="#c3">3 · Animação</a><a href="#c4">4 · Ler o código</a><a href="#c5">5 · Subconjuntos</a><a href="#c6">6 · Poda</a><a href="#c7">7 · Do vetor ao cavalo</a><a href="#c9">8 · Labirinto</a><a href="#c8">🎮 Praticar</a>
+  </nav>
+</header>
+
+<main>
+<!-- ================= 1 ================= -->
+<section id="c1">
+  <h2><span class="n">1</span>A ideia: decidir uma coisa de cada vez</h2>
+  <p class="lead">Antes de qualquer código.</p>
+  <p>Imagina uma prova de <b>3 questões de verdadeiro ou falso</b>, e você quer listar <b>todos</b> os gabaritos possíveis. Como fazer isso sem esquecer nenhum e sem repetir?</p>
+  <p>O jeito organizado é decidir <b>uma questão de cada vez</b>:</p>
+  <div class="caixa">
+    <b>1.</b> Fixa a questão 1 como F e resolve "o resto" (as questões 2 e 3).<br>
+    <b>2.</b> Quando terminar todas as combinações do resto, <b>volta</b> e troca a questão 1 pra V.<br>
+    <b>3.</b> Resolve "o resto" de novo, agora com V na primeira.
+  </div>
+  <p>E "resolver o resto" é exatamente o mesmo problema, só que com uma questão a menos. Isso é <b>recursão</b>. Desenhando as decisões, aparece uma árvore:</p>
+  <div style="text-align:center"><svg id="arvIdeia" viewBox="0 0 620 230" style="width:100%;max-width:620px"></svg></div>
+  <div class="caixa pessego"><b>Backtracking</b> é andar por essa árvore de decisões de um jeito organizado: <b>desce</b> escolhendo, quando chega numa folha <b>registra</b> a resposta, e então <b>volta</b> (back!) só um nível e troca a última escolha. Nunca recomeça do zero.</div>
+  <div class="prof"><div class="av">🧑‍🏫</div><div>Repara em duas coisas que vão cair na prova: cada <b>nível</b> da árvore é uma <b>chamada recursiva</b>, e o número de folhas dobra a cada nível. Com <b>n</b> questões são <b>2 elevado a n</b> folhas. Com 3 questões, 8 gabaritos.</div></div>
+</section>
+
+<!-- ================= 2 ================= -->
+<section id="c2">
+  <h2><span class="n">2</span>O código do professor, linha por linha</h2>
+  <p class="lead">É o <code>all-binary-strings.c</code>. Em vez de V/F, ele usa 0 e 1. <b>Toque em cada linha</b> pra ver o que ela faz.</p>
+  <div class="dois">
+    <div class="codigo" id="codVB"></div>
+    <div class="explica" id="expVB"><h4>👆 Toque numa linha do código</h4>Cada linha tem uma explicação e, em algumas, uma pergunta de professor pra você pensar.</div>
+  </div>
+</section>
+
+<!-- ================= 3 ================= -->
+<section id="c3">
+  <h2><span class="n">3</span>Vendo o código rodar</h2>
+  <p class="lead"><code>vetores_binarios(v, 3, 0)</code>, passo a passo. Pode voltar e avançar à vontade, ou arrastar a barra.</p>
+  <div id="animVB"></div>
+  <div class="prof"><div class="av">🧑‍🏫</div><div>Olha a <b>pilha</b> do lado: ela é sempre o <b>caminho da raiz até o nó atual</b>. A árvore inteira nunca fica na memória, só esse galho. Por isso a pilha tem no máximo <b>n + 1</b> chamadas, mesmo a árvore tendo 15 nós.</div></div>
+</section>
+
+<!-- ================= 4 ================= -->
+<section id="c4">
+  <h2><span class="n">4</span>Ler o código <span class="placar" id="placarQ"></span></h2>
+  <p class="lead">Do jeito que a prova cobra: ler o algoritmo e saber o que ele faz. Responda antes de olhar a animação!</p>
+  <div id="quiz"></div>
+</section>
+
+<!-- ================= 5 ================= -->
+<section id="c5">
+  <h2><span class="n">5</span>De vetores binários para subconjuntos</h2>
+  <p class="lead">O <code>all-subsets.c</code> é o mesmo código com um detalhe na hora de imprimir.</p>
+  <div class="dois">
+    <div>
+      <p>Quer listar todos os subconjuntos de <code>{23, 10, 20}</code>? Cada elemento tem duas escolhas: <b>fica fora</b> (0) ou <b>entra</b> (1). É exatamente um vetor binário!</p>
+      <div class="caixa">
+        <code>v = 0 0 0</code> → { }<br>
+        <code>v = 1 0 1</code> → { 23, 20 }<br>
+        <code>v = 1 1 1</code> → { 23, 10, 20 }
+      </div>
+      <p>A <b>árvore é idêntica</b>. A única mudança é a função que imprime: ela recebe o <code>set</code> e só mostra <code>set[i]</code> onde <code>v[i]</code> vale 1.</p>
+    </div>
+    <div class="codigo" id="codSub"></div>
+  </div>
+  <div id="animSub"></div>
+  <div class="prof"><div class="av">🧑‍🏫</div><div>Lição importante: muitas vezes o "problema novo" da prova é um problema que você já conhece com <b>outra interpretação da folha</b>. Antes de escrever código do zero, pergunte: isso é uma árvore de decisões que eu já sei percorrer?</div></div>
+</section>
+
+<!-- ================= 6 ================= -->
+<section id="c6">
+  <h2><span class="n">6</span>Poda: o backtracking de verdade</h2>
+  <p class="lead">Até aqui a gente visitou a árvore <b>inteira</b>. O backtracking fica esperto quando <b>corta galhos</b> que já se sabe que não dão certo.</p>
+  <div class="caixa rosa"><b>Alteração no estilo da prova</b> (exemplo nosso, não é código do professor): "Altere <code>vetores_binarios</code> para imprimir só os vetores que <b>não têm dois 1 seguidos</b>."</div>
+  <div class="dois">
+    <div>
+      <p>Dá pra gerar tudo e filtrar na hora de imprimir, mas isso visita galhos inúteis. Melhor: <b>antes de colocar 1 na posição i</b>, olha se a posição anterior já é 1. Se for, nem desce por esse galho.</p>
+      <p>A mudança é uma linha só: um <code>if</code> em volta do segundo ramo.</p>
+    </div>
+    <div class="codigo" id="codPoda"></div>
+  </div>
+  <div id="animPoda"></div>
+  <div class="prof"><div class="av">🧑‍🏫</div><div>Compare o contador de chamadas: sem poda, n = 4 faz 31 chamadas. Com poda, bem menos, e os galhos cortados (em vermelho) nem chegam a ser chamados. Essa é a diferença entre <b>força bruta</b> e <b>backtracking</b>.</div></div>
+</section>
+
+<!-- ================= 7 ================= -->
+<section id="c7">
+  <h2><span class="n">7</span>Do vetor binário ao cavalo</h2>
+  <p class="lead">O <code>cavalo.c</code> é a mesma árvore, com mais filhos por nó e uma poda.</p>
+  <table class="map">
+    <tr><th></th><th><code>vetores_binarios</code></th><th><code>solveKTUtil</code> (cavalo)</th></tr>
+    <tr><td>Nível da árvore</td><td><code>i</code>: qual posição decidir</td><td><code>movei</code>: qual passo do passeio</td></tr>
+    <tr><td>Folha / sucesso</td><td><code>i == n</code></td><td><code>movei == N*N</code></td></tr>
+    <tr><td>Escolhas por nó</td><td>2 (0 ou 1)</td><td>8 saltos (<code>for k</code>)</td></tr>
+    <tr><td>Poda</td><td>nenhuma (vê tudo)</td><td><code>isSafe</code>: fora do tabuleiro ou casa já usada</td></tr>
+    <tr><td>Escolher</td><td><code>v[i] = 0</code> / <code>v[i] = 1</code></td><td><code>sol[next_x][next_y] = movei</code></td></tr>
+    <tr><td>Desfazer</td><td>não precisa: o próximo valor sobrescreve</td><td><b>precisa</b>: <code>sol[next_x][next_y] = -1</code></td></tr>
+    <tr><td>Para quando</td><td>nunca, imprime tudo</td><td>na primeira solução (<code>return 1</code> sobe)</td></tr>
+  </table>
+  <div class="prof"><div class="av">🧑‍🏫</div><div><b>Pergunta de prova:</b> por que o cavalo precisa desfazer (<code>sol = -1</code>) e o vetor binário não? Porque o <code>isSafe</code> <b>lê outras casas</b> do tabuleiro. Se uma casa ficasse marcada depois de um caminho que falhou, ela pareceria ocupada pra sempre e bloquearia caminhos bons. No vetor binário, ninguém lê <code>v[i]</code> antes de ele ser escrito de novo.</div></div>
+</section>
+
+<section id="c9">
+  <h2><span class="n">8</span>O labirinto do ratinho</h2>
+  <p class="lead">O <code>labirinto.c</code>: um rato em (0,0) precisa chegar no queijo em (N−1, N−1). No código do professor ele só anda <b>pra baixo</b> (x + 1) e <b>pra direita</b> (y + 1).</p>
+  <div class="caixa">Em cada casa, o rato pensa assim:<br>
+    <b>1.</b> Aqui é a saída? Então marca e avisa que deu certo.<br>
+    <b>2.</b> Aqui é parede ou fora do labirinto? Então não serve, volta.<br>
+    <b>3.</b> Senão, <b>marca</b> a casa no caminho, tenta descer, e se não der, tenta ir pra direita.<br>
+    <b>4.</b> Se nenhuma das duas deu certo, <b>desmarca</b> (BACKTRACK) e volta.</div>
+  <div class="dois">
+    <div class="codigo" id="codLab"></div>
+    <div class="explica" id="expLab"><h4>👆 Toque numa linha do código</h4>Repara nos comentários em inglês: são do código original do professor.</div>
+  </div>
+  <h3 style="color:var(--titulo);margin:18px 0 6px">Duas maneiras de testar: antes ou dentro</h3>
+  <table class="map">
+    <tr><th></th><th><code>solveKTUtil</code> (cavalo)</th><th><code>solveMazeUtil</code> (labirinto)</th></tr>
+    <tr><td>Onde testa se a casa serve</td><td><b>antes</b> de chamar: <code>if (isSafe(next_x, ...))</code></td><td><b>dentro</b> da chamada, no começo: <code>if (isSafe(maze, x, y))</code></td></tr>
+    <tr><td>Quem marca a casa</td><td>quem <b>chama</b>: <code>sol[next_x][next_y] = movei</code></td><td>a <b>própria</b> chamada: <code>sol[x][y] = 1</code></td></tr>
+    <tr><td>Quem desmarca</td><td>quem chama, no <code>else</code></td><td>a própria chamada, antes do <code>return false</code></td></tr>
+    <tr><td>Consequência</td><td>só chama casa válida</td><td>chama até pra parede e pra fora, e essas chamadas morrem na hora</td></tr>
+  </table>
+  <div class="prof"><div class="av">🧑‍🏫</div><div>Os dois jeitos estão certos e aparecem muito. Na prova, a primeira coisa a fazer quando ler um backtracking é achar <b>onde testa, onde marca e onde desmarca</b>. Isso responde metade das perguntas.</div></div>
+  <div class="ctrl" style="margin-top:14px"><select class="btn" id="labMapa"><option value="prof">Labirinto do professor</option><option value="beco">Com becos</option><option value="quatro">Alteração: 4 direções</option></select></div>
+  <div class="anim"><div class="palco">
+    <div><div class="narra" id="labNarra"></div><div class="grade" id="labGrade"></div>
+      <div class="ctrl"><button class="btn" id="lb0">⏮</button><button class="btn" id="lbv">◀</button><button class="btn pri" id="lbp">▶ Rodar</button><button class="btn" id="lba">▶|</button><input type="range" id="lrng" min="0" value="0"><span class="cont" id="lcont"></span></div></div>
+    <div class="painel"><div class="codigo" id="labCod"></div>
+      <div class="mini"><h5>Pilha de chamadas</h5><div class="pilha" id="labPilha"></div></div>
+      <div class="mini"><h5>Matriz <code>sol</code> · <span id="labCnt"></span></h5><pre class="solmat" id="labSol"></pre></div></div>
+  </div></div>
+  <div class="caixa rosa"><b>Alteração no estilo da prova:</b> "faça o rato andar nas 4 direções". Basta acrescentar mais dois <code>if</code> com <code>x - 1</code> e <code>y - 1</code>. E agora aquela linha <code>if (sol[x][y] == 1) return false;</code>, que no original nunca acontecia, vira <b>essencial</b>: sem ela o rato desceria e subiria pra sempre. Escolha "Alteração: 4 direções" ali em cima pra ver.</div>
+  <div id="quizLab"></div>
+</section>
+
+<!-- ================= 8 ================= -->
+<section id="c8">
+  <h2><span class="n">🎮</span>Agora pratique jogando</h2>
+  <div class="jogos">
+    <a class="jogo" href="domino.html"><h3>🁫 Dominó do Backtracking</h3>Cada peça colocada é uma escolha de um nível; "a peça encaixa?" é a poda. Trave e volte com o Desfazer, depois veja o algoritmo e a máquina usando a mesma árvore.<br><span class="ir">Jogar ▸</span></a>
+    <a class="jogo" href="labirinto.html"><h3>🐭 Ratinho no Labirinto</h3>O <code>labirinto.c</code> do professor: guie o rato com ↓ e →, bata em parede, volte de beco. Tem a alteração com 4 direções e o C rodando passo a passo.<br><span class="ir">Jogar ▸</span></a>
+    <a class="jogo" href="cavalo.html"><h3>♞ Cavalo no Campo Minado</h3>O <code>solveKTUtil</code> do professor com minas. Você é o algoritmo: escolhe o salto, trava e volta. Depois assista o C rodando linha por linha.<br><span class="ir">Jogar ▸</span></a>
+  </div>
+</section>
+</main>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function realce(t){
+  let cm=''; const k=t.indexOf('//'); if(k>=0){cm=t.slice(k);t=t.slice(0,k);}
+  t=esc(t).replace(/\b(void|int|if|return|for|else|while)\b/g,'<span class="kw">$1</span>');
+  return t+(cm?`<span class="cm">${esc(cm)}</span>`:'');
+}
+
+/* ---------- 1: árvore da ideia ---------- */
+(function(){
+  const s=$('arvIdeia'); let h='';
+  const n0={x:310,y:30}, l1=[{x:160,y:105,t:'F'},{x:460,y:105,t:'V'}];
+  const l2=[{x:85,y:185,t:'F'},{x:235,y:185,t:'V'},{x:385,y:185,t:'F'},{x:535,y:185,t:'V'}];
+  l1.forEach(p=>h+=`<line x1="${n0.x}" y1="${n0.y}" x2="${p.x}" y2="${p.y}" stroke="#bcd3e6" stroke-width="3"/>`);
+  l2.forEach((p,i)=>{const q=l1[i>>1];h+=`<line x1="${q.x}" y1="${q.y}" x2="${p.x}" y2="${p.y}" stroke="#bcd3e6" stroke-width="3"/>`;});
+  h+=`<rect x="${n0.x-70}" y="${n0.y-16}" width="140" height="32" rx="10" fill="#2f5d7c"/><text x="${n0.x}" y="${n0.y+6}" fill="#fff" font-size="15" text-anchor="middle" font-family="Fredoka">nada decidido</text>`;
+  l1.forEach(p=>h+=`<circle cx="${p.x}" cy="${p.y}" r="22" fill="#e7f2fb" stroke="#2f5d7c" stroke-width="2"/><text x="${p.x}" y="${p.y+6}" font-size="17" text-anchor="middle" font-family="Fredoka" fill="#2f5d7c">Q1=${p.t}</text>`.replace('font-size="17"','font-size="13"'));
+  l2.forEach((p,i)=>h+=`<circle cx="${p.x}" cy="${p.y}" r="22" fill="#fff1e3" stroke="#f0a81c" stroke-width="2"/><text x="${p.x}" y="${p.y+5}" font-size="13" text-anchor="middle" font-family="Fredoka" fill="#7a4b10">Q2=${p.t}</text>`);
+  h+=`<text x="310" y="226" font-size="14" text-anchor="middle" fill="#6b7785" font-family="Fredoka">... e cada um desses ainda se divide em Q3 = F ou V: 8 folhas no total</text>`;
+  s.innerHTML=h;
+})();
+
+/* ---------- 2: código clicável ---------- */
+const VB=[
+ ['// funcao para gerar todas strings binárias',null],
+ ['void vetores_binarios(int v[], int n, int i) {',['A assinatura','<code>v</code> guarda as escolhas feitas até agora. <code>n</code> é quantas posições o vetor tem. <code>i</code> é <b>qual posição vamos decidir agora</b>, ou seja, em que <b>nível da árvore</b> estamos. A primeira chamada é com <code>i = 0</code>.']],
+ ['    if (i == n) {',['A base: chegou numa folha','Se <code>i == n</code>, todas as posições de 0 até n−1 já foram decididas. Não sobrou escolha nenhuma: é uma <b>folha</b> da árvore.<br><br>🤔 <i>E se a base fosse <code>i == n − 1</code>?</i> A última posição nunca seria decidida, e você imprimiria lixo nela.']],
+ ['        imprime_vetor(v, n);',['Registra a resposta','Na folha, o vetor está completo: é um dos 2<sup>n</sup> vetores. Imprime.']],
+ ['        return;',['Volta pra quem chamou','Esse <code>return</code> é o começo do "back": a chamada termina e o controle volta pro nível de cima, que vai continuar de onde parou.']],
+ ['    }',null],
+ ['    v[i] = 0;',['Escolha 1: zero','Fixa a posição <code>i</code> com 0. Na árvore, é descer pro <b>filho da esquerda</b>.']],
+ ['    vetores_binarios(v, n, i + 1);',['Resolve o resto (com 0 fixado)','Chama a mesma função pra decidir as posições <b>i+1 em diante</b>. Essa chamada só termina quando <b>todos</b> os vetores que começam com esse prefixo forem impressos.']],
+ ['    v[i] = 1;',['Escolha 2: volta e troca','Aqui está o <b>backtracking</b>: a chamada de cima terminou, voltamos pra posição <code>i</code> e trocamos a escolha pra 1.<br><br>🤔 <i>Ninguém desfaz o 0?</i> Não precisa: o 1 sobrescreve. E as posições depois de <code>i</code> ficam com lixo da rodada anterior, mas tudo bem, porque elas vão ser escritas de novo antes de alguém ler.']],
+ ['    vetores_binarios(v, n, i + 1);',['Resolve o resto (com 1 fixado)','Mesma chamada, agora com 1 na posição <code>i</code>: desce pro <b>filho da direita</b>. Depois disso a função acaba (sem <code>return</code> explícito) e volta pro nível de cima.<br><br>🤔 <i>Quantas chamadas a função faz no total pra n = 3?</i> 1 + 2 + 4 + 8 = 15. Em geral 2<sup>n+1</sup> − 1.']],
+ ['}',null],
+ ['',null],
+ ['int main() {',null],
+ ['    int n = 4;',['n = 4','Quatro posições: vai imprimir 2<sup>4</sup> = 16 vetores.']],
+ ['    int v[n];',['O vetor de escolhas','Um vetor só, compartilhado por todas as chamadas! Cada nível escreve na sua posição <code>i</code>. É por isso que funciona sem copiar nada.']],
+ ['    vetores_binarios(v, n, 0);',['A chamada inicial','Começa na raiz: nenhuma posição decidida, <code>i = 0</code>.']],
+ ['}',null],
+];
+function montaClicavel(id,linhas,expId){
+  const el=$(id);
+  el.innerHTML=linhas.map(([t,e],k)=>`<div data-k="${k}" class="${e?'cl':''}">${realce(t)||' '}</div>`).join('');
+  if(expId) el.querySelectorAll('div.cl').forEach(d=>d.onclick=()=>{
+    el.querySelectorAll('div').forEach(x=>x.classList.remove('sel')); d.classList.add('sel');
+    const [tit,txt]=linhas[+d.dataset.k][1]; $(expId).innerHTML=`<h4>${tit}</h4>${txt}`;
+  });
+}
+montaClicavel('codVB',VB,'expVB');
+
+/* ---------- motor de animação da árvore ---------- */
+function criaAnimacao(alvo,cfg){
+  // cfg: n, codigo [linhas com id], folha(v)->string, pode1(v,i)->bool, nome
+  const quadros=[], nos=[]; const v=Array(cfg.n).fill(null); const pilha=[]; let saida='', cham=0;
+  const linhaDe=id=>cfg.codigo.findIndex(l=>l[1]===id);
+  const snap=(id,msg,extra={})=>quadros.push({linha:linhaDe(id),msg,st:nos.map(x=>x.st),cur:pilha.length?pilha[pilha.length-1]:-1,
+    v:v.slice(),pilha:pilha.map(k=>nos[k].nome),saida,cham,i:extra.i,ton:extra.ton||''});
+  function novo(pai,esc,depth,nome){const k=nos.length;nos.push({pai,esc,depth,nome,st:'oculto',kids:[]});if(pai>=0)nos[pai].kids.push(k);return k;}
+  function rec(i,pai,esc){
+    const k=novo(pai,esc,i,`${cfg.nome}(v, ${cfg.n}, ${i})`); cham++;
+    nos[k].st='pilha'; pilha.push(k);
+    snap('sig',pai<0?`Primeira chamada: <code>${cfg.nome}(v, ${cfg.n}, 0)</code>. Nada decidido ainda: é a raiz da árvore.`:`Chamou <code>${cfg.nome}(v, ${cfg.n}, ${i})</code>: vamos decidir a posição ${i}.`,{i});
+    snap('base',`<code>i == n</code>? ${i} == ${cfg.n}? ${i===cfg.n?'<b>Sim!</b> Chegou numa folha.':'Não, ainda tem posição pra decidir.'}`,{i});
+    if(i===cfg.n){
+      const o=cfg.folha(v); saida+=o+'\n'; nos[k].saida=o; nos[k].st='folha';
+      snap('imp',`Imprime <code>${o.trim()||'(vazio)'}</code>. Mais uma resposta encontrada!`,{i,ton:'bom'});
+      pilha.pop(); snap('ret','<code>return</code>: volta pro nível de cima, que vai continuar de onde parou.',{i});
+      return;
+    }
+    for(const b of [0,1]){
+      if(b===1&&cfg.pode1&&!cfg.pode1(v,i)){
+        const p=novo(k,1,i+1,'podado'); nos[p].st='podado';
+        snap('poda',`A posição ${i-1} já é 1. Pôr 1 em ${i} formaria "1 1": <b>poda</b>! Esse galho inteiro nem é chamado.`,{i,ton:'ruim'});
+        continue;
+      }
+      v[i]=b;
+      for(let j=i+1;j<cfg.n;j++) if(v[j]!==null) v[j]=v[j]; // lixo continua lá
+      snap(b?'v1':'v0',b?`Voltou! Agora <code>v[${i}] = 1</code>: troca a escolha da posição ${i}. Esse é o "back" do backtracking.`:`<code>v[${i}] = 0</code>: primeira escolha pra posição ${i}.`,{i});
+      snap(b?'c1':'c0',`Chama <code>${cfg.nome}(v, ${cfg.n}, ${i+1})</code> pra decidir o resto, com v[${i}] = ${b} fixado.`,{i});
+      rec(i+1,k,b);
+      nos[k].st='pilha'; // volta a ser o topo
+    }
+    nos[k].st='feito'; pilha.pop();
+    snap('fim',`Acabaram as escolhas da posição ${i}. A função termina e volta pro nível de cima.`,{i});
+  }
+  rec(0,-1,null);
+  quadros.push({...quadros[quadros.length-1],linha:-1,cur:-1,pilha:[],msg:`Fim! ${cfg.resumo(cham,saida)}`,ton:'bom'});
+  // layout
+  let folhaX=0; const pos=[];
+  (function lay(k){const no=nos[k];if(!no.kids.length){pos[k]={x:folhaX++,y:no.depth};return;}no.kids.forEach(lay);pos[k]={x:(pos[no.kids[0]].x+pos[no.kids[no.kids.length-1]].x)/2,y:no.depth};})(0);
+  const DX=Math.max(58,cfg.n>=4?48:70), DY=74, W=Math.max(320,folhaX*DX+40), H=(cfg.n+1)*DY+50;
+  const P=k=>({x:20+DX/2+pos[k].x*DX,y:34+pos[k].y*DY});
+  // DOM
+  alvo.innerHTML=`<div class="anim"><div class="palco"><div><div class="narra"></div><div class="arvore"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"></svg></div>
+    <div class="legenda"><span><i style="background:#ffe7a8;border:2px solid #f0a81c"></i>na pilha (galho atual)</span><span><i style="background:#fff;border:2px solid #9fb6c9"></i>já terminou</span><span><i style="background:#e2f5ea;border:2px solid #2f9e5a"></i>folha: imprimiu</span>${cfg.pode1?'<span><i style="background:#fdecef;border:2px solid #d9485f"></i>podado</span>':''}</div>
+    <div class="ctrl"><button class="btn b0">⏮</button><button class="btn bv">◀</button><button class="btn pri bp">▶ Rodar</button><button class="btn ba">▶|</button><input type="range" min="0" value="0"><span class="cont"></span></div><label class="toggle"><input type="checkbox" class="fant"> mostrar a árvore inteira em fantasma</label></div>
+    <div class="painel"><div class="codigo cod"></div>
+      <div class="mini"><h5>Vetor <code>v</code></h5><div class="vet"></div></div>
+      <div class="mini"><h5>Pilha de chamadas</h5><div class="pilha"></div></div>
+      <div class="mini"><h5>Saída · <span class="cham"></span></h5><div class="saida"></div></div></div></div>
+    </div>`;
+  const q=s=>alvo.querySelector(s), svg=q('svg'), rng=q('input[type=range]');
+  q('.cod').innerHTML=cfg.codigo.map(([t])=>`<div>${realce(t)||' '}</div>`).join('');
+  rng.max=quadros.length-1;
+  let f=0, timer=null;
+  function desenha(){
+    const Q=quadros[f], fant=q('.fant').checked; let h='';
+    nos.forEach((no,k)=>{ if(no.pai<0) return; const st=Q.st[k]||'oculto'; if(st==='oculto'&&!fant) return;
+      const a=P(no.pai), b=P(k), on=st!=='oculto';
+      h+=`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${st==='podado'?'#d9485f':on?'#9fb6c9':'#dfe8f0'}" stroke-width="${Q.pilha.length&&st==='pilha'?4:2.5}" ${st==='podado'?'stroke-dasharray="5 4"':''}/>`;
+      const mx=(a.x+b.x)/2, my=(a.y+b.y)/2;
+      h+=`<text x="${mx+(no.esc?8:-8)}" y="${my}" font-size="12" text-anchor="middle" fill="${on?'#2f5d7c':'#c8d6e2'}" font-family="JetBrains Mono">${no.esc}</text>`;
+    });
+    nos.forEach((no,k)=>{ const st=Q.st[k]||'oculto'; if(st==='oculto'&&!fant) return; const p=P(k);
+      const cor={pilha:['#ffe7a8','#f0a81c'],feito:['#fff','#9fb6c9'],folha:['#e2f5ea','#2f9e5a'],podado:['#fdecef','#d9485f'],oculto:['#f7fafc','#e1e9f0']}[st];
+      const atual=k===Q.cur;
+      if(st==='podado'){h+=`<text x="${p.x}" y="${p.y+6}" font-size="22" text-anchor="middle" fill="#d9485f">✂</text>`;return;}
+      h+=`<circle cx="${p.x}" cy="${p.y}" r="${atual?17:14}" fill="${cor[0]}" stroke="${cor[1]}" stroke-width="${atual?4:2.5}"/>`;
+      h+=`<text x="${p.x}" y="${p.y+4}" font-size="11" text-anchor="middle" fill="#2b3440" font-family="JetBrains Mono">${no.depth}</text>`;
+      if(st==='folha') h+=`<text x="${p.x}" y="${p.y+32}" font-size="11" text-anchor="middle" fill="#2f9e5a" font-family="JetBrains Mono" font-weight="600">${esc(no.saida.trim()||'{ }')}</text>`;
+    });
+    svg.innerHTML=h;
+    const nar=q('.narra'); nar.innerHTML=Q.msg; nar.className='narra '+Q.ton;
+    q('.cod').querySelectorAll('div').forEach((d,k)=>d.className=k===Q.linha?'on'+(Q.ton==='bom'?' r':''):'');
+    q('.vet').innerHTML=Q.v.map((x,j)=>`<div class="${j===Q.i?'cur':''} ${Q.i!==undefined&&j>Q.i&&x!==null?'lixo':''}"><small>v[${j}]</small><b>${x===null?'?':x}</b></div>`).join('');
+    q('.pilha').innerHTML=Q.pilha.map(t=>`<div>${t}</div>`).join('')||'<span style="color:#6b7785">vazia</span>';
+    q('.saida').textContent=Q.saida; q('.saida').scrollTop=1e6;
+    q('.cham').textContent=`${Q.cham} chamada${Q.cham===1?'':'s'}`;
+    rng.value=f; q('.cont').textContent=`${f+1} / ${quadros.length}`;
+    if(Q.cur>=0){const p=P(Q.cur),box=q('.arvore');if(p.x<box.scrollLeft+40||p.x>box.scrollLeft+box.clientWidth-40)box.scrollLeft=p.x-box.clientWidth/2;}
+  }
+  const vai=k=>{f=Math.max(0,Math.min(quadros.length-1,k));desenha();};
+  const pausa=()=>{clearInterval(timer);timer=null;q('.bp').textContent='▶ Rodar';};
+  q('.b0').onclick=()=>{pausa();vai(0);}; q('.bv').onclick=()=>{pausa();vai(f-1);}; q('.ba').onclick=()=>{pausa();vai(f+1);};
+  q('.bp').onclick=()=>{if(timer)return pausa(); if(f>=quadros.length-1)vai(0); q('.bp').textContent='⏸ Pausar'; timer=setInterval(()=>{if(f>=quadros.length-1)return pausa();vai(f+1);},cfg.vel||900);};
+  rng.oninput=()=>{pausa();vai(+rng.value);};
+  q('.fant').onchange=desenha;
+  // na poda, pré-calcula os nós fantasmas também (todos já existem no array)
+  desenha();
+  return {quadros};
+}
+
+/* ---------- 3: animação vetores binários ---------- */
+const CODANIM=[
+ ['void vetores_binarios(int v[], int n, int i) {','sig'],
+ ['    if (i == n) {','base'],
+ ['        imprime_vetor(v, n);','imp'],
+ ['        return;','ret'],
+ ['    }',''],
+ ['    v[i] = 0;','v0'],
+ ['    vetores_binarios(v, n, i + 1);','c0'],
+ ['    v[i] = 1;','v1'],
+ ['    vetores_binarios(v, n, i + 1);','c1'],
+ ['}','fim'],
+];
+criaAnimacao($('animVB'),{n:3,nome:'vetores_binarios',codigo:CODANIM,folha:v=>v.join(' '),
+  resumo:(c,s)=>`Foram <b>${c} chamadas</b> e <b>${s.trim().split('\n').length} vetores</b> impressos. 15 = 2<sup>4</sup> − 1 e 8 = 2<sup>3</sup>.`});
+
+/* ---------- 4: quiz ---------- */
+const QUIZ=[
+ {e:'Com <code>n = 2</code>, o que o programa imprime, na ordem?',o:['00 01 10 11','00 10 01 11','11 10 01 00','01 10 11 00'],c:0,
+  x:'O ramo do 0 é sempre explorado <b>inteiro</b> antes do ramo do 1. Então primeiro tudo que começa com 0 (00, 01), depois tudo que começa com 1 (10, 11). É a ordem de contar em binário!'},
+ {e:'Quantas chamadas de <code>vetores_binarios</code> acontecem com <code>n = 3</code> (contando a primeira)?',o:['8','15','16','7'],c:1,
+  x:'Cada nível dobra: 1 + 2 + 4 + 8 = 15. As 8 folhas também são chamadas! Em geral, 2<sup>n+1</sup> − 1.'},
+ {e:'Com <code>n = 4</code>, qual o <b>máximo</b> de chamadas empilhadas ao mesmo tempo?',o:['4','5','16','31'],c:1,
+  x:'A pilha é um galho da raiz até uma folha: i = 0, 1, 2, 3, 4. São n + 1 = 5 chamadas. A árvore tem 31 nós, mas a pilha nunca guarda mais que um galho.'},
+ {e:'Se trocar a ordem (<code>v[i] = 1</code> e chamada, <b>depois</b> <code>v[i] = 0</code> e chamada), qual a <b>primeira</b> linha impressa com <code>n = 3</code>?',o:['0 0 0','1 1 1','1 0 0','0 0 1'],c:1,
+  x:'Agora o ramo do 1 vem primeiro em todo nível, então desce sempre pela direita: 1 1 1. A saída fica em ordem decrescente.'},
+ {e:'Na chamada <code>vetores_binarios(v, 3, 2)</code>, quais posições de <code>v</code> já estão decididas?',o:['nenhuma','só v[2]','v[0] e v[1]','v[0], v[1] e v[2]'],c:2,
+  x:'<code>i</code> é a posição que <b>vai</b> ser decidida agora. Quem chegou com i = 2 já fixou v[0] e v[1] nos níveis de cima.'},
+ {e:'No <code>all-subsets.c</code> com <code>set = {23, 10, 20}</code>, qual subconjunto é impresso quando <code>v = 0 1 1</code>?',o:['{23}','{10, 20}','{23, 10}','{20}'],c:1,
+  x:'v[i] = 1 quer dizer "set[i] entra". Posições 1 e 2: set[1] = 10 e set[2] = 20.'},
+];
+(function(){
+  let acertos=0, resp=0;
+  $('quiz').innerHTML=QUIZ.map((q,k)=>`<div class="q" data-k="${k}"><div class="enun">${k+1}. ${q.e}</div><div class="ops">${q.o.map((o,j)=>`<button data-j="${j}">${o}</button>`).join('')}</div><div class="fb"></div></div>`).join('');
+  document.querySelectorAll('#quiz .q').forEach(div=>{
+    const q=QUIZ[+div.dataset.k]; let feito=false;
+    div.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+      if(feito) return; feito=true; resp++;
+      const j=+b.dataset.j; div.querySelectorAll('button')[q.c].classList.add('certa');
+      if(j!==q.c) b.classList.add('errada'); else acertos++;
+      const fb=div.querySelector('.fb'); fb.classList.add('on'); fb.innerHTML=(j===q.c?'✅ <b>Isso!</b> ':'❌ <b>Não foi dessa vez.</b> ')+q.x;
+      $('placarQ').textContent=`· ${acertos}/${resp}`;
+    });
+  });
+})();
+
+/* ---------- 5: subconjuntos ---------- */
+montaClicavel('codSub',[
+ ['void imprime_vetor(int set[], int v[], int n) {',null],
+ ['    for (int i = 0; i < n; i++)',null],
+ ['        if (v[i])               // só quem "entrou"',null],
+ ['            printf("%d ", set[i]);',null],
+ ['    printf("\\n");',null],
+ ['}',null],
+ ['// o resto é igual: v[i] = 0 (fica fora)',null],
+ ['//                  v[i] = 1 (entra)',null],
+],null);
+const SET=[23,10,20];
+criaAnimacao($('animSub'),{n:3,nome:'vetores_binarios',codigo:CODANIM.map(([t,id])=>[t.replace('imprime_vetor(v, n)','imprime_vetor(set, v, n)').replace(/vetores_binarios\(int v\[\]/,'vetores_binarios(int set[], int v[]').replace(/vetores_binarios\(v,/g,'vetores_binarios(set, v,'),id]),
+  folha:v=>'{ '+v.map((x,j)=>x?SET[j]:null).filter(x=>x!==null).join(', ')+' }',
+  resumo:(c,s)=>`Mesmas ${c} chamadas da árvore de antes, e os 8 subconjuntos de {23, 10, 20}, do vazio até o conjunto inteiro.`});
+
+/* ---------- 6: poda ---------- */
+const CODPODA=[
+ ['void sem_11(int v[], int n, int i) {','sig'],
+ ['    if (i == n) {','base'],
+ ['        imprime_vetor(v, n);','imp'],
+ ['        return;','ret'],
+ ['    }',''],
+ ['    v[i] = 0;','v0'],
+ ['    sem_11(v, n, i + 1);','c0'],
+ ['    if (i == 0 || v[i-1] == 0) {   // poda!','poda'],
+ ['        v[i] = 1;','v1'],
+ ['        sem_11(v, n, i + 1);','c1'],
+ ['    }',''],
+ ['}','fim'],
+];
+montaClicavel('codPoda',CODPODA.map(([t])=>[t,null]),null);
+$('codPoda').querySelectorAll('div')[7].style.background='#fdecef';
+criaAnimacao($('animPoda'),{n:4,nome:'sem_11',codigo:CODPODA,folha:v=>v.join(' '),pode1:(v,i)=>i===0||v[i-1]===0,vel:650,
+  resumo:(c,s)=>`Com poda: <b>${c} chamadas</b> (sem poda seriam 31) e ${s.trim().split('\n').length} vetores sem "1 1". Cada ✂ é um galho inteiro que nunca foi visitado.`});
+
+
+/* ---------- 8: labirinto ---------- */
+document.head.insertAdjacentHTML('beforeend',`<style>${LAB.CSS}</style>`);
+const EXPL={
+ sig:['A assinatura','<code>x</code> é a <b>linha</b> e <code>y</code> é a <b>coluna</b>. <code>maze</code> tem 1 onde é caminho e 0 onde é parede. <code>sol</code> guarda o caminho que está sendo montado.'],
+ goal:['Chegou na saída?','Se (x, y) é o canto de baixo à direita e é caminho, achou! Essa é a <b>base de sucesso</b>.'],
+ goalM:['Marca e avisa','Marca a última casa e devolve <code>true</code>. Esse true vai subir pela pilha inteira.'],
+ safe:['A casa serve?','<code>isSafe</code> confere se (x, y) está <b>dentro</b> do labirinto e se é <b>caminho</b>. Se não for, pula tudo e cai no <code>return false</code> lá de baixo.'],
+ vis:['Já passei aqui?','Se a casa já está no caminho, voltar nela seria andar em círculo.<br><br>🤔 <i>Com só ↓ e →, isso pode acontecer?</i> Não! O rato só vai pra frente, nunca volta numa casa. A linha só faz diferença na alteração com 4 direções.'],
+ mark:['Escolhe','Marca (x, y) como parte do caminho <b>antes</b> de continuar. Repara que aqui é a própria chamada que marca a sua casa.'],
+ down:['Tenta descer','x + 1 é a linha de baixo. O comentário original diz "Move forward in x direction".'],
+ right:['Tenta a direita','Só tenta isso se descer não deu certo, porque se tivesse dado, o <code>return true</code> já teria saído da função.'],
+ prop:['O sucesso sobe','Se a chamada de baixo achou, esta também acha e devolve true sem tentar mais nada.'],
+ unmark:['Desfaz (BACKTRACK)','Nenhuma direção levou à saída: tira (x, y) do caminho. Sem isso, a matriz <code>sol</code> impressa no fim teria casas de becos marcadas com 1.'],
+ ret0:['Avisa que falhou','Quem chamou vai tentar a próxima direção.'],
+ unsafe:['A casa não servia','Chegou aqui porque o <code>isSafe</code> deu false: parede ou fora. Devolve false sem marcar nada.'],
+};
+(function(){
+  const linhas=LAB.codigo(2);
+  const el=$('codLab'); el.innerHTML=linhas.map(([t,id],k)=>`<div data-k="${k}" class="${EXPL[id]?'cl':''}">${realce(t)||' '}</div>`).join('');
+  el.querySelectorAll('div.cl').forEach(d=>d.onclick=()=>{el.querySelectorAll('div').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');const [t,x]=EXPL[linhas[+d.dataset.k][1]];$('expLab').innerHTML=`<h4>${t}</h4>${x}`;});
+  let F=[],f=0,timer=null,M,D;
+  function carrega(){const mp=LAB.MAPAS[$('labMapa').value];M=mp.m;D=mp.dirs;F=LAB.gerar(M,D).F;f=0;$('lrng').max=F.length-1;
+    $('labCod').innerHTML=LAB.codigo(D).map(([t,id])=>`<div data-id="${id}">${realce(t)||' '}</div>`).join('');desenha();}
+  function desenha(){const Q=F[f];LAB.grade($('labGrade'),M,Q);$('labNarra').innerHTML=Q.msg;$('labNarra').className='narra '+(Q.ton||'');
+    $('labCod').querySelectorAll('div').forEach(d=>d.className=Q.linha&&d.dataset.id===Q.linha?'on':'');
+    $('labPilha').innerHTML=Q.pilha.map(([x,y])=>`<div>solveMazeUtil(maze, ${x}, ${y}, sol)</div>`).join('')||'<span style="color:#6b7785">vazia</span>';
+    LAB.matriz($('labSol'),Q.sol);$('labCnt').textContent=`${Q.cham} chamadas, ${Q.voltas} voltas`;$('lrng').value=f;$('lcont').textContent=`${f+1} / ${F.length}`;}
+  const vai=k=>{f=Math.max(0,Math.min(F.length-1,k));desenha();};
+  const pausa=()=>{clearInterval(timer);timer=null;$('lbp').textContent='▶ Rodar';};
+  $('lb0').onclick=()=>{pausa();vai(0);};$('lbv').onclick=()=>{pausa();vai(f-1);};$('lba').onclick=()=>{pausa();vai(f+1);};
+  $('lbp').onclick=()=>{if(timer)return pausa();if(f>=F.length-1)vai(0);$('lbp').textContent='⏸ Pausar';timer=setInterval(()=>{if(f>=F.length-1)return pausa();vai(f+1);},750);};
+  $('lrng').oninput=()=>{pausa();vai(+$('lrng').value);};
+  $('labMapa').onchange=()=>{pausa();carrega();};
+  carrega();
+})();
+(function(){
+  const Q=[
+   {e:'Qual matriz <code>sol</code> o <code>labirinto.c</code> imprime para o labirinto do <code>main()</code> dele?<br><code style="white-space:pre;display:inline-block;margin-top:6px">maze = 1 0 0 0\n       1 1 0 1\n       0 1 0 0\n       1 1 1 1</code>',
+    o:['1000 / 1100 / 0100 / 0111','1000 / 1101 / 0100 / 1111','1000 / 1100 / 0100 / 1111','1100 / 0100 / 0100 / 0111'],c:0,
+    x:'O caminho é (0,0) ↓ (1,0) → (1,1) ↓ (2,1) ↓ (3,1) → (3,2) → (3,3). Só as casas do caminho ficam com 1. O (1,3) e o (3,0) são caminho no maze, mas o rato nunca passa por eles.'},
+   {e:'No código original (só ↓ e →), quando a linha <code>if (sol[x][y] == 1) return false;</code> é verdadeira?',o:['Sempre que o rato bate na parede','Nunca: só andando ↓ e → ele não volta numa casa','Só no último passo','Quando a casa é a saída'],c:1,
+    x:'Indo só pra baixo e pra direita, x + y aumenta a cada passo, então ele nunca pisa duas vezes na mesma casa. A linha só começa a trabalhar na alteração com 4 direções.'},
+   {e:'No labirinto "Com becos", se o código tentasse <b>→ antes de ↓</b>, o que mudaria?',o:['Nada, acha igual','Acha pela linha de cima, sem voltar nenhuma vez','Não acharia caminho','Daria loop infinito'],c:1,
+    x:'Indo pra direita primeiro: (0,0) → (0,1) → (0,2) → (0,3), e daí desce até (3,3). A ordem das tentativas muda o caminho encontrado e o trabalho feito, mas não muda se existe solução.'},
+  ];
+  $('quizLab').innerHTML=Q.map((q,k)=>`<div class="q" data-k="${k}"><div class="enun">${q.e}</div><div class="ops">${q.o.map((o,j)=>`<button data-j="${j}">${o}</button>`).join('')}</div><div class="fb"></div></div>`).join('');
+  $('quizLab').querySelectorAll('.q').forEach(div=>{const q=Q[+div.dataset.k];let feito=false;
+    div.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(feito)return;feito=true;const j=+b.dataset.j;
+      div.querySelectorAll('button')[q.c].classList.add('certa');if(j!==q.c)b.classList.add('errada');
+      const fb=div.querySelector('.fb');fb.classList.add('on');fb.innerHTML=(j===q.c?'✅ <b>Isso!</b> ':'❌ <b>Não foi dessa vez.</b> ')+q.x;});});
+})();
+
+/* ---------- navegação dos capítulos ---------- */
+const links=[...document.querySelectorAll('#caps a')];
+const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id));}}),{rootMargin:'-40% 0px -55% 0px'});
+document.querySelectorAll('main section').forEach(s=>obs.observe(s));
+</script>
+<script src="aula-fatia.js"></script>
+</body>
+</html>

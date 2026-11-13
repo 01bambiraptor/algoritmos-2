@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · feito a partir do material da disciplina CI1056 (UFPR) · CC BY-NC-SA 4.0 · veja LICENSE.txt -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f4f5f6">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<title>Cavalo no Campo Minado: backtracking em C</title>
+<style>
+:root{
+  --ciano:#5f6b76; --cianoF:#3d4852; --magenta:#5f6b76; --magentaF:#3d4852; --limao:#5b8a6a; --limaoF:#5b8a6a;
+  --laranja:#8a8f96; --amarelo:#b8a37a; --vermelho:#b5545f; --texto:#2f343a; --suave:#7a8088;
+  --vidro:#ffffff; --borda:#dde1e5;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{color:var(--texto);font:16px/1.45 'Fredoka',system-ui,sans-serif;
+  -webkit-user-select:none;user-select:none;touch-action:manipulation;
+  background:#f4f5f6}
+body.treme{animation:treme .35s}
+@keyframes treme{20%{transform:translate(-6px,2px)}40%{transform:translate(6px,-2px)}60%{transform:translate(-4px,1px)}80%{transform:translate(3px,0)}}
+header{padding:14px 20px 4px;max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+h1{margin:0;font-size:clamp(22px,3.2vw,32px);font-weight:700;color:#2b3440}
+.sub{color:var(--suave);margin:0;max-width:1280px;padding:0 20px;margin:0 auto;font-size:15px}
+.topoBtns{margin-left:auto;display:flex;gap:8px}
+.wrap{max-width:1280px;margin:0 auto;padding:8px 20px 40px}
+.abas{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0;background:#e6e8eb;padding:5px;border-radius:16px;width:max-content;max-width:100%}
+.abas button{border:0;background:transparent;color:var(--suave);padding:10px 18px;min-height:46px;border-radius:12px;font-weight:600;cursor:pointer;font-size:15px;font-family:inherit}
+.abas button.on{background:#fff;color:var(--texto);box-shadow:0 2px 6px #0001}
+.barra{display:flex;gap:14px;flex-wrap:wrap;align-items:center;background:#fff;border:1px solid var(--borda);border-radius:16px;padding:10px 14px;margin-bottom:14px;box-shadow:0 2px 10px #2f5d7c0d}
+.barra label{display:flex;gap:8px;align-items:center;font-size:15px;font-weight:600}
+input[type=range]{accent-color:var(--magentaF);width:130px;height:28px}
+input[type=checkbox]{accent-color:var(--magentaF);width:22px;height:22px}
+select{border:2px solid var(--borda);border-radius:10px;padding:8px 10px;background:#fff;color:var(--texto);font:inherit;font-weight:600;min-height:44px}
+.btn{border:2px solid var(--borda);background:#fff;color:var(--cianoF);padding:10px 14px;min-height:48px;border-radius:13px;cursor:pointer;font-weight:600;font-size:15px;font-family:inherit;transition:transform .08s}
+.btn:active{transform:scale(.96)}
+.btn.pri{background:#3d4852;border-color:#2f3740;color:#fff}
+.btn.alerta{background:#6b7480;border-color:#555d68;color:#fff}
+.btn.on{background:#eceef1;border-color:#8a9099;color:#2f343a}
+.btn.icone{min-width:48px;padding:8px 10px;font-size:20px}
+.btn:disabled{opacity:.4;cursor:default}
+.grade{display:grid;grid-template-columns:min(46vw,72vh) 1fr;gap:18px;align-items:start}
+@media (max-width:900px){.grade{grid-template-columns:1fr}}
+.card{background:#fff;border:1px solid var(--borda);border-radius:18px;padding:14px;box-shadow:0 2px 10px #2f5d7c0d}
+.card h3{margin:0 0 8px;font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--magentaF)}
+#tabWrap{position:relative;width:100%;aspect-ratio:1/1;margin:0 auto}
+@media (max-width:900px){#tabWrap{max-width:min(92vw,50vh)}}
+#tab{position:absolute;inset:0;display:grid;gap:5px}
+#tab .casa{border:2px solid #e3e6e9;border-radius:12px;background:#fdfdfd;position:relative;font-weight:700;color:var(--cianoF);font-size:clamp(16px,3.4vh,30px);cursor:default;padding:0;display:flex;align-items:center;justify-content:center;transition:background .15s,box-shadow .15s;font-family:inherit}
+#tab .casa.esc{background:#f0f1f3}
+#tab .casa.vis{background:#d9dfe5;border-color:#8a949f;color:#2f343a}
+#tab .casa.topo{background:#d5dbe1;border-color:#3d4852;color:#2f343a;box-shadow:0 0 0 3px #3d485233;z-index:2}
+#tab .casa.alvo{cursor:pointer;background:#eef3ef;border:2px dashed var(--limao);animation:pulsa 1.3s ease-in-out infinite}
+@keyframes pulsa{50%{box-shadow:0 0 0 4px #5b8a6a33}}
+#tab .casa.alvo:active{background:#d3f0de}
+#tab .casa.mina{background:#f3e7e8;border-color:#d4a9ae}
+#tab .casa.minaFraca{opacity:.6}
+#tab .casa.probe-ok{border:3px solid var(--limao);background:#e8f0ea}
+#tab .casa.probe-no{border:3px solid var(--vermelho);background:#f3e7e8}
+#tab .casa.desfeito{animation:desf .6s}
+@keyframes desf{0%{background:#e4c7cb}100%{background:#fdfdfd}}
+#tab .casa.boom{animation:boom .5s}
+@keyframes boom{0%{transform:scale(1)}30%{transform:scale(1.2);background:#e4c7cb}100%{transform:scale(1)}}
+.casa .badge{position:absolute;top:3px;right:6px;font-size:clamp(11px,1.6vh,15px);font-weight:700;line-height:1}
+.casa .rot{position:absolute;bottom:3px;left:6px;font-size:clamp(10px,1.4vh,13px);font-weight:700;line-height:1}
+.casa .coord{position:absolute;bottom:3px;right:6px;font-size:10px;color:#a9b8c6;font-weight:500}
+#linhas{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:visible}
+#tab{z-index:2}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}
+.stat{background:#f2f3f5;border:1px solid var(--borda);border-radius:12px;padding:6px 12px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--suave)}
+.stat b{color:var(--magentaF);font-size:20px;font-family:'JetBrains Mono',ui-monospace,monospace;letter-spacing:0}
+.stat.xp{border-color:#cfd3d8;background:#eceef1}
+.stat.xp b{color:#3d4852}
+.msg{border-radius:14px;padding:12px 14px;margin-top:12px;background:#f2f3f5;border:2px solid #dde1e5;min-height:50px;font-size:15.5px}
+.msg.ruim{background:#f6ecee;border-color:#e0bcc2}
+.msg.bom{background:#ebf2ed;border-color:#bcd3c3}
+.msg.atencao{background:#f3f1ec;border-color:#d8d0bf}
+code{background:#eceef1;border-radius:6px;padding:0 5px;font-size:.9em;font-family:'JetBrains Mono',ui-monospace,monospace;color:#3d4852}
+pre.codigo{margin:0;background:#f8f9fa;border:1px solid var(--borda);border-radius:14px;padding:8px 0;font:14px/1.6 'JetBrains Mono',ui-monospace,monospace;overflow:auto;max-height:62vh;-webkit-overflow-scrolling:touch;color:#2b3440}
+pre.codigo .ln{display:block;padding:0 12px;white-space:pre;border-left:5px solid transparent}
+pre.codigo .ln.hl{background:#e4e8ec;border-left-color:#3d4852}
+pre.codigo .ln.hl2{background:#e8f0ea;border-left-color:var(--limao)}
+pre.codigo .kw{color:#3d4852;font-weight:700}
+pre.codigo .cm{color:#8a9aa8;font-style:italic}
+pre.codigo .nu{color:#6b7480;font-weight:600}
+.pilha{display:flex;flex-direction:column;gap:4px;max-height:240px;overflow:auto;font:13.5px 'JetBrains Mono',ui-monospace,monospace;-webkit-overflow-scrolling:touch}
+.pilha div{background:#f6f7f8;border:1px solid var(--borda);border-radius:9px;padding:4px 10px}
+.pilha div.topo{background:#e4e8ec;border-color:#3d4852;font-weight:700;color:#2f343a}
+.log{max-height:200px;overflow:auto;font-size:14px;display:flex;flex-direction:column;-webkit-overflow-scrolling:touch}
+.log div{padding:4px 0;border-bottom:1px dashed #e1e9f0}
+.dois{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:1100px){.dois{grid-template-columns:1fr}}
+.legenda{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--suave);margin-top:10px;font-weight:600}
+.legenda span i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:5px;box-shadow:none!important}
+.oculto{display:none!important}
+.texto{-webkit-user-select:text;user-select:text}
+.texto h2{font-size:19px;margin:20px 0 6px;color:var(--magentaF)}
+.texto h2:first-child{margin-top:0}
+.texto table{border-collapse:collapse;width:100%;font-size:15px}
+.texto td,.texto th{border:1px solid var(--borda);padding:8px 10px;text-align:left;vertical-align:top}
+.texto th{background:#f0f1f3;color:var(--cianoF);font-size:13px}
+.caixa{background:#f0f1f3;border-radius:14px;padding:12px 16px;margin:10px 0}
+.caixa.pessego{background:#f5f4f0;border:2px solid #dcd8cc}
+.caixa.rosa{background:#f3eef0}
+.pequeno{font-size:13px;color:var(--suave)}
+#vitoria{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#ffffffb0;backdrop-filter:blur(4px);z-index:50;padding:20px}
+#vitoria .box{background:#fff;border:3px solid var(--magentaF);border-radius:24px;padding:26px 30px;max-width:520px;text-align:center;box-shadow:0 10px 30px #0003;animation:entra .4s}
+@keyframes entra{from{transform:scale(.7);opacity:0}}
+#vitoria h2{margin:0 0 6px;font-size:34px;font-weight:700;color:var(--magentaF)}
+#vitoria .grandes{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.confete{position:fixed;top:-20px;width:10px;height:16px;border-radius:3px;z-index:60;pointer-events:none;animation:cai linear forwards}
+@keyframes cai{to{transform:translateY(110vh) rotate(720deg)}}
+</style>
+<script src="modo.js"></script>
+</head>
+<body>
+<header>
+  <a class="btn" href="index.html" style="text-decoration:none;display:inline-flex;align-items:center">🕹 Início</a>
+  <h1>♞ Cavalo no Campo Minado</h1>
+  <div class="topoBtns">
+    <button class="btn icone" id="btnSom" title="som">🔊</button>
+    <button class="btn icone" id="btnTela" title="tela cheia">⛶</button>
+  </div>
+</header>
+<p class="sub">O cavalo precisa pisar em <b>todas</b> as casas seguras, uma vez cada, sem cair nas minas. Quando trava, volta. Isso é backtracking.</p>
+<div class="wrap">
+  <div class="abas">
+    <button data-aba="jogar" class="on">🎮 Jogar</button>
+    <button data-aba="auto">🔍 Ver o C rodar</button>
+    <button data-aba="como">📖 Como funciona</button>
+  </div>
+
+  <div style="margin:4px 0 12px"><span id="modoSlot" data-ap='com a ajuda "Ainda tem saída?"' data-esp='sem a ajuda "Ainda tem saída?"'></span></div>
+  <div class="barra" id="barraTab">
+    <label>Tabuleiro
+      <select id="selN"><option value="5" selected>5 × 5</option><option value="6">6 × 6</option></select>
+    </label>
+    <label>Minas <input type="range" id="selM" min="2" max="8" value="4"> <b id="txtM">4</b></label>
+    <button class="btn pri" id="btnNovo">Novo tabuleiro</button>
+    <span class="pequeno" id="infoTab"></span>
+  </div>
+
+  <!-- ===================== JOGAR ===================== -->
+  <section id="aba-jogar">
+    <div class="grade">
+      <div class="card">
+        <div id="tabWrap"><div id="tab"></div><svg id="linhas"></svg></div>
+        <div class="legenda">
+          <span><i style="background:#3d4852"></i>cavalo</span>
+          <span><i style="background:#a9b1ba"></i>visitada (nº = valor em <code>sol</code>)</span>
+          <span><i style="background:#5b8a6a"></i>dá pra pular</span>
+          <span><i style="background:#d4a9ae"></i>mina</span>
+        </div>
+      </div>
+      <div>
+        <div class="card" id="painelJogo">
+          <h3>Sua vez de ser o algoritmo</h3>
+          <p style="margin:0 0 8px">Clique numa casa em L a partir do cavalo. As minas estão escondidas. O número pequeno no canto de cada casa visitada diz <b>quantas minas existem a um salto de cavalo dali</b> (é o "campo minado" do jogo). Se travar, use <b>Voltar</b>.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn alerta" id="btnVoltar">↩ Voltar (backtrack)</button>
+            <button class="btn" id="btnBandeira">🚩 Marcar mina</button>
+            <button class="btn soAprender" id="btnDica">🤔 Ainda tem saída?</button>
+            <button class="btn" id="btnVerMinas">👁 Mostrar minas</button>
+            <button class="btn" id="btnRecomecar">Recomeçar</button>
+          </div>
+          <div class="stats">
+            <div class="stat xp">pontos: <b id="jXP">0</b></div>
+            <div class="stat">casas: <b id="jPasso">1</b> / <b id="jTotal">0</b></div>
+            <div class="stat">voltas: <b id="jVoltas">0</b></div>
+            <div class="stat">explosões: <b id="jBooms">0</b></div>
+            <div class="stat">minas a um salto daqui: <b id="jPerto">0</b></div>
+          </div>
+          <div class="msg" id="jMsg">O cavalo começa em (0,0). O código do professor já marcou <code>sol[0][0] = 0</code> e chamou <code>solveKTUtil(0, 0, 1, ...)</code>.</div>
+        </div>
+        <div class="dois" style="margin-top:12px">
+          <div class="card"><h3>Sua pilha de chamadas</h3><p class="pequeno" style="margin:0 0 6px">Cada clique empilha uma chamada. Voltar desempilha.</p><div class="pilha" id="jPilha"></div></div>
+          <div class="card"><h3>O que você fez</h3><div class="log" id="jLog"></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== AUTO ===================== -->
+  <section id="aba-auto" class="oculto">
+    <div class="grade">
+      <div>
+        <div class="card">
+          <div id="tabWrapAutoSlot"></div>
+          <div class="stats">
+            <div class="stat">chamadas: <b id="aCham">0</b></div>
+            <div class="stat">retrocessos: <b id="aBack">0</b></div>
+            <div class="stat">profundidade: <b id="aProf">0</b></div>
+            <div class="stat">passos de execução: <b id="aEv">0</b></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:12px">
+          <h3>Pilha de chamadas</h3>
+          <p class="pequeno" style="margin:0 0 6px">Topo em cima. <code>k</code> é qual dos 8 saltos aquela chamada está testando agora.</p>
+          <div class="pilha" id="aPilha"></div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button class="btn pri" id="btnPasso">Próximo passo ▸</button>
+            <button class="btn" id="btnPlay">▶ Rodar</button>
+            <button class="btn" id="btnFim">⏭ Até o fim</button>
+            <button class="btn" id="btnReset">↺ Reiniciar</button>
+            <label style="font-size:14px;display:flex;gap:6px;align-items:center">velocidade <input type="range" id="vel" min="1" max="10" value="5"></label>
+            <label style="font-size:14px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="resumo"> só escolhas e voltas</label>
+          </div>
+          <div class="msg" id="aMsg">Aperte <b>Próximo passo</b>. A linha acesa no código é a que está rodando agora.</div>
+        </div>
+        <div class="card" style="margin-top:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <h3 style="margin:0">O código em C</h3>
+            <button class="btn" id="btnCopiar">Copiar programa completo</button>
+          </div>
+          <pre class="codigo" id="codigo"></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== COMO FUNCIONA ===================== -->
+  <section id="aba-como" class="oculto">
+    <div class="card texto">
+      <h2>A ideia em três palavras: escolhe, explora, desfaz</h2>
+      <p>Backtracking é tentar um caminho, ir o mais longe possível e, quando dá errado, <b>voltar só o último passo</b> e tentar a próxima opção. Não recomeça do zero: desfaz o mínimo necessário.</p>
+      <div class="caixa">O código é o <code>cavalo.c</code> do professor, com uma única mudança: as minas. Elas entram na matriz <code>sol</code> com o valor <code>MINA</code> (-2), então o <code>isSafe</code> dele já recusa essas casas sem mudar nada. E a parada vira <code>movei == total</code> (casas seguras) em vez de <code>N * N</code>.</div>
+      <div class="caixa">
+        <b>1. Escolhe:</b> <code>sol[next_x][next_y] = movei;</code> marca a casa <b>antes</b> de chamar.<br>
+        <b>2. Explora:</b> <code>solveKTUtil(next_x, next_y, movei + 1, ...)</code> continua a partir dela.<br>
+        <b>3. Desfaz:</b> se voltou 0, o <code>else</code> faz <code>sol[next_x][next_y] = -1; // backtracking</code> e o <code>for</code> tenta o próximo salto.
+      </div>
+
+      <h2>O jogo e o C são a mesma coisa</h2>
+      <table>
+        <tr><th>No jogo</th><th>No C</th></tr>
+        <tr><td>Clicar numa casa em L</td><td><code>sol[next_x][next_y] = movei;</code> e <code>solveKTUtil(next_x, next_y, movei + 1, ...)</code></td></tr>
+        <tr><td>O número no centro da casa</td><td>o valor em <code>sol[x][y]</code> (a largada é 0)</td></tr>
+        <tr><td>Casa fora, já visitada ou mina</td><td><code>isSafe</code> devolve 0 (só passa quem tem <code>sol == -1</code>)</td></tr>
+        <tr><td>Explodir numa mina</td><td>você "pagou pra ver"; o programa enxerga o -2 e nem tenta</td></tr>
+        <tr><td>Ficar sem casa pra pular</td><td>o <code>for</code> chega no fim e faz <code>return 0</code></td></tr>
+        <tr><td>Botão Voltar</td><td>o <code>return 0</code> desempilha, e quem chamou faz <code>sol[x][y] = -1</code></td></tr>
+        <tr><td>Sua pilha de jogadas</td><td>a pilha de chamadas (cada caixinha guarda <code>x</code>, <code>y</code>, <code>movei</code> e <code>k</code>)</td></tr>
+        <tr><td>Ganhar</td><td><code>movei == total</code>: <code>return 1</code> e esse 1 sobe a pilha inteira</td></tr>
+      </table>
+
+      <h2>Os 8 saltos do cavalo</h2>
+      <p>Os vetores <code>xMove</code> e <code>yMove</code> guardam quanto o cavalo anda em linha e coluna em cada salto <code>k</code>. Trocar a ordem deles muda o caminho que o algoritmo testa primeiro, e pode mudar muito o número de chamadas.</p>
+      <div class="caixa pessego"><code>int xMove[8] = { 2, 1, -1, -2, -2, -1,  1,  2 };</code><br><code>int yMove[8] = { 1, 2,  2,  1, -1, -2, -2, -1 };</code></div>
+
+      <h2>Perguntas pra pensar (ou pra usar em aula)</h2>
+      <ol>
+        <li>Por que é obrigatório o <code>sol[next_x][next_y] = -1</code> no <code>else</code>? O que aconteceria sem ele? <span class="pequeno">(dica: rode mentalmente e veja quem achou a casa "ocupada" depois)</span></li>
+        <li>Por que o <code>return 1</code> dentro do <code>for</code> é necessário? O que muda se ele sumir?</li>
+        <li>Qual é a profundidade máxima da pilha num tabuleiro 5×5 com 4 minas? Por quê?</li>
+        <li>No modo Jogar, quando o botão "Ainda tem saída?" diz que não, quantas voltas você precisa dar, no mínimo?</li>
+        <li>Por que o programa nunca "explode", mas você explode?</li>
+      </ol>
+
+      <h2>Desafios em C (pra fazer no terminal)</h2>
+      <ol>
+        <li>Copie o programa (aba Ver o C rodar), compile com <code>gcc -Wall -Wextra -std=c99</code> e rode.</li>
+        <li>Conte quantas chamadas e quantos retrocessos aconteceram e compare com o jogo.</li>
+        <li>Troque a ordem de <code>xMove</code>/<code>yMove</code> e meça de novo.</li>
+        <li>Faça o programa contar <b>todas</b> as soluções em vez de parar na primeira. <span class="pequeno">(o que muda no <code>return 1</code>?)</span></li>
+        <li>Desafio extra: heurística de Warnsdorff. Antes de testar os saltos, ordene pelos vizinhos com <b>menos</b> saídas livres. Quantas chamadas sobram?</li>
+      </ol>
+      <div class="caixa rosa"><b>Pra quem ensina:</b> deixe o aluno jogar primeiro sem mostrar as minas. Ele vai sentir na pele o "volta um, tenta outro". Depois abra a aba do C no mesmo tabuleiro e compare o caminho dele com o do programa.</div>
+    </div>
+  </section>
+</div>
+
+<div id="vitoria" class="oculto"><div class="box">
+  <h2>Passeio completo!</h2>
+  <div id="vTexto"></div>
+  <div class="grandes" id="vStats"></div>
+  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+    <button class="btn" id="vVerC">🔍 Ver o C resolver</button>
+    <button class="btn pri" id="vDeNovo">Novo tabuleiro ▸</button>
+  </div>
+</div></div>
+<script>
+"use strict";
+const DL=[2,1,-1,-2,-2,-1,1,2], DC=[1,2,2,1,-1,-2,-2,-1];
+let N=5, M=4, MINAS=null, TOTAL=0, REF={calls:0,backs:0};
+
+const $=id=>document.getElementById(id);
+const grid0=()=>Array.from({length:N},()=>Array(N).fill(0));
+const dentro=(l,c)=>l>=0&&l<N&&c>=0&&c<N;
+
+/* ---------- solver rápido (mesma lógica do C) ---------- */
+function resolve(g,l,c,p,tot,cap){
+  let calls=0,backs=0,ab=false;
+  function t(l,c,p){
+    if(++calls>cap){ab=true;return false}
+    g[l][c]=p; if(p===tot) return true;
+    for(let k=0;k<8;k++){const a=l+DL[k],b=c+DC[k];
+      if(dentro(a,b)&&g[a][b]===0){ if(t(a,b,p+1)) return true; if(ab) return false; } }
+    g[l][c]=0; backs++; return false;
+  }
+  const ok=t(l,c,p); return {ok,calls,backs,ab};
+}
+
+/* ---------- gerar tabuleiro com solução ---------- */
+function gerar(){
+  const faixa = N===5 ? [25,4000] : [25,20000];
+  const cap = N===5 ? 200000 : 60000;
+  let melhor=null;
+  for(let a=0;a<1500;a++){
+    const g=grid0(); let m=0;
+    while(m<M){const l=Math.random()*N|0,c=Math.random()*N|0; if((l||c)&&g[l][c]===0){g[l][c]=-1;m++;}}
+    const copia=g.map(r=>r.slice());
+    const r=resolve(copia,0,0,1,N*N-M,cap);
+    if(!r.ok) continue;
+    if(r.calls>=faixa[0]&&r.calls<=faixa[1]){melhor={g,r};break;}
+    if(!melhor || Math.abs(r.calls-300)<Math.abs(melhor.r.calls-300)) melhor={g,r};
+  }
+  if(!melhor){ $('infoTab').textContent='Não achei tabuleiro com solução com essas minas. Tente outro número.'; return false; }
+  MINAS=melhor.g.map(r=>r.map(v=>v===-1)); TOTAL=N*N-M; REF={calls:melhor.r.calls,backs:melhor.r.backs};
+  $('infoTab').textContent=`${TOTAL} casas seguras. Este tabuleiro tem solução saindo de (0,0).`;
+  return true;
+}
+function vizMinas(l,c){let n=0;for(let k=0;k<8;k++){const a=l+DL[k],b=c+DC[k];if(dentro(a,b)&&MINAS[a][b])n++;}return n;}
+
+/* ---------- tabuleiro (DOM) ---------- */
+let celulas=[];
+function montaTab(){
+  const t=$('tab'); t.innerHTML=''; t.style.gridTemplateColumns=`repeat(${N},1fr)`; t.style.gridTemplateRows=`repeat(${N},1fr)`;
+  celulas=[];
+  for(let l=0;l<N;l++){celulas.push([]);for(let c=0;c<N;c++){
+    const b=document.createElement('button'); b.className='casa'; b.dataset.l=l; b.dataset.c=c;
+    b.addEventListener('click',()=>{ if(aba==='jogar') cliqueJogo(l,c); });
+    t.appendChild(b); celulas[l].push(b);
+  }}
+  $('linhas').setAttribute('viewBox',`0 0 ${N} ${N}`);
+}
+function desenhaLinhas(path){
+  const s=$('linhas'); if(path.length<2){s.innerHTML='';return;}
+  const pts=path.map(([l,c])=>`${c+.5},${l+.5}`).join(' ');
+  s.innerHTML=`<polyline points="${pts}" fill="none" stroke="#3d4852" stroke-opacity=".12" stroke-width=".22" stroke-linejoin="round" stroke-linecap="round"/><polyline points="${pts}" fill="none" stroke="#3d4852" stroke-opacity=".7" stroke-width=".06" stroke-linejoin="round" stroke-linecap="round"/>`;
+}
+const corBadge=n=>n===0?'#b0b6bd':n===1?'#6b7480':n===2?'#3d4852':'#b5545f';
+
+/* ---------- som (Web Audio, sem arquivos) ---------- */
+let AC=null, SOM=true;
+function ac(){ if(!AC){ try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){AC=null;} }
+  if(AC&&AC.state==='suspended') AC.resume(); return AC; }
+function tom(f,t0,dur,tipo,vol,f2){ const a=ac(); if(!a) return; const t=a.currentTime+t0;
+  const o=a.createOscillator(), g=a.createGain(); o.type=tipo; o.frequency.setValueAtTime(f,t);
+  if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+  g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+dur+.03); }
+function ruido(dur,vol){ const a=ac(); if(!a) return; const n=a.sampleRate*dur|0, b=a.createBuffer(1,n,a.sampleRate), d=b.getChannelData(0);
+  for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2);
+  const s=a.createBufferSource(), f=a.createBiquadFilter(), g=a.createGain(); s.buffer=b; f.type='lowpass'; f.frequency.value=900; g.gain.value=vol;
+  s.connect(f); f.connect(g); g.connect(a.destination); s.start(); }
+function som(n){ if(!SOM) return; try{
+  if(n==='pulo') tom(520,0,.09,'square',.05,900);
+  else if(n==='volta') tom(620,0,.16,'triangle',.09,240);
+  else if(n==='boom'){ ruido(.5,.5); tom(140,0,.35,'sawtooth',.08,50); }
+  else if(n==='beco'){ tom(300,0,.12,'sawtooth',.04); tom(220,.14,.2,'sawtooth',.04); }
+  else if(n==='vitoria') [523,659,784,1047,1319].forEach((f,i)=>tom(f,i*.1,.22,'square',.05));
+  else if(n==='tick') tom(1000,0,.03,'square',.025);
+  else if(n==='desfaz') tom(340,0,.08,'triangle',.05,200);
+  else if(n==='ok') tom(700,0,.12,'sine',.07,1050);
+  else if(n==='nao') tom(260,0,.15,'sine',.07,180);
+}catch(e){} }
+
+/* =================== MODO JOGAR =================== */
+let J;
+function novoJogo(){
+  J={xp:0, tab:grid0(), path:[[0,0]], reveladas:new Set(), bandeiras:new Set(), voltas:0, booms:0, verMinas:false, modoBand:false, venceu:false, log:[]};
+  J.tab[0][0]=1;
+  $('jTotal').textContent=TOTAL;
+  jLog('Começou: sol[0][0] = 0; solveKTUtil(0, 0, 1)');
+  jMensagem('O cavalo começa em (0,0): <code>sol[0][0] = 0</code> e a primeira chamada é <code>solveKTUtil(0, 0, 1, ...)</code>. Clique numa casa destacada.','');
+  $('vitoria').classList.add('oculto'); $('btnVerMinas').classList.remove('on'); $('btnBandeira').classList.remove('on');
+  renderJogo();
+}
+const chave=(l,c)=>l+','+c;
+function topoJ(){return J.path[J.path.length-1];}
+function alvosJ(){
+  const [l,c]=topoJ(), r=[];
+  for(let k=0;k<8;k++){const a=l+DL[k],b=c+DC[k];
+    if(dentro(a,b)&&J.tab[a][b]===0&&!J.reveladas.has(chave(a,b))) r.push([a,b]);}
+  return r;
+}
+function jMensagem(html,tipo){const m=$('jMsg');m.innerHTML=html;m.className='msg'+(tipo?' '+tipo:'');}
+function jLog(t){J.log.push(t);}
+function cliqueJogo(l,c){
+  if(J.venceu) return;
+  const k=chave(l,c);
+  if(J.modoBand){
+    if(J.tab[l][c]!==0||J.reveladas.has(k)) return;
+    J.bandeiras.has(k)?J.bandeiras.delete(k):J.bandeiras.add(k); renderJogo(); return;
+  }
+  if(!alvosJ().some(([a,b])=>a===l&&b===c)) return;
+  if(J.bandeiras.has(k)){jMensagem('Essa casa está marcada com 🚩. Tire a bandeira (botão Marcar mina) se quiser arriscar.','atencao');return;}
+  const passo=J.path.length+1;
+  if(MINAS[l][c]){
+    J.reveladas.add(k); J.booms++; J.xp=Math.max(0,J.xp-15); som('boom');
+    document.body.classList.remove('treme'); void document.body.offsetWidth; document.body.classList.add('treme');
+    jLog(`💥 mina em (${l},${c})`);
+    jMensagem(`💥 Mina em (${l},${c})! No C, <code>pode(${l}, ${c})</code> devolveria 0 e o programa nem tentaria pular. O cavalo continua onde estava.`,'ruim');
+    renderJogo(); const el=celulas[l][c]; el.classList.add('boom'); setTimeout(()=>el.classList.remove('boom'),500);
+    checaBeco(); return;
+  }
+  J.tab[l][c]=passo; J.path.push([l,c]); J.xp+=10;
+  jLog(`sol[${l}][${c}] = ${passo-1}; solveKTUtil(${l}, ${c}, ${passo})`);
+  if(passo===TOTAL){
+    J.venceu=true; J.xp+=100; som('vitoria'); setTimeout(mostrarVitoria,350);
+    jMensagem(`🎉 Você visitou as ${TOTAL} casas seguras! No C isso é <code>movei == total</code>, <code>return 1</code>, e o 1 sobe a pilha inteira.<br>Você voltou <b>${J.voltas}</b> vez(es) e explodiu <b>${J.booms}</b>. O programa em C, saindo de (0,0) neste tabuleiro, fez <b>${REF.calls}</b> chamadas e <b>${REF.backs}</b> retrocessos.`,'bom');
+    renderJogo(); return;
+  }
+  som('pulo');
+  jMensagem(`Pulou para (${l},${c}). No código: <code>sol[${l}][${c}] = ${passo-1};</code> e depois empilhou <code>solveKTUtil(${l}, ${c}, ${passo})</code>.`,'');
+  renderJogo(); checaBeco();
+}
+function checaBeco(){
+  if(J.venceu) return;
+  if(alvosJ().length===0){ setTimeout(()=>som('beco'),250);
+    jMensagem(`🧱 Beco sem saída: nenhuma casa livre a um salto, e faltam ${TOTAL-J.path.length} casas. No C, o <code>for</code> terminou sem sucesso. Hora do <b>backtrack</b>: aperte Voltar.`,'atencao');
+  }
+}
+function voltar(){
+  if(J.venceu||J.path.length<=1){ if(J.path.length<=1) jMensagem('Não dá pra voltar da primeira casa: ela é a chamada inicial, <code>solveKTUtil(0, 0, 1)</code>.','atencao'); return; }
+  const [l,c]=J.path.pop(); J.tab[l][c]=0; J.voltas++; J.xp=Math.max(0,J.xp-3); som('volta');
+  jLog(`↩ return 0; quem chamou faz sol[${l}][${c}] = -1`);
+  const [tl,tc]=topoJ();
+  jMensagem(`<code>solveKTUtil(${l}, ${c}, ...)</code> devolveu 0. De volta em (${tl},${tc}), o <code>else</code> faz <code>sol[${l}][${c}] = -1; // backtracking</code> e o <code>for</code> tenta o próximo salto.`,'');
+  renderJogo(); const el=celulas[l][c]; el.classList.add('desfeito'); setTimeout(()=>el.classList.remove('desfeito'),600);
+}
+function dica(){
+  if(J.venceu) return;
+  const g=J.tab.map(r=>r.slice());
+  for(let l=0;l<N;l++)for(let c=0;c<N;c++) if(MINAS[l][c]) g[l][c]=-1;
+  const [l,c]=topoJ(); const p=J.path.length;
+  g[l][c]=0;
+  const r=resolve(g,l,c,p,TOTAL,300000);
+  if(r.ab) jMensagem('Não consegui decidir rápido. Muitas possibilidades ainda abertas.','');
+  else if(r.ok){ som('ok'); jMensagem(`✅ Ainda dá pra completar a partir daqui. (O programa testou ${r.calls} chamadas pra ter certeza.)`,'bom'); }
+  else { som('nao'); jMensagem(`❌ Desse ponto não tem saída: qualquer caminho vai travar. O programa testou ${r.calls} chamadas e todas falharam. Você precisa voltar.`,'ruim'); }
+}
+function renderJogo(){
+  const alvos=new Set(alvosJ().map(([a,b])=>chave(a,b)));
+  const [tl,tc]=topoJ();
+  for(let l=0;l<N;l++)for(let c=0;c<N;c++){
+    const el=celulas[l][c], k=chave(l,c), v=J.tab[l][c]; let cls='casa', html='';
+    if((l+c)%2) cls+=' esc';
+    if(v>0){
+      cls+=' vis'; const nm=vizMinas(l,c);
+      html=(l===tl&&c===tc?'♞':v-1)+`<span class="badge" style="color:${corBadge(nm)}">${nm}</span>`;
+      if(l===tl&&c===tc){cls+=' topo'; html+=`<span class="rot">${v-1}</span>`;}
+    } else if(J.reveladas.has(k)){cls+=' mina'; html='💣';}
+    else if(J.verMinas&&MINAS[l][c]){cls+=' mina minaFraca'; html='💣';}
+    else if(J.bandeiras.has(k)){html='🚩'; if(alvos.has(k)) cls+=' alvo';}
+    else if(alvos.has(k)&&!J.venceu){cls+=' alvo';}
+    if(!html) html=`<span class="coord">${l},${c}</span>`;
+    el.className=cls; el.innerHTML=html;
+  }
+  desenhaLinhas(J.path);
+  $('jXP').textContent=J.xp; $('jPasso').textContent=J.path.length; $('jVoltas').textContent=J.voltas; $('jBooms').textContent=J.booms;
+  $('jPerto').textContent=vizMinas(tl,tc);
+  $('jPilha').innerHTML=J.path.map(([l,c],i)=>`<div class="${i===J.path.length-1?'topo':''}">solveKTUtil(${l}, ${c}, ${i+1})</div>`).reverse().join('');
+  $('jLog').innerHTML=J.log.map(t=>`<div>${t}</div>`).reverse().join('');
+  $('btnVoltar').disabled=J.path.length<=1||J.venceu;
+}
+
+/* =================== MODO AUTO (C rodando) =================== */
+const CODIGO=[
+  ['#define N 5'],
+  ['#define MINA -2          /* nossa novidade: casa com mina */'],
+  ['int total;               /* N*N - minas: casas seguras */'],
+  [''],
+  ['/* Verifica se x,y são índices válidos para tabuleiro N*N */'],
+  ['int isSafe(int x, int y, int sol[N][N]) {','podef'],
+  ['    return (x >= 0 && x < N && y >= 0 && y < N','podef'],
+  ['            && sol[x][y] == -1);   /* mina (-2) não passa */','podef'],
+  ['}','podef'],
+  [''],
+  ['int solveKTUtil(int x, int y, int movei, int sol[N][N],','enter'],
+  ['                int xMove[], int yMove[]) {','enter'],
+  ['    if (movei == total)          /* original: N * N */','base'],
+  ['        return 1;','ret1'],
+  ['    for (int k = 0; k < 8; k++) {','for'],
+  ['        int next_x = x + xMove[k];','nlnc'],
+  ['        int next_y = y + yMove[k];','nlnc'],
+  ['        if (isSafe(next_x, next_y, sol)) {','pode'],
+  ['            sol[next_x][next_y] = movei;','mark'],
+  ['            if (solveKTUtil(next_x, next_y, movei + 1, sol, xMove, yMove) == 1)','call'],
+  ['                return 1;','prop'],
+  ['            else'],
+  ['                sol[next_x][next_y] = -1; /* backtracking */','unmark'],
+  ['        }'],
+  ['    }'],
+  ['    return 0;','ret0'],
+  ['}'],
+];
+function realca(t){
+  let cm='', i=t.indexOf('/*'); if(i>=0){cm=t.slice(i);t=t.slice(0,i);}
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  t=esc(t).replace(/\b(\d+)\b/g,'<span class="nu">$1</span>').replace(/(#define|\bint\b|\breturn\b|\bif\b|\bfor\b|\belse\b)/g,'<span class="kw">$1</span>');
+  return t+(cm?`<span class="cm">${esc(cm)}</span>`:'');
+}
+function montaCodigo(){
+  $('codigo').innerHTML=CODIGO.map(([t,id])=>[t.replace('#define N 5','#define N '+N),id]).map(([t,id])=>`<span class="ln"${id?` data-id="${id}"`:''}>${realca(t)||' '}</span>`).join('');
+}
+function acende(ids){
+  document.querySelectorAll('#codigo .ln').forEach(el=>{
+    el.classList.toggle('hl', ids.includes(el.dataset.id) && el.dataset.id!=='podef');
+    el.classList.toggle('hl2', el.dataset.id==='podef' && ids.includes('podef'));
+  });
+}
+
+let S, GEN, ULT=null, timer=null, rodando=false;
+function ev(lines,msg,tipo){return {lines,msg,tipo};}
+function motivo(a,b){
+  if(!dentro(a,b)) return 'fora';
+  if(S.tab[a][b]===-1) return 'mina';
+  if(S.tab[a][b]>0) return 'visitada';
+  return 'livre';
+}
+function* tenta(x,y,movei){
+  // mesma ordem do solveKTUtil do professor: a casa (x,y) JÁ foi marcada por quem chamou
+  const fr={l:x,c:y,passo:movei,k:'-'}; S.stack.push(fr); S.calls++; S.prof=Math.max(S.prof,S.stack.length);
+  S.probe=null;
+  yield ev(['enter'],`Entrou em <code>solveKTUtil(${x}, ${y}, ${movei})</code>: o cavalo está em (${x},${y}) e ${movei} casa(s) já estão marcadas. Caixinha nova na pilha.`,'enter');
+  yield ev(['base'],`<code>movei == total</code>? ${movei} de ${S.total} casas seguras. ${movei===S.total?'Sim!':'Ainda não, segue.'}`,'base');
+  if(movei===S.total){ yield ev(['ret1'],`🎉 Marcou as ${S.total} casas seguras! Devolve 1.`,'fim'); return true; }
+  for(let k=0;k<8;k++){
+    fr.k=k; S.probe=null;
+    yield ev(['for'],`Vai testar o salto <b>k = ${k}</b> (de 0 a 7).`,'for');
+    const a=x+DL[k], b=y+DC[k];
+    S.probe={l:a,c:b,ok:null};
+    yield ev(['nlnc'],`<code>next_x = ${x} + (${DL[k]})</code>, <code>next_y = ${y} + (${DC[k]})</code>: cai em (${a},${b}).`,'nlnc');
+    const m=motivo(a,b); S.probe.ok=(m==='livre');
+    const txt={fora:`(${a},${b}) está fora do tabuleiro: <code>isSafe</code> devolve 0.`,
+      mina:`(${a},${b}) é mina (<code>sol = MINA</code>, -2): <code>isSafe</code> devolve 0.`,
+      visitada:dentro(a,b)?`(${a},${b}) já está no caminho (<code>sol = ${S.tab[a]?.[b]-1}</code>, não é -1): <code>isSafe</code> devolve 0.`:'',
+      livre:`(${a},${b}) tem <code>sol = -1</code>: <code>isSafe</code> devolve 1.`}[m];
+    yield ev(['pode','podef'],txt,'pode');
+    if(m==='livre'){
+      S.tab[a][b]=movei+1;
+      yield ev(['mark'],`<b>Escolhe:</b> <code>sol[${a}][${b}] = ${movei}</code>. Repara: no código do professor quem marca a casa é quem chama, antes da chamada.`,'mark');
+      yield ev(['call'],`Chama <code>solveKTUtil(${a}, ${b}, ${movei+1}, ...)</code>. Esta chamada fica parada esperando a resposta.`,'call');
+      const ok=yield* tenta(a,b,movei+1);
+      S.stack.length=S.stack.indexOf(fr)+1; S.probe=null;
+      if(ok){ yield ev(['prop'],`A chamada de baixo devolveu 1, então esta também devolve 1. O sucesso sobe pela pilha.`,'fim'); S.stack.pop(); return true; }
+      S.tab[a][b]=0; S.backs++; S.flash={l:a,c:b};
+      yield ev(['unmark'],`Voltou de (${a},${b}) com 0. <b>Desfaz:</b> <code>sol[${a}][${b}] = -1; // backtracking</code> e segue pro próximo salto.`,'unmark');
+    }
+  }
+  S.probe=null;
+  yield ev(['ret0'],`Testou os 8 saltos a partir de (${x},${y}) e nenhum deu certo: <code>return 0</code>. Desempilha, e quem chamou vai desmarcar (${x},${y}).`,'ret0');
+  S.stack.pop();
+  return false;
+}
+function resetAuto(){
+  pausa();
+  S={tab:grid0(),stack:[],calls:0,backs:0,prof:0,probe:null,flash:null,total:TOTAL,evs:0,fim:false,ok:false};
+  for(let l=0;l<N;l++)for(let c=0;c<N;c++) if(MINAS[l][c]) S.tab[l][c]=-1;
+  S.tab[0][0]=1; /* sol[0][0] = 0 */
+  GEN=tenta(0,0,1); ULT=null;
+  acende([]); setMsgA('Aperte <b>Próximo passo</b>. A linha acesa no código é a que está rodando agora. O programa já fez <code>sol[0][0] = 0</code> e começa com <code>solveKTUtil(0, 0, 1, ...)</code>.','');
+  if(aba==='auto') renderAuto();
+}
+function setMsgA(h,t){const m=$('aMsg');m.innerHTML=h;m.className='msg'+(t?' '+t:'');}
+function umPasso(){
+  if(S.fim) return false;
+  const r=GEN.next(); S.evs++;
+  if(r.done){ S.fim=true; S.ok=r.value;
+    ULT=ev([], r.value?`✅ Terminou: <code>solveKTUtil(0, 0, 1)</code> devolveu 1. Caminho completo com ${S.calls} chamadas e ${S.backs} retrocessos.`:'Terminou sem solução.', 'final');
+    return false; }
+  ULT=r.value; return true;
+}
+function avanca(){
+  const resumo=$('resumo').checked;
+  if(!resumo){ umPasso(); return; }
+  while(umPasso()){ if(['mark','unmark','fim'].includes(ULT.tipo)) break; }
+}
+function renderAuto(){
+  for(let l=0;l<N;l++)for(let c=0;c<N;c++){
+    const el=celulas[l][c], v=S.tab[l][c]; let cls='casa', html='';
+    if((l+c)%2) cls+=' esc';
+    const top=S.stack.length&&S.stack[S.stack.length-1];
+    if(v===-1){cls+=' mina';html='💣';}
+    else if(v>0){cls+=' vis'; html=v-1; if(top&&top.l===l&&top.c===c){cls+=' topo'; html='♞'+`<span class="rot">${v-1}</span>`;}}
+    else html=`<span class="coord">${l},${c}</span>`;
+    if(S.probe&&S.probe.l===l&&S.probe.c===c&&S.probe.ok!==null) cls+=S.probe.ok?' probe-ok':' probe-no';
+    else if(S.probe&&S.probe.l===l&&S.probe.c===c) cls+=' probe-no';
+    el.className=cls; el.innerHTML=html;
+  }
+  if(S.flash){const {l,c}=S.flash; const el=celulas[l][c]; el.classList.add('desfeito'); setTimeout(()=>el.classList.remove('desfeito'),600); S.flash=null;}
+  // caminho atual = casas marcadas em ordem de passo
+  const path=[]; for(let l=0;l<N;l++)for(let c=0;c<N;c++) if(S.tab[l][c]>0) path.push([S.tab[l][c],l,c]);
+  path.sort((a,b)=>a[0]-b[0]); desenhaLinhas(path.map(x=>[x[1],x[2]]));
+  $('aCham').textContent=S.calls; $('aBack').textContent=S.backs; $('aProf').textContent=S.stack.length; $('aEv').textContent=S.evs;
+  $('aPilha').innerHTML=S.stack.map((f,i)=>`<div class="${i===S.stack.length-1?'topo':''}">solveKTUtil(${f.l}, ${f.c}, ${f.passo})   k = ${f.k}</div>`).reverse().join('');
+  if(ULT){ acende(ULT.lines); const t=ULT.tipo;
+    setMsgA(ULT.msg, t==='unmark'||t==='ret0'?'ruim':(t==='fim'||t==='final')?'bom':t==='volta'?'atencao':''); }
+  ['btnPasso','btnPlay','btnFim'].forEach(id=>$(id).disabled=S.fim);
+}
+const ATRASOS=[1100,750,500,320,200,110,55,20,6,0];
+function pausa(){rodando=false; clearTimeout(timer); $('btnPlay').textContent='▶ Rodar';}
+function loop(){
+  if(!rodando) return;
+  const v=+$('vel').value, d=ATRASOS[v-1];
+  if(d===0){ for(let i=0;i<60&&!S.fim;i++) avanca(); }
+  else { avanca(); somEvento(ULT, d<55); }
+  renderAuto();
+  if(S.fim){pausa(); som('vitoria'); return;}
+  timer=setTimeout(loop, d===0?16:d);
+}
+
+/* =================== abas e controles =================== */
+let aba='jogar';
+function trocaAba(a){
+  aba=a; document.querySelectorAll('.abas button').forEach(b=>b.classList.toggle('on',b.dataset.aba===a));
+  ['jogar','auto','como'].forEach(x=>$('aba-'+x).classList.toggle('oculto',x!==a));
+  $('barraTab').classList.toggle('oculto',a==='como');
+  const w=$('tabWrap');
+  if(a==='auto'){ $('tabWrapAutoSlot').appendChild(w); renderAuto(); }
+  else if(a==='jogar'){ document.querySelector('#aba-jogar .card').prepend(w); pausa(); renderJogo(); }
+  else pausa();
+}
+document.querySelectorAll('.abas button').forEach(b=>b.addEventListener('click',()=>trocaAba(b.dataset.aba)));
+
+function ajustaSlider(){
+  const s=$('selM'); if(N===5){s.min=2;s.max=8;} else {s.min=4;s.max=12;}
+  if(+s.value<+s.min) s.value=s.min; if(+s.value>+s.max) s.value=s.max;
+  M=+s.value; $('txtM').textContent=M;
+}
+function novoTabuleiro(){
+  N=+$('selN').value; ajustaSlider();
+  if(!gerar()) return;
+  montaTab(); novoJogo(); resetAuto();
+  if(aba==='auto') renderAuto(); else renderJogo();
+}
+$('selN').addEventListener('change',novoTabuleiro);
+$('selM').addEventListener('input',()=>{$('txtM').textContent=$('selM').value;});
+$('selM').addEventListener('change',novoTabuleiro);
+$('btnNovo').addEventListener('click',novoTabuleiro);
+$('btnVoltar').addEventListener('click',voltar);
+$('btnRecomecar').addEventListener('click',novoJogo);
+$('btnDica').addEventListener('click',dica);
+$('btnVerMinas').addEventListener('click',()=>{J.verMinas=!J.verMinas;$('btnVerMinas').classList.toggle('on',J.verMinas);renderJogo();});
+$('btnBandeira').addEventListener('click',()=>{J.modoBand=!J.modoBand;$('btnBandeira').classList.toggle('on',J.modoBand);
+  jMensagem(J.modoBand?'Modo bandeira ligado: clique numa casa pra marcar ou desmarcar 🚩. Clique no botão de novo pra voltar a pular.':'Modo bandeira desligado. Pode voltar a pular.','');});
+$('btnPasso').addEventListener('click',()=>{pausa();ac();avanca();somEvento(ULT,false);renderAuto();});
+$('btnPlay').addEventListener('click',()=>{ if(rodando){pausa();return;} rodando=true; ac(); $('btnPlay').textContent='⏸ Pausar'; loop(); });
+$('btnFim').addEventListener('click',()=>{pausa(); ac(); let i=0; while(!S.fim&&i<3e6){umPasso();i++;} som('vitoria'); renderAuto();});
+$('btnReset').addEventListener('click',resetAuto);
+
+const PROGRAMA=`/* cavalo_minado.c: o cavalo.c do professor, com minas
+ * Mudanças em relação ao original:
+ *   - casas com mina recebem MINA (-2) em sol, então isSafe já recusa
+ *   - a parada é movei == total (casas seguras), não N * N
+ *   - contadores de chamadas e retrocessos, pra comparar com o jogo
+ * compile: gcc -Wall -Wextra -std=c99 cavalo_minado.c -o cavalo
+ * rode:    ./cavalo 4 42      (minas, semente)
+ */
+#include <stdio.h>
+#include <stdlib.h>
+#define N 5
+#define MINA -2
+
+int total;                      /* casas seguras */
+long chamadas = 0, retrocessos = 0;
+
+int solveKTUtil(int x, int y, int movei, int sol[N][N], int xMove[], int yMove[]);
+
+/* Verifica se x,y são índices válidos para tabuleiro N*N */
+int isSafe(int x, int y, int sol[N][N])
+{
+    return (x >= 0 && x < N && y >= 0 && y < N && sol[x][y] == -1);
+}
+
+/* Imprime a matriz solução sol[N][N] (mina aparece como *) */
+void printSolution(int sol[N][N])
+{
+    for (int x = 0; x < N; x++) {
+        for (int y = 0; y < N; y++)
+            if (sol[x][y] == MINA) printf("  * ");
+            else                   printf(" %2d ", sol[x][y]);
+        printf("\\n");
+    }
+}
+
+void solveKT(int minas)
+{
+    int sol[N][N];
+
+    for (int x = 0; x < N; x++)
+        for (int y = 0; y < N; y++)
+            sol[x][y] = -1;
+
+    int colocadas = 0;
+    while (colocadas < minas) {         /* (0,0) nunca é mina: é a largada */
+        int x = rand() % N, y = rand() % N;
+        if ((x != 0 || y != 0) && sol[x][y] == -1) {
+            sol[x][y] = MINA;
+            colocadas++;
+        }
+    }
+    total = N * N - minas;
+
+    sol[0][0] = 0; // Since the Knight is initially at the first block
+
+    int xMove[8] = { 2, 1, -1, -2, -2, -1, 1, 2 };
+    int yMove[8] = { 1, 2, 2, 1, -1, -2, -2, -1 };
+
+    if (solveKTUtil(0, 0, 1, sol, xMove, yMove) == 1)
+        printSolution(sol);
+    else {
+        printSolution(sol);
+        printf("Solucao nao existe\\n");
+    }
+    printf("%ld chamadas, %ld retrocessos\\n", chamadas, retrocessos);
+}
+
+int solveKTUtil(int x, int y, int movei, int sol[N][N], int xMove[], int yMove[])
+{
+    chamadas++;
+    if (movei == total)
+        return 1;
+
+    for (int k = 0; k < 8; k++) {
+        int next_x = x + xMove[k];
+        int next_y = y + yMove[k];
+        if (isSafe(next_x, next_y, sol))
+        {
+            sol[next_x][next_y] = movei;
+            if (solveKTUtil(next_x, next_y, movei + 1, sol, xMove, yMove) == 1)
+                return 1;
+            else {
+                sol[next_x][next_y] = -1; // backtracking
+                retrocessos++;
+            }
+        }
+    }
+
+    return 0;
+}
+
+int main(int argc, char *argv[])
+{
+    int minas = 4;
+    unsigned semente = 42;
+    if (argc > 1) minas = atoi(argv[1]);
+    if (argc > 2) semente = (unsigned) atoi(argv[2]);
+    srand(semente);
+    solveKT(minas);
+    return 0;
+}
+`;
+$('btnCopiar').addEventListener('click',async()=>{
+  const b=$('btnCopiar');
+  try{ await navigator.clipboard.writeText(PROGRAMA); b.textContent='Copiado ✓'; }
+  catch(e){ b.textContent='Não deu pra copiar aqui'; }
+  setTimeout(()=>b.textContent='Copiar programa completo',1800);
+});
+
+function mostrarVitoria(){
+  $('vTexto').innerHTML=`Você visitou as <b>${TOTAL}</b> casas seguras. No C: <code>movei == total</code>, <code>return 1</code>, e o 1 sobe a pilha inteira.`;
+  $('vStats').innerHTML=`<div class="stat xp">pontos <b>${J.xp}</b></div><div class="stat">suas voltas <b>${J.voltas}</b></div><div class="stat">explosões <b>${J.booms}</b></div><div class="stat">voltas do C <b>${REF.backs}</b></div>`;
+  $('vitoria').classList.remove('oculto');
+  const cores=['#c9ced4','#a9b1ba','#8a9099','#dcd8cc','#e3e6e9'];
+  for(let i=0;i<70;i++){ const s=document.createElement('span'); s.className='confete';
+    s.style.left=Math.random()*100+'vw'; s.style.background=cores[i%cores.length];
+     s.style.animationDuration=(1.8+Math.random()*1.8)+'s';
+    s.style.animationDelay=(Math.random()*.6)+'s'; document.body.appendChild(s); setTimeout(()=>s.remove(),4500); }
+}
+$('vVerC').addEventListener('click',()=>{ $('vitoria').classList.add('oculto'); trocaAba('auto'); });
+$('vDeNovo').addEventListener('click',()=>{ $('vitoria').classList.add('oculto'); novoTabuleiro(); });
+$('btnSom').addEventListener('click',()=>{ SOM=!SOM; $('btnSom').textContent=SOM?'🔊':'🔇'; if(SOM){ac(); som('ok');} });
+$('btnTela').addEventListener('click',()=>{ const d=document, el=d.documentElement; try{
+  if(d.fullscreenElement||d.webkitFullscreenElement){ (d.exitFullscreen||d.webkitExitFullscreen).call(d); }
+  else { const r=el.requestFullscreen||el.webkitRequestFullscreen; if(r){ const p=r.call(el); if(p&&p.catch) p.catch(()=>{}); } }
+}catch(e){} });
+function somEvento(e,rapido){ if(!e||rapido) return;
+  if(e.tipo==='mark') som('tick'); else if(e.tipo==='unmark') som('desfaz'); else if(e.tipo==='final') som('vitoria'); }
+
+/* início */
+montaCodigo();
+novoTabuleiro();
+</script>
+<script>window.addEventListener('modo',()=>location.reload());</script>
+<script src="canto.js"></script>
+</body>
+</html>

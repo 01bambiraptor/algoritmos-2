@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · feito a partir do material da disciplina CI1056 (UFPR) · CC BY-NC-SA 4.0 · veja LICENSE.txt -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#e7f2fb">
+<title>Slide do Backtracking</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--titulo:#2f5d7c;--ceu:#e7f2fb;--gelo:#f2f7fb;--pessego:#ffd6b0;--rosa:#fdecef;--ink:#2b3440;--muted:#6b7785;--ok:#2f9e5a;--red:#d9485f;--gold:#f0a81c;--borda:#d5e6f3;--c:72px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{font-family:'Fredoka',system-ui,sans-serif;color:var(--ink);font-size:17px;line-height:1.5;touch-action:manipulation;
+  background:linear-gradient(180deg,#d4e8f6 0,#e7f2fb 40%,#f2f7fb 100%) fixed;min-height:100vh}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 18px;max-width:1120px;margin:0 auto}
+header h1{margin:0;font-size:1.5rem;color:var(--titulo)}
+header .sub{color:var(--muted);font-size:.95rem}
+.voltar{font:inherit;font-weight:600;text-decoration:none;color:var(--titulo);background:#fff;border:2px solid var(--borda);border-radius:12px;padding:7px 14px}
+main{max-width:1120px;margin:0 auto;padding:0 18px 60px}
+.barra{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:4px 0 14px}
+.chip{font:inherit;font-weight:600;border:2px solid var(--borda);background:#fff;color:var(--titulo);border-radius:999px;padding:6px 14px;cursor:pointer;min-height:42px}
+.chip.on{background:var(--titulo);border-color:var(--titulo);color:#fff}
+.chip small{font-weight:400;opacity:.8}
+.abas{display:flex;gap:6px;margin-left:auto}
+.btn{font:inherit;font-weight:600;border-radius:12px;border:2px solid var(--borda);background:#fff;color:var(--titulo);min-height:46px;padding:8px 14px;cursor:pointer}
+.btn:active{transform:scale(.96)}
+.btn.pri{background:var(--titulo);border-color:var(--titulo);color:#fff}
+.btn:disabled{opacity:.4;cursor:default}
+.palco{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,380px);gap:18px;align-items:start}
+.palco>div{min-width:0}
+@media (min-width:861px){.palco>div:first-child{position:sticky;top:12px}}
+@media (max-width:860px){.palco{grid-template-columns:1fr}}
+.cartao{background:#ffffffe8;border:1.5px solid var(--borda);border-radius:22px;padding:16px 18px;box-shadow:0 6px 24px #2f5d7c12}
+.cartao h3{margin:0 0 6px;color:var(--titulo);font-size:1.1rem}
+.cartao p{margin:6px 0}
+
+/* ---------- a maquete: bandeja de madeira sobre a grama ---------- */
+.maquete{position:relative;display:flex;justify-content:center;padding:26px 18px 46px;border-radius:28px;
+  background:radial-gradient(ellipse at 50% 30%,#a9dc8a 0,#86c46a 55%,#6fae58 100%);box-shadow:inset 0 -10px 0 #8a6239,inset 0 -14px 0 #6f4c2a,0 18px 30px #2f5d7c26;overflow:hidden}
+.maquete:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 12% 20%,#ffffff22 0 2px,transparent 3px) 0 0/34px 30px,radial-gradient(circle at 70% 60%,#2d5a2018 0 2px,transparent 3px) 0 0/26px 22px;pointer-events:none}
+.bandeja{position:relative;padding:12px;border-radius:18px;background:linear-gradient(145deg,#e9c99c,#d4a873);box-shadow:0 10px 0 #b98a52,0 18px 22px #3b2a1640,inset 0 2px 0 #fff3}
+.tab{position:relative;width:calc(var(--c)*var(--W));height:calc(var(--c)*var(--H));border-radius:10px;
+  background:#f6ecdc;box-shadow:inset 0 3px 8px #8a623955;
+  background-image:linear-gradient(#e6d5bd 1px,transparent 1px),linear-gradient(90deg,#e6d5bd 1px,transparent 1px);background-size:var(--c) var(--c)}
+.porta{position:absolute;z-index:0;background:linear-gradient(180deg,#f6ecdc,#ffe7b0);box-shadow:0 0 14px #ffc94a99;border-radius:0 0 8px 8px}
+.porta:after{content:"saída ▼";position:absolute;left:50%;top:100%;transform:translate(-50%,2px);white-space:nowrap;font:700 12px Fredoka,sans-serif;color:#fff;
+  background:#e0a33a;border-radius:999px;padding:1px 9px;box-shadow:0 2px 0 #b9802a;animation:pisca 1.4s ease-in-out infinite}
+@keyframes pisca{50%{transform:translate(-50%,5px)}}
+.peca{position:absolute;left:0;top:0;padding:4px;transition:transform .16s cubic-bezier(.3,1.3,.5,1);touch-action:none;cursor:grab;z-index:2}
+.peca .b{width:100%;height:100%;border-radius:12px;position:relative;
+  background:linear-gradient(160deg,#fbf3e6,#ead6b8);box-shadow:0 5px 0 #c7a57a,0 9px 10px #5a3d1d33,inset 0 2px 0 #fff;border:1.5px solid #d9bd94}
+.peca .b:after{content:"";position:absolute;inset:7px;border-radius:8px;border:1.5px dashed #d9bd9488}
+.peca.v .b{background:linear-gradient(160deg,#e6f3fc,#c9e2f4);box-shadow:0 5px 0 #8fb6d3,0 9px 10px #2f5d7c33,inset 0 2px 0 #fff;border-color:#a9cbe4}
+.peca.h .b{background:linear-gradient(160deg,#fdeef1,#f6d3db);box-shadow:0 5px 0 #d9a3b0,0 9px 10px #7a3b4a33,inset 0 2px 0 #fff;border-color:#eebcc8}
+.peca.alvo .b{background:linear-gradient(160deg,#fff4c8,#ffc970 60%,#f6a93b);box-shadow:0 5px 0 #d08a26,0 9px 14px #a0601a55,inset 0 2px 0 #fff8;border-color:#e9a43f}
+.peca.alvo .b:after{border-color:#fff8}
+.peca.alvo .b span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:calc(var(--c)*.42);filter:drop-shadow(0 2px 0 #d08a2688)}
+.peca.sel .b{outline:3px solid var(--titulo);outline-offset:2px}
+.peca.tenta .b{outline:3px dashed var(--red);outline-offset:2px}
+.peca.anda .b{outline:3px solid var(--gold);outline-offset:2px}
+.peca.sai{transition:transform .6s ease-in,opacity .6s}
+.fogos{position:absolute;inset:0;pointer-events:none;z-index:5}
+
+.cont{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:10px 0}
+.cont div{background:var(--gelo);border-radius:14px;padding:8px 10px;text-align:center}
+.cont b{display:block;font-size:1.5rem;color:var(--titulo);line-height:1.1}
+.cont small{color:var(--muted);font-size:.82rem}
+.cont .melhor b{color:var(--ok)}
+.linha{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.msg{border-radius:14px;padding:10px 14px;margin-top:10px;background:var(--ceu);min-height:46px}
+.msg.bom{background:#e8f7ee;border:2px solid #a9dcbc}
+.msg.ruim{background:var(--rosa);border:2px solid #f3b8c3}
+.dica{background:#fff8ef;border:2px dashed var(--pessego);border-radius:14px;padding:10px 14px;margin-top:12px;font-size:.96rem}
+
+/* ---------- modo ver o backtracking ---------- */
+.codigo{font-family:'JetBrains Mono',monospace;font-size:.8rem;background:#f8fbfe;border:2px solid var(--borda);border-radius:14px;padding:6px 0;overflow-x:auto}
+.codigo div{white-space:pre;padding:1px 12px;border-left:5px solid transparent}
+.codigo div.on{background:#ffe7a8;border-left-color:var(--gold)}
+.codigo div.on.r{background:var(--rosa);border-left-color:var(--red)}
+.codigo div.on.g{background:#e2f5ea;border-left-color:var(--ok)}
+.codigo div.oculta{display:none}
+.codigo .cm{color:#8a9aa8}.codigo .kw{color:#2f5d7c;font-weight:600}
+.pilha{display:flex;flex-wrap:wrap;gap:4px;max-height:118px;overflow:auto;margin-top:6px;padding:6px;background:var(--gelo);border-radius:12px;min-height:40px;align-content:flex-start}
+.pilha span{font-family:'JetBrains Mono',monospace;font-size:.75rem;background:#fff;border:1px solid var(--borda);border-radius:7px;padding:1px 6px}
+.pilha span:last-child{background:#fff1e3;border-color:var(--gold);font-weight:600}
+.interr{display:flex;align-items:center;gap:10px;background:var(--gelo);border-radius:14px;padding:8px 12px;margin:8px 0;cursor:pointer;user-select:none}
+.interr input{width:22px;height:22px;accent-color:var(--titulo)}
+.ctrl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.ctrl input[type=range]{flex:1;min-width:120px;accent-color:var(--titulo)}
+table.cmp{width:100%;border-collapse:collapse;margin-top:8px;font-size:.92rem}
+table.cmp th,table.cmp td{padding:6px 8px;border-bottom:1px solid var(--borda);text-align:left}
+table.cmp th{color:var(--titulo)}
+table.cmp td b{color:var(--titulo)}
+.esconde{display:none!important}
+.rodape{text-align:center;color:var(--muted);font-size:.9rem;margin-top:26px}
+.freire{display:inline-block;margin-top:6px;color:#2f5d7c;font-size:.95em}
+</style>
+<script src="modo.js"></script>
+</head>
+<body>
+<header>
+  <a class="voltar" href="index.html">← Início</a>
+  <div><h1>🧩 Slide do Backtracking</h1><div class="sub">deslize os blocos até o bloco dourado sair pela porta</div></div>
+</header>
+<div style="max-width:1200px;margin:0 auto;padding:0 18px 10px"><span id="modoSlot" data-ap='com 💡 dica' data-esp='sem dica e com limite de movimentos (mínimo + 20%)'></span></div>
+<main>
+  <div class="barra" id="fases"></div>
+  <div class="barra">
+    <div class="abas"><button class="chip on" id="abaJ">🎮 Jogar</button><button class="chip" id="abaV">🔍 Ver o backtracking</button></div>
+  </div>
+
+  <div class="palco">
+    <div>
+      <div class="maquete"><div class="bandeja"><div class="tab" id="tab"></div></div><div class="fogos" id="fogos"></div></div>
+    </div>
+
+    <!-- painel do modo jogar -->
+    <div id="painelJ">
+      <div class="cartao">
+        <h3 id="tFase"></h3>
+        <div class="cont">
+          <div><b id="nMov">0</b><small>seus movimentos</small></div>
+          <div class="melhor"><b id="nMin">…</b><small>mínimo possível</small></div>
+        </div>
+        <div class="linha">
+          <button class="btn" id="bDesfaz">↩ Desfazer</button>
+          <button class="btn soAprender" id="bDica">💡 Dica</button>
+          <button class="btn" id="bRe">⟳ Recomeçar</button>
+        </div>
+        <div class="msg" id="msgJ">Arraste um bloco (ou toque nele e use as setas do teclado). Cada passo de uma casa conta como um movimento.</div>
+        <div class="dica soAprender"><b>Repara:</b> quando você trava e aperta <b>Desfazer</b>, está fazendo exatamente o que o backtracking faz: volta a última decisão e tenta outra. A pilha dos seus movimentos é a pilha de chamadas.</div>
+      </div>
+    </div>
+
+    <!-- painel do modo ver -->
+    <div id="painelV" class="esconde">
+      <div class="cartao">
+        <h3>O computador resolvendo com backtracking</h3>
+        <label class="interr"><input type="checkbox" id="poda" checked><span><b>Poda de estados repetidos</b><br><small>não visita de novo uma arrumação que já viu</small></span></label>
+        <div class="codigo" id="cod"></div>
+        <div class="cont">
+          <div><b id="vNos">0</b><small>chamadas (estados testados)</small></div>
+          <div><b id="vVolta">0</b><small>retrocessos (desfez)</small></div>
+          <div><b id="vRep">0</b><small>repetidos podados</small></div>
+          <div><b id="vProf">0</b><small>profundidade agora</small></div>
+        </div>
+        <small style="color:var(--muted)">pilha de decisões (movimentos ainda abertos):</small>
+        <div class="pilha" id="pilha"></div>
+        <div class="ctrl">
+          <button class="btn pri" id="vPlay">▶ Rodar</button>
+          <button class="btn" id="vPasso">Passo</button>
+          <button class="btn" id="vFim">Ver o resultado</button>
+          <input type="range" id="vVel" min="1" max="60" value="12" aria-label="velocidade">
+        </div>
+        <div class="msg" id="msgV">Aperte ▶ pra ver o algoritmo tentar, empilhar, bater num beco e desfazer.</div>
+      </div>
+      <div class="cartao" style="margin-top:14px">
+        <h3>Comparando as estratégias nesta fase</h3>
+        <table class="cmp" id="cmp"></table>
+        <p style="color:var(--muted);font-size:.9rem">Números calculados agora, no seu navegador, rodando os algoritmos de verdade nesta fase.</p>
+      </div>
+    </div>
+  </div>
+  <p class="rodape">Feito a partir do material da disciplina CI1056 · Algoritmos e Estruturas de Dados II · UFPR<br>Este material não substitui o material do professor: é uma ferramenta visual de apoio ao entendimento.<br><span class="freire"><i>“Ninguém nasce feito, é experimentando-nos no mundo que nós nos fazemos.”</i> Paulo Freire, <i>Política e educação</i></span></p>
+</main>
+
+<script>
+"use strict";
+/* ================= fases (todas testadas: têm solução, e o mínimo é calculado na hora) ================= */
+const FASES=[
+ {nome:'Aquecimento',W:3,H:3,saida:[2,2],pecas:[[1,0,1,1,1],[2,0,1,1],[2,1,1,1],[1,2,2,1],[0,1,1,2],[0,0,1,1]]},
+ {nome:'Sem espaço',W:3,H:3,saida:[2,2],pecas:[[0,0,1,1,1],[1,1,1,1],[1,0,1,1],[1,2,2,1],[0,1,1,2],[2,1,1,1]]},
+ {nome:'O corredor',W:4,H:4,saida:[2,3],pecas:[[0,0,2,1,1],[0,2,1,1],[1,2,1,1],[3,0,1,2],[3,2,1,2],[1,1,2,1],[1,3,1,1],[2,2,1,2]]},
+ {nome:'O bloco grande',W:4,H:5,saida:[1,3],pecas:[[1,1,2,2,1],[3,2,1,2],[3,0,1,2],[0,1,1,2],[2,3,1,2],[0,0,2,1],[0,3,1,1],[2,0,1,1],[1,3,1,1],[0,4,1,1]]},
+ {nome:'Desafio',W:4,H:5,saida:[1,3],pecas:[[2,0,2,2,1],[3,3,1,2],[0,2,1,2],[1,2,1,2],[0,0,1,2],[2,2,2,1],[1,0,1,1],[2,4,1,1],[1,4,1,1],[2,3,1,1]]}
+].map(f=>({...f,pecas:f.pecas.map(([x,y,w,h,a])=>({x,y,w,h,alvo:!!a}))}));
+
+/* ================= núcleo: estado, movimentos, BFS e DFS ================= */
+const DIRS=[[0,-1,'↑'],[1,0,'→'],[0,1,'↓'],[-1,0,'←']];
+const cls=p=>p.alvo?'A':p.w===1&&p.h===1?'s':p.w===2&&p.h===1?'h':p.w===1&&p.h===2?'v':'B';
+function chave(L,pos){const g=new Array(L.W*L.H).fill('.');L.pecas.forEach((p,i)=>{const[x,y]=pos[i],c=cls(p);for(let dy=0;dy<p.h;dy++)for(let dx=0;dx<p.w;dx++)g[(y+dy)*L.W+x+dx]=c;});return g.join('');}
+function ocupa(L,pos){const g=new Int16Array(L.W*L.H).fill(-1);L.pecas.forEach((p,i)=>{const[x,y]=pos[i];for(let dy=0;dy<p.h;dy++)for(let dx=0;dx<p.w;dx++)g[(y+dy)*L.W+x+dx]=i;});return g;}
+function pode(L,pos,i,d,g){g=g||ocupa(L,pos);const p=L.pecas[i],nx=pos[i][0]+DIRS[d][0],ny=pos[i][1]+DIRS[d][1];
+  if(nx<0||ny<0||nx+p.w>L.W||ny+p.h>L.H)return false;
+  for(let y=ny;y<ny+p.h;y++)for(let x=nx;x<nx+p.w;x++){const o=g[y*L.W+x];if(o!==-1&&o!==i)return false;}return true;}
+function movimentos(L,pos){const g=ocupa(L,pos),o=[];L.pecas.forEach((p,i)=>{for(let d=0;d<4;d++)if(pode(L,pos,i,d,g))o.push([i,d]);});return o;}
+const aplica=(pos,[i,d])=>{const n=pos.map(q=>q.slice());n[i][0]+=DIRS[d][0];n[i][1]+=DIRS[d][1];return n;};
+const alvoI=L=>L.pecas.findIndex(p=>p.alvo);
+const venceu=(L,pos)=>{const i=alvoI(L);return pos[i][0]===L.saida[0]&&pos[i][1]===L.saida[1];};
+/* busca em largura: acha o MÍNIMO de movimentos (e o primeiro passo dele, pra dica) */
+function bfs(L,ini){
+  ini=ini||L.pecas.map(p=>[p.x,p.y]);if(venceu(L,ini))return{min:0,estados:1,primeiro:null};
+  const pai=new Map([[chave(L,ini),null]]);let fila=[[ini,null]],prof=0;
+  while(fila.length){prof++;const nova=[];
+    for(const[pos,prim]of fila)for(const m of movimentos(L,pos)){const n=aplica(pos,m),k=chave(L,n);if(pai.has(k))continue;pai.set(k,1);
+      const p1=prim||m;if(venceu(L,n))return{min:prof,estados:pai.size,primeiro:p1};nova.push([n,p1]);}
+    fila=nova;}
+  return{min:-1,estados:pai.size,primeiro:null};
+}
+/* backtracking em profundidade, com pilha explícita (mesma lógica da versão recursiva mostrada ao lado).
+   Gera "eventos" pra animação, até um limite, e conta tudo até o fim. */
+function backtracking(L,{poda,limProf,limNos=400000,maxEv=6000}){
+  const ini=L.pecas.map(p=>[p.x,p.y]),vis=new Set(),ev=[];let nos=0,volta=0,rep=0,sol=-1,estourou=false;
+  const E=(...a)=>{if(ev.length<maxEv)ev.push(a);};
+  nos=1;E('chama',0);
+  if(venceu(L,ini))return{nos,volta,rep,sol:0,ev,estourou};
+  if(poda)vis.add(chave(L,ini));
+  const pilha=[{pos:ini,ms:movimentos(L,ini),k:0,m:null}];
+  while(pilha.length){
+    const f=pilha[pilha.length-1];
+    if(f.k>=f.ms.length||(!poda&&pilha.length-1>=limProf)){ // acabaram as opções (ou bateu no limite): volta
+      if(!poda&&pilha.length-1>=limProf&&f.k===0)E('limite',pilha.length-1);
+      pilha.pop();E('falha',pilha.length);
+      if(f.m){volta++;E('volta',f.m,pilha.length-1);}
+      continue;}
+    const m=f.ms[f.k++],n=aplica(f.pos,m);
+    if(poda){const k=chave(L,n);if(vis.has(k)){rep++;E('repetido',m,pilha.length-1);continue;}vis.add(k);}
+    nos++;if(nos>limNos){estourou=true;break;}
+    E('vai',m,pilha.length);
+    if(venceu(L,n)){sol=pilha.length;E('achou',pilha.length);break;}
+    pilha.push({pos:n,ms:movimentos(L,n),k:0,m});
+  }
+  return{nos,volta,rep,sol,ev,estourou};
+}
+
+/* ================= desenho do tabuleiro ================= */
+const $=id=>document.getElementById(id);
+const tab=$('tab');
+let F=0,L=null,pos=[],hist=[],sel=-1,minimo=null,ganhou=false,modo='J',els=[];
+function tamanhoCasa(){const w=Math.min(innerWidth,1120)-(innerWidth<860?80:480);return Math.max(46,Math.min(84,Math.floor(Math.min(w/L.W,(innerHeight*.62)/L.H))));}
+function monta(){
+  document.documentElement.style.setProperty('--c',tamanhoCasa()+'px');
+  tab.style.setProperty('--W',L.W);tab.style.setProperty('--H',L.H);
+  tab.innerHTML='';els=[];
+  const a=L.pecas[alvoI(L)],porta=document.createElement('div');porta.className='porta';
+  porta.style.cssText=`left:calc(var(--c)*${L.saida[0]});width:calc(var(--c)*${a.w});top:100%;height:13px`;
+  tab.appendChild(porta);
+  L.pecas.forEach((p,i)=>{const e=document.createElement('div');e.className='peca '+({A:'alvo',s:'s',h:'h',v:'v',B:'B'})[cls(p)];
+    e.style.width=`calc(var(--c)*${p.w})`;e.style.height=`calc(var(--c)*${p.h})`;
+    e.innerHTML='<div class="b">'+(p.alvo?'<span>⭐</span>':'')+'</div>';e.dataset.i=i;tab.appendChild(e);els.push(e);arrasta(e,i);});
+  desenha();
+}
+function desenha(){els.forEach((e,i)=>{e.style.transform=`translate(calc(var(--c)*${pos[i][0]}),calc(var(--c)*${pos[i][1]}))`;e.classList.toggle('sel',modo==='J'&&i===sel);});}
+addEventListener('resize',()=>{if(L){document.documentElement.style.setProperty('--c',tamanhoCasa()+'px');}});
+
+/* ================= modo jogar ================= */
+function carrega(i){
+  F=i;L=FASES[i];pos=L.pecas.map(p=>[p.x,p.y]);hist=[];sel=-1;ganhou=false;
+  document.querySelectorAll('#fases .chip').forEach((c,k)=>c.classList.toggle('on',k===i));
+  $('tFase').textContent=`Fase ${i+1}: ${L.nome}`;
+  const r=bfs(L);minimo=r;$('nMin').textContent=r.min;
+  $('nMov').textContent=0;msg('J','Arraste um bloco (ou toque nele e use as setas do teclado). Cada passo de uma casa conta como um movimento.');
+  monta();paraV();preparaV();
+}
+function msg(q,t,c){const m=$('msg'+q);m.innerHTML=t;m.className='msg'+(c?' '+c:'');}
+function move(i,d){
+  if(ganhou||modo!=='J'||!pode(L,pos,i,d))return false;
+  pos=aplica(pos,[i,d]);hist.push([i,d]);$('nMov').textContent=hist.length;desenha();
+  if(venceu(L,pos))vitoria();
+  return true;
+}
+function vitoria(){
+  ganhou=true;const a=alvoI(L),e=els[a];e.classList.add('sai');
+  setTimeout(()=>{e.style.transform+=` translateY(calc(var(--c)*${L.pecas[a].h+.4}))`;e.style.opacity=0;},60);
+  const n=hist.length,m=minimo.min;
+  const lim=m+Math.max(2,Math.ceil(m*.2));
+  if(ESP()&&n>lim){ msg('J',`🏆 Especialista: saiu, mas com ${n} movimentos. O limite era ${lim} (mínimo ${m} + folga). Desfaça e tente um caminho mais curto.`,'ruim'); return; }
+  msg('J',n===m?`🏆 <b>Perfeito!</b> ${n} movimentos, exatamente o mínimo possível.`:`🎉 <b>Saiu!</b> Você usou ${n} movimentos; o mínimo é ${m}. Dá pra tentar de novo com menos?`,'bom');
+  try{const k='fliperama-alg2',f=JSON.parse(localStorage.getItem(k)||'{}');f.slide=1;localStorage.setItem(k,JSON.stringify(f));
+    const kb='slide-melhor',b=JSON.parse(localStorage.getItem(kb)||'{}');if(!b[F]||n<b[F])b[F]=n;localStorage.setItem(kb,JSON.stringify(b));}catch(e){}
+  marcaFases();fogos();
+}
+function fogos(){const c=$('fogos');c.innerHTML='';for(let k=0;k<26;k++){const s=document.createElement('span');const a=Math.random()*6.28,r=60+Math.random()*120;
+  s.textContent=['✨','⭐','🟡','🔸'][k%4];s.style.cssText=`position:absolute;left:50%;top:55%;font-size:${14+Math.random()*12}px;transition:transform .9s cubic-bezier(.2,.8,.3,1),opacity .9s ${.4}s;`;
+  c.appendChild(s);requestAnimationFrame(()=>{s.style.transform=`translate(${Math.cos(a)*r}px,${Math.sin(a)*r-40}px)`;s.style.opacity=0;});}
+  setTimeout(()=>c.innerHTML='',1600);}
+$('bDesfaz').onclick=()=>{if(!hist.length||modo!=='J')return;if(ganhou){carregaPos();return;}const[i,d]=hist.pop();pos=aplica(pos,[i,(d+2)%4]);$('nMov').textContent=hist.length;desenha();
+  msg('J','↩ Desfez o último movimento. Isso é um <b>retrocesso</b>: voltar uma decisão pra tentar outra.');};
+function carregaPos(){ // depois de ganhar, "desfazer" volta o bloco pra dentro
+  ganhou=false;const a=alvoI(L);els[a].classList.remove('sai');els[a].style.opacity=1;const[i,d]=hist.pop();pos=aplica(pos,[i,(d+2)%4]);$('nMov').textContent=hist.length;desenha();msg('J','Voltou um passo.');}
+$('bRe').onclick=()=>carrega(F);
+$('bDica').onclick=()=>{if(ganhou||modo!=='J')return;const r=bfs(L,pos);if(!r.primeiro){msg('J','Já está resolvido!');return;}
+  const[i,d]=r.primeiro;els[i].classList.add('anda');setTimeout(()=>els[i].classList.remove('anda'),900);
+  msg('J',`💡 Mexa o bloco destacado pra <b>${['cima','direita','baixo','esquerda'][d]}</b>. Daqui, ainda faltam no mínimo <b>${r.min}</b> movimentos.`);};
+/* arrastar com dedo ou mouse; cada vez que passa de meia casa, anda uma casa */
+function arrasta(e,i){
+  let x0,y0,ativo=false;
+  e.addEventListener('pointerdown',ev=>{if(modo!=='J')return;ativo=true;x0=ev.clientX;y0=ev.clientY;sel=i;desenha();e.setPointerCapture(ev.pointerId);});
+  e.addEventListener('pointermove',ev=>{if(!ativo)return;const c=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--c'))*.5;
+    const dx=ev.clientX-x0,dy=ev.clientY-y0;let d=-1;
+    if(Math.abs(dx)>c&&Math.abs(dx)>=Math.abs(dy))d=dx>0?1:3;else if(Math.abs(dy)>c)d=dy>0?2:0;
+    if(d>=0){if(move(i,d)){x0+=DIRS[d][0]*c*2;y0+=DIRS[d][1]*c*2;}else{x0=ev.clientX;y0=ev.clientY;}}});
+  const fim=()=>{ativo=false;};e.addEventListener('pointerup',fim);e.addEventListener('pointercancel',fim);
+}
+addEventListener('keydown',ev=>{if(modo!=='J'||sel<0)return;const d={ArrowUp:0,ArrowRight:1,ArrowDown:2,ArrowLeft:3}[ev.key];if(d!==undefined){ev.preventDefault();move(sel,d);}});
+
+/* ================= modo ver o backtracking ================= */
+const COD=[
+ ['int tenta(estado e, int prof) {',''],
+ ['  if (venceu(e)) return 1;      <span class="cm">// caso base: saiu!</span>','achou'],
+ ['  if (prof == LIMITE) return 0;  <span class="cm">// sem poda, precisa de limite</span>','limite','sem'],
+ ['  marca(e);                     <span class="cm">// poda: já vi este estado</span>','','com'],
+ ['  for (cada movimento m possível) {',''],
+ ['    novo = aplica(e, m);',''],
+ ['    if (visitado(novo)) continue; <span class="cm">// poda</span>','repetido','com'],
+ ['    empilha(m);',''],
+ ['    if (tenta(novo, prof + 1)) return 1;','vai'],
+ ['    desempilha(m);              <span class="cm">// retrocesso: desfaz</span>','volta'],
+ ['  }',''],
+ ['  return 0;                     <span class="cm">// nenhuma opção deu certo</span>','falha'],
+ ['}','']];
+$('cod').innerHTML=COD.map(([t,,q])=>`<div data-q="${q||''}">${t.replace(/\b(int|if|for|return|continue)\b/g,'<span class="kw">$1</span>')}</div>`).join('');
+let V=null,tm=0,rodando=false;
+function preparaV(){
+  const poda=$('poda').checked;
+  document.querySelectorAll('#cod div').forEach(d=>d.classList.toggle('oculta',d.dataset.q===(poda?'sem':'com')));
+  const lim=minimo.min+4;
+  V={res:backtracking(L,{poda,limProf:lim}),k:0,pos:L.pecas.map(p=>[p.x,p.y]),pilha:[],nos:1,volta:0,rep:0,lim};
+  ['vNos','vVolta','vRep','vProf'].forEach(id=>$(id).textContent=0);$('vNos').textContent=1;$('pilha').innerHTML='';
+  luz(-1);
+  msg('V',poda?'Aperte ▶ pra ver o algoritmo tentar, empilhar, bater num beco e desfazer.':`Sem poda, o algoritmo não lembra o que já viu e pode andar em círculo pra sempre. Por isso ganha um <b>limite de profundidade</b> (aqui, ${lim} movimentos).`);
+  comparacao();
+  if(modo==='V'){pos=V.pos.map(q=>q.slice());desenha();}
+}
+function luz(linha,tipo){document.querySelectorAll('#cod div').forEach((d,k)=>{d.classList.toggle('on',k===linha);d.classList.toggle('r',k===linha&&tipo==='r');d.classList.toggle('g',k===linha&&tipo==='g');});}
+const linhaDe=t=>COD.findIndex(c=>c[1]===t);
+const nomeMov=([i,d])=>`${cls(L.pecas[i])==='A'?'⭐':'#'+i}${DIRS[d][2]}`;
+function passo(){
+  const ev=V.res.ev[V.k++];if(!ev){fimV();return false;}
+  els.forEach(e=>e.classList.remove('tenta','anda'));
+  const[t,a]=ev;
+  if(t==='vai'){V.pos=aplica(V.pos,a);V.pilha.push(a);V.nos++;luz(linhaDe('vai'));els[a[0]].classList.add('anda');}
+  else if(t==='volta'){V.pos=aplica(V.pos,[a[0],(a[1]+2)%4]);V.pilha.pop();V.volta++;luz(linhaDe('volta'),'r');els[a[0]].classList.add('tenta');}
+  else if(t==='repetido'){V.rep++;luz(linhaDe('repetido'),'r');els[a[0]].classList.add('tenta');}
+  else if(t==='limite'){luz(linhaDe('limite'),'r');}
+  else if(t==='falha'){luz(linhaDe('falha'),'r');}
+  else if(t==='achou'){luz(linhaDe('achou'),'g');}
+  else if(t==='chama'){luz(0);}
+  pos=V.pos.map(q=>q.slice());desenha();
+  $('vNos').textContent=V.nos;$('vVolta').textContent=V.volta;$('vRep').textContent=V.rep;$('vProf').textContent=V.pilha.length;
+  const P=$('pilha');P.innerHTML=V.pilha.slice(-40).map(m=>`<span>${nomeMov(m)}</span>`).join('');P.scrollTop=P.scrollHeight;
+  const txt=({vai:()=>`Tenta mover <b>${nomeMov(a)}</b> e chama tenta() de novo, um nível mais fundo.`,volta:()=>`Não deu certo por esse caminho: <b>desfaz ${nomeMov(a)}</b> e tenta a próxima opção.`,
+    repetido:()=>`Mover ${nomeMov(a)} levaria a uma arrumação que já foi vista. <b>Poda!</b> Nem entra.`,limite:()=>`Chegou no limite de profundidade sem sair. Volta.`,
+    falha:()=>'Todas as opções deste nível foram tentadas. Devolve 0 pra quem chamou.',achou:()=>'⭐ <b>Saiu!</b> O caso base devolve 1, e esse 1 sobe por toda a pilha.',
+    chama:()=>'Primeira chamada: tenta(estado inicial, 0).'}[t]||(()=>''))();
+  if(txt)msg('V',txt,t==='achou'?'bom':(t==='vai'?'':'ruim'));
+  if(t==='achou'){fimV();return false;}
+  return true;
+}
+function fimV(){paraV();const r=V.res;
+  msg('V',r.sol>=0?`⭐ Achou uma saída com <b>${r.sol}</b> movimentos depois de testar <b>${r.nos.toLocaleString('pt-BR')}</b> estados. Repara: o backtracking acha <b>uma</b> solução, não necessariamente a menor (a mínima tem ${minimo.min}).`
+    :r.estourou?`Testou ${r.nos.toLocaleString('pt-BR')} estados e ainda não tinha saído. Sem poda, a árvore de decisões explode.`
+    :`Testou ${r.nos.toLocaleString('pt-BR')} estados e não achou saída dentro do limite de ${V.lim} movimentos.`,r.sol>=0?'bom':'ruim');}
+function paraV(){rodando=false;clearTimeout(tm);$('vPlay').textContent='▶ Rodar';}
+function roda(){if(!rodando)return;const v=+$('vVel').value;let n=v>40?Math.ceil((v-40)/2):1;let ok=true;while(n--&&ok)ok=passo();
+  if(ok&&rodando)tm=setTimeout(roda,v>40?16:Math.max(16,600-v*14));}
+$('vPlay').onclick=()=>{if(rodando){paraV();return;}if(V.k>=V.res.ev.length)preparaV();rodando=true;$('vPlay').textContent='⏸ Pausar';roda();};
+$('vPasso').onclick=()=>{paraV();passo();};
+$('vFim').onclick=()=>{paraV();while(V.k<V.res.ev.length)if(!passo())break;
+  const r=V.res;$('vNos').textContent=r.nos.toLocaleString('pt-BR');$('vVolta').textContent=r.volta.toLocaleString('pt-BR');$('vRep').textContent=r.rep.toLocaleString('pt-BR');fimV();};
+$('poda').onchange=()=>{paraV();preparaV();};
+function comparacao(){
+  const a=backtracking(L,{poda:true,limProf:1e9,maxEv:0}),b=backtracking(L,{poda:false,limProf:minimo.min+4,limNos:400000,maxEv:0});
+  const f=n=>n.toLocaleString('pt-BR');
+  $('cmp').innerHTML=`<tr><th>estratégia</th><th>estados testados</th><th>solução</th></tr>
+   <tr><td>backtracking <b>com poda</b></td><td>${f(a.nos)}</td><td>${a.sol>=0?a.sol+' mov.':'não achou'}</td></tr>
+   <tr><td>backtracking <b>sem poda</b> (limite ${minimo.min+4})</td><td>${b.estourou?'mais de '+f(400000):f(b.nos)}</td><td>${b.sol>=0?b.sol+' mov.':b.estourou?'desistiu':'não achou'}</td></tr>
+   <tr><td>busca em largura (o mínimo)</td><td>${f(minimo.estados)}</td><td><b>${minimo.min} mov.</b></td></tr>`;
+}
+
+/* ================= abas e fases ================= */
+function marcaFases(){let b={};try{b=JSON.parse(localStorage.getItem('slide-melhor')||'{}');}catch(e){}
+  $('fases').innerHTML=FASES.map((f,k)=>`<button class="chip${k===F?' on':''}" data-k="${k}">${k+1}. ${f.nome}${b[k]?` <small>✔ ${b[k]}</small>`:''}</button>`).join('');
+  document.querySelectorAll('#fases .chip').forEach(c=>c.onclick=()=>carrega(+c.dataset.k));}
+function aba(q){modo=q;$('abaJ').classList.toggle('on',q==='J');$('abaV').classList.toggle('on',q==='V');
+  $('painelJ').classList.toggle('esconde',q!=='J');$('painelV').classList.toggle('esconde',q!=='V');
+  paraV();els.forEach(e=>e.classList.remove('tenta','anda','sai'));els.forEach(e=>e.style.opacity=1);
+  if(q==='V'){preparaV();}else{pos=L.pecas.map(p=>[p.x,p.y]);hist.forEach(m=>pos=aplica(pos,m));if(ganhou){ganhou=false;}desenha();}}
+$('abaJ').onclick=()=>aba('J');$('abaV').onclick=()=>aba('V');
+marcaFases();carrega(0);
+</script>
+<script>window.addEventListener('modo',()=>location.reload());</script>
+<script src="canto.js"></script>
+</body>
+</html>

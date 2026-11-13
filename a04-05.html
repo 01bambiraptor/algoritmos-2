@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · feito a partir do material da disciplina CI1056 (UFPR) · CC BY-NC-SA 4.0 · veja LICENSE.txt -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f2f7fb">
+<title>Aula 4 e 5: Busca em vetor</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--titulo:#2f5d7c;--ceu:#e7f2fb;--gelo:#f2f7fb;--pessego:#ffd6b0;--rosa:#fdecef;--ink:#2b3440;--muted:#6b7785;--ok:#2f9e5a;--red:#d9485f;--gold:#f0a81c;--borda:#d5e6f3}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:'Fredoka',system-ui,sans-serif;color:var(--ink);background:var(--gelo);font-size:17px;line-height:1.55;touch-action:manipulation}
+header{position:sticky;top:0;z-index:20;background:#fffffff0;backdrop-filter:blur(6px);border-bottom:2px solid var(--borda)}
+.top{display:flex;align-items:center;gap:12px;padding:10px 18px;flex-wrap:wrap}
+.top h1{margin:0;font-size:1.45rem;color:var(--titulo)}
+.top .aula{color:var(--muted);font-size:.95rem}
+.voltar{font:inherit;font-weight:600;text-decoration:none;color:var(--titulo);background:var(--ceu);border-radius:12px;padding:8px 14px}
+nav.caps{display:flex;gap:6px;overflow-x:auto;padding:0 18px 10px;scrollbar-width:none}
+nav.caps a{white-space:nowrap;text-decoration:none;color:var(--titulo);background:var(--gelo);border:2px solid var(--borda);border-radius:999px;padding:5px 12px;font-size:.92rem;font-weight:500}
+nav.caps a.on{background:var(--titulo);color:#fff;border-color:var(--titulo)}
+main{max-width:1080px;margin:0 auto;padding:10px 18px 60px}
+section{background:#fff;border-radius:22px;padding:22px 24px;margin:18px 0;box-shadow:0 2px 10px #2f5d7c10;border:1px solid var(--borda);scroll-margin-top:110px}
+section h2{margin:0 0 6px;color:var(--titulo);font-size:1.5rem}
+section h2 .n{display:inline-flex;width:34px;height:34px;border-radius:50%;background:var(--pessego);color:var(--titulo);align-items:center;justify-content:center;margin-right:8px;font-size:1.1rem}
+.lead{color:var(--muted);margin-top:0}
+.caixa{background:var(--ceu);border-radius:16px;padding:14px 18px;margin:12px 0}
+.caixa.pessego{background:#fff1e3;border:2px solid var(--pessego)}
+.caixa.rosa{background:var(--rosa)}
+.prof{display:flex;gap:12px;align-items:flex-start;background:#fff8ef;border:2px dashed var(--pessego);border-radius:16px;padding:12px 16px;margin:12px 0}
+.prof .av{font-size:1.8rem;line-height:1}
+code,.mono{font-family:'JetBrains Mono',monospace;font-size:.88em;background:var(--ceu);border-radius:6px;padding:1px 6px}
+.dois{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:860px){.dois{grid-template-columns:1fr}}
+/* código clicável */
+.codigo{font-family:'JetBrains Mono',monospace;font-size:.86rem;background:#f8fbfe;border:2px solid var(--borda);border-radius:14px;padding:8px 0;overflow-x:auto}
+.codigo div{white-space:pre;padding:2px 14px;border-left:5px solid transparent;min-height:1.4em}
+.codigo div.cl{cursor:pointer}
+.codigo div.cl:hover{background:#eef6fd}
+.codigo div.sel{background:#fff1e3;border-left-color:var(--gold)}
+.codigo div.on{background:#ffe7a8;border-left-color:var(--gold)}
+.codigo div.on.r{background:#e2f5ea;border-left-color:var(--ok)}
+.codigo .cm{color:#8a9aa8}
+.codigo .kw{color:#2f5d7c;font-weight:600}
+.explica{background:#fff8ef;border:2px solid var(--pessego);border-radius:14px;padding:12px 16px;min-height:120px}
+.explica h4{margin:0 0 4px;color:var(--titulo)}
+/* animação */
+.anim{border:2px solid var(--borda);border-radius:18px;padding:14px;background:var(--gelo);margin-top:12px}
+.anim .palco{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(250px,1fr);gap:14px}
+@media (max-width:860px){.anim .palco{grid-template-columns:1fr}}
+.arvore{background:#fff;border-radius:14px;border:1px solid var(--borda);overflow:auto;min-height:300px}
+.arvore svg{display:block;margin:0 auto}
+.narra{font-size:1.05rem;background:#fff;border-radius:14px;border:2px solid var(--borda);padding:12px 14px;min-height:72px;margin-bottom:10px}
+.narra.bom{border-color:#a9dcbc;background:#effaf3}
+.narra.ruim{border-color:#f3b8c3;background:var(--rosa)}
+.ctrl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.btn{font:inherit;font-weight:600;border-radius:12px;border:2px solid var(--borda);background:#fff;color:var(--titulo);min-height:48px;min-width:48px;padding:8px 14px;cursor:pointer}
+.btn:active{transform:scale(.95)}
+.btn.pri{background:var(--titulo);border-color:var(--titulo);color:#fff}
+.btn:disabled{opacity:.4}
+.ctrl input[type=range]{flex:1;min-width:140px;height:34px;accent-color:var(--titulo)}
+.ctrl .cont{color:var(--muted);font-size:.85rem;min-width:70px;text-align:right}
+.painel{display:flex;flex-direction:column;gap:10px}
+.mini{background:#fff;border-radius:14px;border:1px solid var(--borda);padding:10px 12px}
+.mini h5{margin:0 0 6px;color:var(--titulo);font-size:.92rem}
+.vet{display:flex;gap:4px;flex-wrap:wrap}
+.vet div{width:42px;text-align:center;border:2px solid var(--borda);border-radius:9px;background:#fff;padding:2px 0}
+.vet div small{display:block;font-size:.7rem;color:var(--muted)}
+.vet div b{font-family:'JetBrains Mono',monospace;font-size:1.1rem}
+.vet div.cur{border-color:var(--gold);background:#fff4d6}
+.vet div.lixo b{color:#b9c4ce}
+.pilha{display:flex;flex-direction:column-reverse;gap:3px;font-family:'JetBrains Mono',monospace;font-size:.8rem}
+.pilha div{background:var(--gelo);border-radius:8px;padding:3px 8px;border:1px solid var(--borda)}
+.pilha div:last-child{background:#fff1e3;border-color:var(--gold);font-weight:600}
+.saida{font-family:'JetBrains Mono',monospace;font-size:.85rem;background:#f8fbfe;border-radius:8px;padding:6px 8px;min-height:30px;max-height:150px;overflow:auto;white-space:pre}
+.legenda{display:flex;gap:12px;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin-top:8px}
+.legenda i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:4px;vertical-align:-1px}
+.toggle{font-size:.88rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+.toggle input{width:20px;height:20px;accent-color:var(--titulo)}
+/* quiz */
+.q{border:2px solid var(--borda);border-radius:16px;padding:14px 16px;margin:12px 0;background:#fff}
+.q .enun{font-weight:500;margin-bottom:8px}
+.q .ops{display:flex;flex-wrap:wrap;gap:8px}
+.q .ops button{font:inherit;border-radius:12px;border:2px solid var(--borda);background:var(--gelo);padding:8px 14px;cursor:pointer;min-height:46px;font-family:'JetBrains Mono',monospace;font-size:.92rem}
+.q .ops button.certa{background:#e2f5ea;border-color:var(--ok)}
+.q .ops button.errada{background:var(--rosa);border-color:var(--red)}
+.q .fb{margin-top:8px;display:none}
+.q .fb.on{display:block}
+.placar{font-weight:600;color:var(--titulo)}
+/* praticar */
+.jogos{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.jogo{display:block;text-decoration:none;color:inherit;border-radius:18px;padding:16px;border:2px solid var(--borda);background:var(--gelo)}
+.jogo h3{margin:0 0 4px;color:var(--titulo)}
+.jogo .ir{display:inline-block;margin-top:8px;background:var(--titulo);color:#fff;border-radius:10px;padding:6px 14px;font-weight:600}
+table.map{border-collapse:collapse;width:100%;font-size:.95rem}
+table.map td,table.map th{border:1px solid var(--borda);padding:7px 10px;text-align:left;vertical-align:top}
+table.map th{background:var(--ceu);color:var(--titulo)}
+
+
+.vetLinha{display:flex;gap:4px;flex-wrap:wrap;margin-top:10px;justify-content:center}
+.vetLinha .cel,.ulin .cel{width:46px;border:2px solid var(--borda);border-radius:10px;background:#fff;padding:2px 0;text-align:center}
+.cel small{display:block;font-size:.7rem;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.cel b{font-family:'JetBrains Mono',monospace;font-size:1rem}
+.cel i{display:block;font-style:normal;font-weight:700;font-size:.72rem;color:#b5532b;min-height:1.1em}
+.cel.vaz{opacity:.35}.cel.sel{border-color:var(--gold);background:#fff4d6}.cel.ordC{background:#e2f5ea;border-color:#a9dcbc}
+.arvore{padding:8px;text-align:center;min-height:120px}
+.abre{font-family:'JetBrains Mono',monospace;font-size:.95rem;background:#f8fbfe;border:2px solid var(--borda);border-radius:14px;padding:10px 14px}
+.abre div{padding:3px 6px;border-radius:8px;white-space:pre-wrap}.abre .nova{background:#fff4d6}
+.abre .fim{margin-top:6px;font-family:'Fredoka';background:#e2f5ea;border:2px solid #a9dcbc}
+.barras{display:flex;gap:6px;align-items:flex-end;justify-content:center;background:#fff;border:1px solid var(--borda);border-radius:14px;padding:14px 8px 6px;flex-wrap:nowrap;overflow-x:auto}
+.bar{width:50px;flex:none;text-align:center}
+.bar .col{height:114px;display:flex;align-items:flex-end;justify-content:center}
+.bar .col span{width:36px;background:#bcd3e6;border-radius:7px 7px 2px 2px;transition:height .3s,background .3s}
+.bar b{display:block;font-family:'JetBrains Mono',monospace}
+.bar small{display:block;font-size:.7rem;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.bar i{display:block;font-style:normal;font-weight:700;font-size:.78rem;color:#b5532b;min-height:1.2em;white-space:nowrap}
+.bar.fora{opacity:.32}.bar.meta1 .col span{background:#9fd3d0}.bar.cp .col span{background:#6aa6e0}.bar.okk .col span{background:#8fd1a8}.bar.tr .col span{background:#f0a81c}
+.ulin{display:flex;gap:4px;align-items:center;justify-content:center;margin-top:8px;flex-wrap:wrap}.uro{font:700 1rem 'JetBrains Mono',monospace;color:var(--titulo);margin-right:4px}
+.seg{display:inline-flex;flex-wrap:wrap;background:var(--ceu);border-radius:12px;padding:3px;gap:3px;margin-top:6px}
+.seg button{border:0;background:transparent;font:inherit;font-size:.9rem;padding:7px 12px;border-radius:9px;cursor:pointer;color:var(--muted);font-weight:600}
+.seg button.on{background:#fff;color:var(--titulo);box-shadow:0 1px 4px #0001}
+.codigo div.mud{background:var(--rosa);border-left-color:var(--red)}
+.tab{border-collapse:collapse;margin:8px 0;font-size:.95rem}.tab td,.tab th{border:1px solid var(--borda);padding:5px 10px;text-align:center}.tab th{background:var(--ceu);color:var(--titulo)}
+.leg{display:flex;gap:12px;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin-top:6px}.leg span::before{content:'';display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:4px;vertical-align:-1px;background:var(--c)}
+</style>
+</head>
+<body data-arquivo="a04-05.html" data-secoes="c6" data-titulo="Busca em vetor" data-num="4 e 5" data-resumo="Procurar um valor andando da ponta para o começo, e como a ordem deixa parar mais cedo." data-selo="🔎" data-ordem='[["a02.html", "Recursão"], ["a03.html", "Mínimo de um vetor"], ["a04-05.html", "Busca em vetor"], ["a06.html", "Busca binária"], ["rev-recursao.html", "Recorrências e revisão"], ["a07.html", "Ordenação por inserção"], ["a08.html", "Ordenação por seleção"], ["a09.html", "Mergesort"], ["a10.html", "Quicksort"], ["rev-ordenacao.html", "Revisão de ordenação"], ["a11.html", "Árvores quase completas e heap"], ["a12.html", "max-heapify e build-max-heap"], ["a13.html", "Heapsort e heap.c"], ["rev-heap.html", "Revisão de heap"], ["bt-vetores.html", "Vetores binários e subconjuntos"], ["bt-cavalo.html", "Passeio do cavalo"], ["bt-labirinto.html", "Labirinto do rato"], ["rev-backtracking.html", "Revisão de backtracking"]]'>
+<header>
+  <div class="top">
+    <a class="voltar" href="index.html#portas">← Portas</a>
+    <h1>📖 Busca em vetor</h1>
+    <span class="aula">aulas 4 e 5 · busca e busca em vetor ordenado · conteúdo da P1</span>
+  </div>
+  <nav class="caps" id="caps">
+    <a href="#c1">1 · O que é</a><a href="#c2">2 · Fatorial e potência</a><a href="#c3">3 · Receita</a><a href="#c4">4 · Fibonacci</a><a href="#c5">5 · Mínimo</a><a href="#c6">6 · Busca</a><a href="#c7">7 · Busca binária</a><a href="#c8">8 · Recorrências</a><a href="#c9">9 · Ler o código</a><a href="#c10">10 · Alterar</a><a href="#c11">🎮 Praticar</a>
+  </nav>
+</header>
+<main>
+
+<section id="c1">
+  <h2><span class="n">1</span>O que é recursão</h2>
+  <p class="lead">Aula 2. A pergunta que abre a aula: <b>se eu já sei quanto vale 26!, como isso me ajuda a calcular 27!?</b></p>
+  <div class="dois">
+    <div>
+      <div class="caixa">27! = 27 · 26!<br>53! = 53 · 52!<br>Generalizando: <b>f(n) = n · f(n − 1)</b></div>
+      <p>Isso é <b>recursão</b>: definir uma função usando ela mesma, só que num caso <b>menor</b>. É como a bonequinha da capa: ela entra num portal que leva pra um mundo igual, só que menor, e lá dentro tem outro portal, e outro...</p>
+      <p>Mas essa definição tem um problema. Calcula f(3) com ela: f(3) = 3 · f(2) = 3 · 2 · f(1) = 3 · 2 · 1 · f(0) = ... f(−1) = ... Ela <b>não para</b>! Falta dizer onde os portais acabam.</p>
+      <div class="caixa pessego">f(n) = <b>1</b>, se n = 0 <small>(base)</small><br>f(n) = <b>n · f(n − 1)</b>, se n &gt; 0 <small>(recursão)</small></div>
+      <div class="prof"><div class="av">🧑‍🏫</div><div>Toda função recursiva tem sempre dois elementos:<br><b>1. base</b>: os casos que se resolvem <b>sem</b> recursão;<br><b>2. recursão</b>: o cálculo dos casos que não são base, chamando a própria função.<br>A vantagem: traduzir a definição matemática pro código dá pouquíssimo trabalho.</div></div>
+    </div>
+    <div>
+      <p><b>Teste:</b> liga e desliga a base e roda f(3).</p>
+      <label class="toggle"><input type="checkbox" id="semBase"> apagar a base (<code>if (n == 0) return 1;</code>)</label>
+      <div id="animBase"></div>
+    </div>
+  </div>
+</section>
+
+<section id="c2">
+  <h2><span class="n">2</span>Fatorial e potência, em C</h2>
+  <p class="lead">O código fica quase igual à definição matemática. Toque nas linhas pra ver a explicação.</p>
+  <div class="dois">
+    <div class="codigo" id="codFat"></div>
+    <div class="explica" id="expFat"><h4>👆 Toque numa linha do código</h4>Este é o fatorial da aula 2, linha por linha.</div>
+  </div>
+  <div class="caixa"><b>Como ler a animação:</b> cada retângulo é uma <b>chamada</b> que está viva. Amarelo forte é quem está rodando agora; amarelo claro são as chamadas que estão <b>esperando</b> a de baixo voltar (a conta delas ficou pendurada); verde já devolveu o valor. A pilha à direita é a mesma coisa vista de lado: o topo é quem roda.</div>
+  <div id="escFat"></div>
+  <div class="prof"><div class="av">🧑‍🏫</div><div>Compare com a versão sem recursão da potência (com <code>while</code>, variável <code>result</code>, contador): o código recursivo parece mais com a definição, é mais legível e geralmente menor. <b>O preço:</b> cada chamada de função custa memória (um bloco na pilha) e tempo.</div></div>
+</section>
+
+<section id="c3">
+  <h2><span class="n">3</span>Receita pra escrever código recursivo</h2>
+  <div class="dois">
+    <div>
+      <div class="caixa">
+        <b>1.</b> Escreva o <b>protótipo</b>: quais as entradas e a saída.<br>
+        <b>2.</b> Escreva o código do <b>caso base</b>.<br>
+        <b>3.</b> Pegue um <b>exemplo concreto</b> e responda: como usar o valor de um caso mais perto da base pra calcular o caso mais longe?<br>
+        <b>4.</b> <b>Generalize</b> o passo 3 pra escrever a parte recursiva.
+      </div>
+      <p><b>Exemplo da aula:</b> imprimir n, n−1, ..., 2, 1.</p>
+      <ol><li><code>void count_down (int n)</code></li><li>base: se n == 1, imprime 1</li><li>count_down(8): imprime 8 e chama count_down(7)</li><li>imprime n e chama count_down(n − 1)</li></ol>
+      <p>E o <code>count_down_up</code> imprime <b>descendo e subindo</b>: 4, 3, 2, 1, 2, 3, 4. A única diferença é um <b>segundo printf depois</b> da chamada.</p>
+      <div class="caixa pessego"><b>O pulo do gato:</b> o que vem <b>antes</b> da chamada recursiva acontece na <b>ida</b> (descendo a pilha). O que vem <b>depois</b> só acontece na <b>volta</b>, quando a chamada de baixo termina.</div>
+    </div>
+    <div id="escCount"></div>
+  </div>
+</section>
+
+<section id="c4">
+  <h2><span class="n">4</span>Fibonacci: quando a recursão explode</h2>
+  <p class="lead">0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55... Os dois primeiros são 0 e 1, e cada um seguinte é a soma dos dois anteriores.</p>
+  <div class="dois">
+    <div class="caixa">F(n) = <b>n</b>, se n ≤ 1<br>F(n) = <b>F(n − 1) + F(n − 2)</b>, se n &gt; 1</div>
+    <div class="prof"><div class="av">🧑‍🏫</div><div>Agora cada chamada faz <b>duas</b> chamadas. A pilha não vira uma fila reta: vira uma <b>árvore</b>. E repara como F(2), F(1) e F(0) são calculados de novo várias vezes.</div></div>
+  </div>
+  <div id="escFib"></div>
+  <div class="dois" style="margin-top:12px">
+    <div>
+      <p><b>Teorema (aula 2):</b> o número de adições que a versão recursiva de F(n) faz é <b>F(n + 1) − 1</b>. E o número de chamadas é <b>2·F(n + 1) − 1</b> (cada adição junta duas chamadas).</p>
+      <table class="tab"><tr><th>n</th><th>F(n+1)</th><th>adições</th><th>chamadas</th></tr>
+      <tr><td>6</td><td>13</td><td>12</td><td>25</td></tr><tr><td>10</td><td>89</td><td>88</td><td>177</td></tr><tr><td>20</td><td>10.946</td><td>10.945</td><td>21.891</td></tr><tr><td>30</td><td>1.346.269</td><td>1.346.268</td><td>2.692.537</td></tr></table>
+    </div>
+    <div>
+      <p><b>Brinque com o n:</b></p>
+      <div class="ctrl"><input type="range" id="fibN" min="1" max="40" value="30"><span id="fibOut" style="min-width:220px"></span></div>
+      <div class="caixa rosa" style="margin-top:10px">Desvantagem da recursão: chamada de função é cara. A versão com laço calcula F(30) com 29 adições; a recursiva faz mais de um milhão.</div>
+    </div>
+  </div>
+</section>
+
+<section id="c5">
+  <h2><span class="n">5</span>Mínimo de vetor: recursão em vetor</h2>
+  <p class="lead">Aula 3. O problema: dado v[a..b], devolver o <b>índice</b> m do menor elemento.</p>
+  <div class="dois">
+    <div>
+      <p>A ideia recursiva: <b>se eu já sei o mínimo de v[a..b−1], como acho o mínimo de v[a..b]?</b> É só comparar esse campeão com o v[b], o único que ficou de fora.</p>
+      <div class="codigo" id="codMin"></div>
+    </div>
+    <div class="explica" id="expMin"><h4>👆 Toque numa linha</h4>Pseudocódigo da aula 3. Repara que quem encolhe é o <b>b</b>: o vetor vai perdendo o último elemento até sobrar um só.</div>
+  </div>
+  <div class="prof"><div class="av">🧑‍🏫</div><div>Num algoritmo recursivo existem <b>sempre 3 elementos</b>:<br><b>Base:</b> as instâncias resolvidas sem recursão (aqui, a = b).<br><b>Recursão:</b> chamar o algoritmo pra outra instância (aqui, Minimo'(v, a, b − 1)).<br><b>Passo:</b> transformar a resposta "parcial" na resposta "completa" (aqui, o <code>Se v[b] &lt; v[m]</code>).</div></div>
+  <div id="escMin"></div>
+</section>
+
+<section id="c6">
+  <h2><span class="n">6</span>Busca em vetor e em vetor ordenado</h2>
+  <p class="lead">Aulas 4 e 5. Mesma estrutura do mínimo: olha o v[b], e se não resolveu, chama pra v[a..b−1].</p>
+  <div class="dois">
+    <div>
+      <h3 style="margin:4px 0;color:var(--titulo)">Busca (aula 4)</h3>
+      <p>Procura x e devolve o índice, ou <b>não</b>. Repara que a base agora é <b>a &gt; b</b> (vetor vazio), e não a = b: se o vetor ficou vazio é porque o x não estava lá.</p>
+      <div class="codigo" id="codBusca"></div>
+      <p><b>Pior caso</b> (x não está, ou está só em v[a]): n comparações. <b>Melhor caso</b> (x está em v[b]): 1 comparação.</p>
+    </div>
+    <div>
+      <h3 style="margin:4px 0;color:var(--titulo)">BuscaSequencial (aula 5)</h3>
+      <p>Com o vetor <b>ordenado</b>, a resposta muda: é o <b>lugar onde x deveria estar</b>, o maior índice m com v[m] ≤ x (ou a − 1 se x é menor que todos).</p>
+      <div class="codigo" id="codBS"></div>
+      <p>Exemplos da aula com v = 4 8 8 15 16 16 23 42: x = 15 → 4; x = 16 → 6; x = 10 → 3; x = 1 → 0; x = 50 → 8.</p>
+    </div>
+  </div>
+  <div id="escBusca"></div>
+</section>
+
+<section id="c7">
+  <h2><span class="n">7</span>Busca binária: cortando pela metade</h2>
+  <p class="lead">Aula 6. Se o vetor está ordenado, não precisa olhar um por um: olha o <b>meio</b>. Se x é menor, ele só pode estar na metade da esquerda; se é maior, na da direita.</p>
+  <div class="dois">
+    <div class="codigo" id="codBB"></div>
+    <div>
+      <div class="caixa">É o jogo de adivinhar número de 1 a 100: você chuta 50, ouve "menor", chuta 25... Em <b>7 chutes</b> acerta qualquer número, porque cada chute joga fora metade.</div>
+      <div class="prof"><div class="av">🧑‍🏫</div><div>No pior caso: <b>C⁺(n) = 1 + C⁺(⌊n/2⌋)</b>, com C⁺(0) = 0. Abrindo, cada chamada divide o n por 2 até chegar em 0, o que leva <b>⌊lg n⌋ + 1</b> passos. Pra n = 8 são 4 comparações; pra n = 1.000.000, só 20.</div></div>
+    </div>
+  </div>
+  <div id="escBB"></div>
+</section>
+
+<section id="c8">
+  <h2><span class="n">8</span>Recorrências: contando o custo</h2>
+  <p class="lead">Analisar um algoritmo recursivo quase sempre dá uma <b>recorrência</b>: uma função de custo definida por ela mesma. Resolver é achar a fórmula sem recursão. O método da aula é <b>abrir</b> a recorrência até chegar na base.</p>
+  <div class="dois">
+    <div>
+      <h3 style="margin:4px 0;color:var(--titulo)">Mínimo' (aula 3)</h3>
+      <p>C'(n) = 0 se n = 1; C'(n) = 1 + C'(n − 1) se n &gt; 1</p>
+      <div id="rec1"></div>
+    </div>
+    <div>
+      <h3 style="margin:4px 0;color:var(--titulo)">Busca binária (aula 6)</h3>
+      <p>C⁺(n) = 0 se n = 0; C⁺(n) = 1 + C⁺(⌊n/2⌋) se n &gt; 0</p>
+      <div id="rec2"></div>
+    </div>
+  </div>
+  <div class="caixa" style="margin-top:12px">
+    <b>Resumo dos custos (comparações com elementos do vetor):</b>
+    <table class="tab"><tr><th>algoritmo</th><th>melhor caso</th><th>pior caso</th></tr>
+    <tr><td>Minimo'</td><td colspan="2">n − 1 (sempre)</td></tr>
+    <tr><td>Busca</td><td>1</td><td>n</td></tr>
+    <tr><td>BuscaSequencial</td><td>1</td><td>n</td></tr>
+    <tr><td>BuscaBinaria</td><td>1</td><td>⌊lg n⌋ + 1</td></tr></table>
+    Lembrete da aula 3: <b>⌊x⌋</b> (chão) é o maior inteiro ≤ x e <b>⌈x⌉</b> (teto) é o menor inteiro ≥ x. ⌊35/23⌋ = 1 e ⌈35/23⌉ = 2.
+  </div>
+</section>
+
+<section id="c9">
+  <h2><span class="n">9</span>Ler o código <span class="placar" id="placarQ"></span></h2>
+  <p class="lead">No estilo da prova e da lista 1: ler, interpretar, prever o que o algoritmo faz. Faça no papel antes de clicar!</p>
+  <div id="quiz"></div>
+</section>
+
+<section id="c10">
+  <h2><span class="n">10</span>Alterar o algoritmo</h2>
+  <p class="lead">As linhas em rosa são as que mudaram. Rode a animação da versão alterada pra conferir.</p>
+  <div id="escAlt"></div>
+</section>
+
+<section id="c11">
+  <h2><span class="n">🎮</span>Agora pratique jogando</h2>
+  <div class="jogos">
+    <a class="jogo" href="torre.html"><h3>🧱 Torre da Recursão</h3>Você vira a pilha de chamadas: empilha cada chamada, desempilha quando ela devolve. Tem fatorial, potência, count_down_up, Fibonacci, Mínimo' e a busca binária desta aula.<br><span class="ir">Jogar ▸</span></a>
+    <a class="jogo" href="a07.html"><h3>📖 Próxima aula: Ordenação</h3>Inserção, seleção, mergesort e quicksort, todos recursivos, usando o Mínimo e a Busca desta aula.<br><span class="ir">Abrir ▸</span></a>
+  </div>
+</section>
+</main>
+<script src="aula-core.js"></script>
+<script>
+/* ===== 1: sem base ===== */
+const CFAT=['int f(int n) {','  if (n == 0)','    return 1;','  else','    return n * f(n-1);','}'];
+const CFATSEM=['int f(int n) {','  // if (n == 0) return 1;   <- apagada','  return n * f(n-1);','}'];
+function fat(R,n){
+  R.call(`f(${n})`);
+  R.ln(1,`n = ${n}. Testa a base: <code>n == 0</code>? ${n===0?'<b>Sim!</b>':'Não.'}`);
+  if(n===0){R.ln(2,'Caso base: devolve 1 sem chamar ninguém. É aqui que a pilha para de crescer.');R.ret(1,'<code>f(0)</code> devolve <b>1</b>. Agora começa a <b>volta</b>.');return 1;}
+  R.ln(4,`Pra calcular <code>${n} * f(${n-1})</code> precisa primeiro do f(${n-1}). A conta <b>${n} * ?</b> fica pendurada esperando.`);
+  const r=fat(R,n-1); R.conta('mult');
+  R.ln(4,`f(${n-1}) voltou com ${r}. Agora faz a conta pendurada: ${n} * ${r} = <b>${n*r}</b>.`);
+  R.ret(n*r); return n*r;
+}
+function animBase(){
+  const sem=$('semBase').checked;
+  recAnim($('animBase'),sem?{codigo:CFATSEM,altura:330,run(R){
+      let n=3;(function g(n){R.call(`f(${n})`);R.ln(2,n>=-2?`Sem base, f(${n}) chama f(${n-1}) direto. Ninguém manda parar...`:'A pilha encheu: <b>stack overflow</b>. O programa cai, como na torre que despenca.',n>=-2?'':'ruim');if(n>-3)g(n-1);})(n);
+    }}:{codigo:CFAT,altura:330,run(R){fat(R,3);},fim:()=>'Fim: f(3) = 6. A pilha cresceu até f(0) e depois esvaziou na volta.'});
+}
+$('semBase').onchange=animBase; animBase();
+
+/* ===== 2: fatorial e potência ===== */
+montaCodigo('codFat',[
+ ['int f(int n) {',['O protótipo','Recebe um inteiro n e devolve um inteiro, o n!.']],
+ ['  if (n == 0)',['O teste da base','Antes de qualquer coisa, pergunta: já cheguei no caso que eu sei resolver direto?']],
+ ['    return 1;',['A base','0! = 1. Devolve sem chamar ninguém. Sem esta linha a função nunca para (veja a seção 1).']],
+ ['  else',null],
+ ['    return n * f(n-1);',['A chamada recursiva','Chama f com um caso <b>menor</b> (n − 1). A multiplicação só acontece <b>quando f(n−1) voltar</b>: até lá, a chamada atual fica parada na pilha, esperando.']],
+ ['}',null]],'expFat');
+const CPOT=['float potencia (float x, int n) {','  if (n==0) return 1.0;','  return x * potencia (x,n-1);','}'];
+function pot(R,x,n){
+  R.call(`potencia(${x},${n})`);
+  if(n===0){R.ln(1,'n == 0: x<sup>0</sup> = 1. Base.');R.ret(1);return 1;}
+  R.ln(1,`n = ${n} não é 0.`);
+  R.ln(2,`Precisa de potencia(${x}, ${n-1}). Fica esperando com <b>${x} * ?</b>.`);
+  const r=pot(R,x,n-1); R.conta('mult');
+  R.ln(2,`Voltou ${r}. ${x} * ${r} = <b>${x*r}</b>.`); R.ret(x*r); return x*r;
+}
+escolhas($('escFat'),[{nome:'f(4)'},{nome:'potencia(2, 5)'}],(a,o)=>recAnim(a,o.nome==='f(4)'?
+  {codigo:CFAT,run:R=>fat(R,4),contadores:[['mult','multiplicações']],fim:c=>`f(4) = 24, com ${c.mult} multiplicações. Pra f(n) são n multiplicações: m(n) = 1 + m(n − 1), m(0) = 0.`}:
+  {codigo:CPOT,run:R=>pot(R,2,5),contadores:[['mult','multiplicações']],fim:c=>`2<sup>5</sup> = 32, com ${c.mult} multiplicações.`}));
+
+/* ===== 3: count_down ===== */
+const CCD=['void count_down (int n) {','  if (n == 1)','    printf("%d", n);','  else {','    printf("%d, ", n);','    count_down (n - 1);','  }','}'];
+const CCDU=['void count_down_up (int n) {','  if (n == 1)','    printf("%d", n);','  else {','    printf("%d, ", n);','    count_down_up (n - 1);','    printf("%d, ", n);','  }','}'];
+function cd(R,n,up){
+  const nm=up?'count_down_up':'count_down'; R.call(`${nm}(${n})`);
+  R.ln(1,`n = ${n}. É 1?`);
+  if(n===1){R.out('1');R.ln(2,'Base: imprime <b>1</b>.');R.ret('fim',`${nm}(1) termina e sai da pilha.`);return;}
+  R.out(n+', ');R.ln(4,`Imprime <b>${n}</b> <i>antes</i> de chamar (isso acontece na <b>ida</b>).`);
+  R.ln(5,`Chama ${nm}(${n-1}) e fica esperando.`); cd(R,n-1,up);
+  if(up){R.out(', '+n);R.ln(6,`${nm}(${n-1}) terminou. Agora sim roda o printf de <i>depois</i>: imprime <b>${n}</b> de novo (isso é a <b>volta</b>).`);}
+  else R.ln(6,`${nm}(${n-1}) terminou. Não tem nada depois da chamada: só sai.`);
+  R.ret('fim',`${nm}(${n}) termina.`);
+}
+escolhas($('escCount'),[{nome:'count_down(4)'},{nome:'count_down_up(4)'}],(a,o)=>recAnim(a,{codigo:o.nome.includes('up')?CCDU:CCD,saida:true,altura:300,run:R=>cd(R,4,o.nome.includes('up'))}));
+
+/* ===== 4: Fibonacci ===== */
+const CFIB=['int F(int n) {','  if (n <= 1)','    return n;','  return F(n-1) + F(n-2);','}'];
+function fib(R,n){
+  R.call(`F(${n})`); R.conta('ch');
+  if(n<=1){R.ln(2,`n = ${n} ≤ 1: base, devolve ${n}.`);R.ret(n);return n;}
+  R.ln(3,`Primeiro calcula F(${n-1}). O F(${n-2}) espera a vez.`);
+  const a=fib(R,n-1);
+  R.ln(3,`F(${n-1}) = ${a}. Agora chama F(${n-2}).`);
+  const b=fib(R,n-2); R.conta('ad');
+  R.ln(3,`${a} + ${b} = <b>${a+b}</b> (uma adição).`); R.ret(a+b); return a+b;
+}
+escolhas($('escFib'),[3,4,5,6].map(n=>({nome:`F(${n})`,n})),(a,o)=>recAnim(a,{codigo:CFIB,run:R=>fib(R,o.n),dy:58,vel:o.n>=6?450:750,contadores:[['ch','chamadas'],['ad','adições']],
+  fim:c=>`F(${o.n}) pronto: ${c.ch} chamadas e ${c.ad} adições. Confere com o teorema: F(${o.n+1}) − 1 = ${c.ad}.`}));
+(function(){const F=[0,1];for(let i=2;i<=42;i++)F[i]=F[i-1]+F[i-2];const fmt=x=>x.toLocaleString('pt-BR');
+  const up=()=>{const n=+$('fibN').value;$('fibOut').innerHTML=`F(${n}) = <b>${fmt(F[n])}</b><br>recursiva: <b>${fmt(F[n+1]-1)}</b> adições e <b>${fmt(2*F[n+1]-1)}</b> chamadas<br>com laço: <b>${Math.max(0,n-1)}</b> adições`;};
+  $('fibN').oninput=up; up();})();
+
+/* ===== 5: Mínimo ===== */
+const VMIN=[null,16,23,4,42,15,8,4];
+const LMIN=[
+ ["Minimo'(v, a, b)",['Entrada e saída','Recebe o vetor e o trecho [a..b]. Devolve um <b>índice</b>, não o valor.']],
+ ['  Se a = b',['O teste da base','Só um elemento no trecho?']],
+ ['    Devolva a',['A base','Com um elemento só, ele é o mínimo. Devolve o índice a.']],
+ ["  m ← Minimo'(v, a, b − 1)",['A recursão','"Confia" que a chamada devolve o índice do menor de v[a..b−1]. Quem encolhe é o b.']],
+ ['  Se v[b] < v[m]',['O passo','Compara o campeão da parte esquerda com o v[b], que ficou de fora. É a única comparação com elementos de v em cada chamada.']],
+ ['    m ← b',['Troca o campeão','Se v[b] é estritamente menor, ele vira o mínimo. Com empate, fica o da esquerda (o &lt; é estrito).']],
+ ['  Devolva m',['Devolve','O índice do mínimo de v[a..b].']]];
+montaCodigo('codMin',LMIN,'expMin');
+function minimo(R,v,a,b,maior){
+  const nm=maior?"Maximo'":"Minimo'"; R.call(`${nm}(v,${a},${b})`);
+  R.vec({v,a,b,ptr:{a,b}});
+  R.ln(1,`Trecho v[${a}..${b}]. a = b?`);
+  if(a===b){R.vec({v,a,b,ptr:{a},cur:a});R.ln(2,`a = b = ${a}: um elemento só. Devolve ${a}.`);R.ret(a);return a;}
+  R.ln(3,`Não. Pede o ${maior?'máximo':'mínimo'} de v[${a}..${b-1}] e espera.`);
+  let m=minimo(R,v,a,b-1,maior); R.vec({v,a,b,ptr:{m,b},cur:b}); R.conta('cmp');
+  const t=maior?v[b]>v[m]:v[b]<v[m];
+  R.ln(4,`Voltou m = ${m} (v[${m}] = ${v[m]}). v[${b}] = ${v[b]} ${maior?'&gt;':'&lt;'} ${v[m]}? ${t?'Sim!':'Não.'}`);
+  if(t){m=b;R.vec({v,a,b,ptr:{m},cur:m});R.ln(5,`m ← ${b}.`);}
+  R.vec({v,a,b,ptr:{m},cur:m}); R.ln(6,`Devolve m = ${m}.`); R.ret(m); return m;
+}
+escolhas($('escMin'),[[1,3],[4,7],[1,7]].map(([a,b])=>({nome:`Minimo'(v, ${a}, ${b})`,a,b})),(el,o)=>recAnim(el,{codigo:LMIN.map(l=>l[0]),run:R=>minimo(R,VMIN,o.a,o.b),contadores:[['cmp','comparações']],dy:52,altura:340,
+  fim:c=>`Fim. n = ${o.b-o.a+1} elementos, ${c.cmp} comparações: sempre n − 1.`}));
+
+/* ===== 6: Busca ===== */
+const LBUSCA=['Busca(x, v, a, b)','  Se a > b','    Devolva não','  Se x = v[b]','    Devolva b','  Devolva Busca(x, v, a, b − 1)'];
+const LBS=['BuscaSequencial(x, v, a, b)','  Se a > b','    Devolva a − 1','  Se x ≥ v[b]','    Devolva b','  Devolva BuscaSequencial(x, v, a, b − 1)'];
+montaCodigo('codBusca',LBUSCA.map(t=>[t])); montaCodigo('codBS',LBS.map(t=>[t]));
+function busca(R,x,v,a,b,seq){
+  const nm=seq?'BuscaSeq':'Busca'; R.call(`${nm}(${x},v,${a},${b})`); R.vec({v,a,b,ptr:{a,b}});
+  R.ln(1,a>b?`a = ${a} &gt; b = ${b}: o trecho ficou <b>vazio</b>.`:`Trecho v[${a}..${b}], não está vazio.`);
+  if(a>b){const r=seq?a-1:'não';R.ln(2,seq?`Devolve a − 1 = ${a-1}: x é menor que todos.`:`Devolve <b>não</b>: o ${x} não está no vetor.`);R.ret(r);return r;}
+  R.conta('cmp'); R.vec({v,a,b,ptr:{b},cur:b});
+  const t=seq?x>=v[b]:x===v[b];
+  R.ln(3,`${x} ${seq?'≥':'='} v[${b}] = ${v[b]}? ${t?'<b>Sim!</b>':'Não.'}`);
+  if(t){R.ln(4,`Devolve ${b}.`);R.ret(b);return b;}
+  R.ln(5,`Chama pro trecho v[${a}..${b-1}].`); const r=busca(R,x,v,a,b-1,seq); R.vec({v,a,b,ptr:{}}); R.ret(r,`Só repassa a resposta (${r}) pra cima.`); return r;
+}
+const VORD=[null,4,8,8,15,16,16,23,42];
+escolhas($('escBusca'),[
+  {nome:'Busca(42, v, 1, 7)',x:42},{nome:'Busca(5, v, 1, 7)',x:5},{nome:'BuscaSeq(8, v, 1, 8)',x:8,s:1},{nome:'BuscaSeq(20, v, 1, 8)',x:20,s:1},{nome:'BuscaSeq(1, v, 1, 8)',x:1,s:1}],
+  (el,o)=>recAnim(el,{codigo:o.s?LBS:LBUSCA,run:R=>busca(R,o.x,o.s?VORD:VMIN,1,o.s?8:7,o.s),contadores:[['cmp','comparações']],dy:50,altura:360,
+   fim:c=>`Fim: ${c.cmp} comparações com elementos de v.`}));
+
+/* ===== 7: Busca binária ===== */
+const LBB=['BuscaBinaria(x, v, a, b)','  Se a > b','    Devolva NÃO','  m ← ⌊(a + b) / 2⌋','  Se x = v[m]','    Devolva m','  Se x < v[m]','    Devolva BuscaBinaria(x, v, a, m − 1)','  Devolva BuscaBinaria(x, v, m + 1, b)'];
+montaCodigo('codBB',[
+ [LBB[0],['Entrada','x é o valor procurado e v[a..b] está <b>ordenado</b>. Sem isso, cortar pela metade não funciona.']],
+ [LBB[1],['Base','Trecho vazio: x não está lá.']],[LBB[2],['Base','Devolve NÃO.']],
+ [LBB[3],['O meio','Chão da média. Com a = 1 e b = 8, m = ⌊9/2⌋ = 4.']],
+ [LBB[4],['Achou?','Compara x com o elemento do meio.']],[LBB[5],['Achou!','Devolve o índice.']],
+ [LBB[6],['Pra que lado?','Se x é menor que o meio, como o vetor está ordenado, ele só pode estar à esquerda.']],
+ [LBB[7],['Metade esquerda','Joga fora o meio e tudo que está à direita dele.']],
+ [LBB[8],['Metade direita','Senão, só pode estar à direita do meio.']]]);
+function bb(R,x,v,a,b){
+  R.call(`BB(${x},v,${a},${b})`); R.vec({v,a,b,ptr:{a,b}});
+  R.ln(1,a>b?`a = ${a} &gt; b = ${b}: trecho vazio.`:`Trecho v[${a}..${b}].`);
+  if(a>b){R.ln(2,`Devolve NÃO: ${x} não está no vetor.`);R.ret('NÃO');return 'NÃO';}
+  const m=Math.floor((a+b)/2); R.vec({v,a,b,ptr:{a,m,b},cur:m});
+  R.ln(3,`m = ⌊(${a} + ${b}) / 2⌋ = ${m}. v[${m}] = ${v[m]}.`); R.conta('cmp');
+  if(x===v[m]){R.ln(4,`${x} = v[${m}]? <b>Sim!</b>`);R.ln(5,`Devolve ${m}.`);R.ret(m);return m;}
+  R.ln(4,`${x} = ${v[m]}? Não.`);
+  let r;
+  if(x<v[m]){R.ln(6,`${x} &lt; ${v[m]}: só pode estar em v[${a}..${m-1}].`);R.ln(7,`Chama a metade esquerda.`);r=bb(R,x,v,a,m-1);}
+  else{R.ln(6,`${x} &lt; ${v[m]}? Não: só pode estar em v[${m+1}..${b}].`);R.ln(8,`Chama a metade direita.`);r=bb(R,x,v,m+1,b);}
+  R.vec({v,a,b,ptr:{}}); R.ret(r,`Repassa ${r} pra cima.`); return r;
+}
+const VBB=[null,4,7,8,15,16,17,23,42];
+escolhas($('escBB'),[8,20,42,4].map(x=>({nome:`BuscaBinaria(${x}, v, 1, 8)`,x})),(el,o)=>recAnim(el,{codigo:LBB,run:R=>bb(R,o.x,VBB,1,8),contadores:[['cmp','comparações']],dy:56,altura:300,
+  fim:c=>`Fim: ${c.cmp} comparações. O pior caso pra n = 8 é ⌊lg 8⌋ + 1 = 4.`}));
+
+/* ===== 8: recorrências ===== */
+abreRec($('rec1'),["C'(7) = 1 + C'(6)","      = 1 + 1 + C'(5) = 2 + C'(5)","      = 3 + C'(4)","      = 4 + C'(3)","      = 5 + C'(2)","      = 6 + C'(1)","      = 6 + 0 = 6"],"Em geral: C'(n) = (n − 1) + C'(1) = <b>n − 1</b>.");
+abreRec($('rec2'),["C⁺(10) = 1 + C⁺(⌊10/2⌋) = 1 + C⁺(5)","       = 2 + C⁺(⌊5/2⌋) = 2 + C⁺(2)","       = 3 + C⁺(1)","       = 4 + C⁺(0)","       = 4 + 0 = 4"],"Chega na base quando 2<sup>u</sup> &gt; n, ou seja, u = <b>⌊lg n⌋ + 1</b>. Pra n = 10: ⌊3,32⌋ + 1 = 4 ✔");
+
+/* ===== 9: quiz ===== */
+quiz($('quiz'),[
+ {e:'1. O que <code>count_down_up(3)</code> imprime?',o:['3, 2, 1','3, 2, 1, 2, 3','1, 2, 3','3, 2, 1, 1, 2, 3'],c:1,x:'Desce imprimindo 3 e 2 (printf de antes), a base imprime 1, e na volta o printf de depois imprime 2 e 3. O 1 só aparece uma vez porque a base não tem segundo printf.'},
+ {e:'2. Se o <code>count_down</code> chamasse <code>count_down(n − 1)</code> <b>antes</b> do <code>printf</code>, em que ordem sairiam os números de count_down(4)?',o:['4 3 2 1','1 2 3 4','4 1 2 3','só o 1'],c:1,x:'Tudo que vem depois da chamada acontece na volta. A primeira chamada a terminar é a mais funda (a base, que imprime 1), depois a de n = 2, e assim por diante.'},
+ {e:'3. Quantas chamadas a versão recursiva faz pra calcular F(5)?',o:['5','8','15','25'],c:2,x:'2·F(n + 1) − 1 = 2·F(6) − 1 = 2·8 − 1 = 15. (São 7 adições: F(6) − 1.)'},
+ {e:"4. Com v = 16 23 4 42 15 8 4, o que <code>Minimo'(v, 4, 7)</code> devolve, e com quantas comparações?",o:['7, com 3','3, com 4','6, com 3','7, com 4'],c:0,x:"O trecho é 42 15 8 4 (índices 4 a 7). O menor é o 4 no índice 7. São n − 1 = 3 comparações."},
+ {e:"5. (Lista 1, ex. 12) O algoritmo M abaixo encolhe pelo <b>a</b> em vez do b. Com v = 4 8 4, o que M(v, 1, 3) devolve?<div class='codigo' style='margin-top:6px'><div>M(v, a, b)</div><div>  Se a = b  Devolva a</div><div>  m ← M(v, a + 1, b)</div><div>  Se v[a] &lt; v[m]  m ← a</div><div>  Devolva m</div></div>",o:['1','2','3','nenhum, não termina'],c:2,x:"M(3,3) = 3. Em M(2,3): v[2] = 8 &lt; 4? não, fica 3. Em M(1,3): v[1] = 4 &lt; 4? não (estrito), fica 3. Resolve o mínimo sim, mas no empate devolve o <b>último</b>. O Minimo' da aula devolveria o 1."},
+ {e:'6. Com v = 4 7 8 15 16 17 23 42, quantas comparações <code>BuscaBinaria(23, v, 1, 8)</code> faz?',o:['1','2','3','7'],c:2,x:'m = 4 (15): 23 é maior, vai pra [5..8]. m = 6 (17): maior, vai pra [7..8]. m = 7 (23): achou. 3 comparações.'},
+ {e:'7. (Lista 1, ex. 4) Função 91 de McCarthy: F(n) = n − 10 se n &gt; 100, senão F(F(n + 11)). Quanto vale F(99)?',o:['89','91','99','não termina'],c:1,x:'F(99) = F(F(110)) = F(100) = F(F(111)) = F(101) = 91. Pra todo n ≤ 101 ela devolve 91; daí o nome.'},
+ {e:'8. (Lista 1, ex. 10) O que calcula: F(a, b) = 0 se b = 0; se b par, F(a + a, ⌊b/2⌋); senão F(a + a, ⌊b/2⌋) + a?',o:['a + b','a · b','a<sup>b</sup>','2<sup>b</sup>'],c:1,x:'É a multiplicação "do camponês russo": dobra o a e divide o b por 2, somando a quando b é ímpar. F(3, 5) = F(6, 2) + 3 = F(12, 1) + 3 = F(24, 0) + 12 + 3 = 15.'},
+ {e:'9. Com v = 4 8 8 15 16 16 23 42, o que <code>BuscaSequencial(10, v, 1, 8)</code> devolve?',o:['não','2','3','4'],c:2,x:'Ela devolve o lugar onde o 10 deveria ficar: o maior índice com v[m] ≤ 10. v[3] = 8 ≤ 10 e v[4] = 15 &gt; 10, então 3.'},
+ {e:'10. Qual recorrência descreve as multiplicações m(n) do fatorial recursivo?',o:['m(n) = 1 + m(n − 1), m(0) = 0','m(n) = n · m(n − 1), m(0) = 1','m(n) = 2·m(n/2)','m(n) = m(n − 1) + m(n − 2)'],c:0,x:'Cada chamada com n &gt; 0 faz uma multiplicação e chama pra n − 1; a base não multiplica. Resolvendo: m(n) = n.'}
+]);
+
+/* ===== 10: alterar ===== */
+escolhas($('escAlt'),[
+ {nome:"Mínimo → Máximo",t:"\"Altere o Minimo' para devolver o índice do <b>maior</b> elemento.\" Só a comparação do passo muda de sentido.",
+  cod:["Maximo'(v, a, b)",'  Se a = b','    Devolva a',"  m ← Maximo'(v, a, b − 1)",'  Se v[b] > v[m]','    m ← b','  Devolva m'],mud:[0,3,4],run:R=>minimo(R,VMIN,1,7,true)},
+ {nome:'Busca pela esquerda',t:'"Altere a Busca para olhar <b>v[a]</b> primeiro e encolher pelo a." A base continua a &gt; b; quem muda é o índice comparado e o da chamada.',
+  cod:['BuscaE(x, v, a, b)','  Se a > b','    Devolva não','  Se x = v[a]','    Devolva a','  Devolva BuscaE(x, v, a + 1, b)'],mud:[3,4,5],run:R=>{(function g(a,b){R.call(`BuscaE(4,v,${a},${b})`);R.vec({v:VMIN,a,b,ptr:{a},cur:a});if(a>b){R.ln(2,'Vazio: não.');R.ret('não');return;}R.conta('cmp');const t=VMIN[a]===4;R.ln(3,`4 = v[${a}] = ${VMIN[a]}? ${t?'Sim!':'Não.'}`);if(t){R.ln(4,`Devolve ${a}. Repara: achou o <b>primeiro</b> 4 (índice 3), não o último como a Busca da aula (índice 7).`);R.ret(a);return;}R.ln(5,`Chama BuscaE(4, v, ${a+1}, ${b}).`);g(a+1,b);R.ret(3,'Repassa pra cima.');})(1,7);}},
+ {nome:'Soma de vetor',t:'(Lista 1, ex. 13) "Escreva um algoritmo recursivo para a soma de v[a..b]." É o mesmo molde do Minimo\', trocando o passo por uma soma.',
+  cod:['Soma(v, a, b)','  Se a > b','    Devolva 0','  Devolva Soma(v, a, b − 1) + v[b]'],mud:[0,1,2,3],run:R=>{(function g(a,b){R.call(`Soma(v,${a},${b})`);R.vec({v:VMIN,a,b,ptr:{b}});if(a>b){R.ln(2,'Trecho vazio: soma 0.');R.ret(0);return 0;}R.ln(3,`Precisa da soma de v[${a}..${b-1}] antes.`);const s=g(a,b-1);R.conta('s');R.vec({v:VMIN,a,b,ptr:{b},cur:b});R.ln(3,`${s} + v[${b}] = ${s} + ${VMIN[b]} = <b>${s+VMIN[b]}</b>.`);R.ret(s+VMIN[b]);return s+VMIN[b];})(1,7);}}
+],(el,o)=>{el.innerHTML=`<div class="caixa rosa" style="margin-top:10px">${o.t}</div><div class="codigo cAlt" style="max-width:520px"></div><div class="aAlt"></div>`;
+  montaCodigo(el.querySelector('.cAlt'),o.cod.map((t,k)=>[t,null,o.mud.includes(k)?'mud':'']));
+  recAnim(el.querySelector('.aAlt'),{codigo:o.cod,run:o.run,contadores:[['cmp','comparações'],['s','somas']].filter(([k])=>o.nome==='Soma de vetor'?k==='s':k==='cmp'),dy:50,altura:340});});
+navCaps();
+</script>
+<script src="aula-fatia.js"></script>
+</body>
+</html>

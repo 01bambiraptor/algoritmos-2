@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · feito a partir do material da disciplina CI1056 (UFPR) · CC BY-NC-SA 4.0 · veja LICENSE.txt -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f2f7fb">
+<title>CI1056 · Algoritmos e Estruturas de Dados II · tópicos</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{--p:#2f5d7c;--p2:#1f4560;--ci:#22b8e6;--pe:#ffb98a;--tx:#24303c;--mu:#6b7785;--bg:#f2f7fb;--sf:#ffffff;--ln:#e3ecf3;--ceu:#e7f2fb}
+*{box-sizing:border-box}
+html,body{margin:0}
+html{overflow-x:clip}
+body{font-family:Inter,system-ui,sans-serif;color:var(--tx);background:var(--bg);line-height:1.5}
+a{color:var(--p)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+header{padding:34px 0 18px}
+.sup{font:600 .78rem Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mu)}
+h1{margin:6px 0 4px;font:800 clamp(1.6rem,3.6vw,2.4rem)/1.1 Inter,sans-serif;letter-spacing:-.02em;color:var(--p2)}
+.sub{color:var(--mu);margin:0}
+.acoes{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.acoes a{text-decoration:none;font:600 .92rem Inter,sans-serif;border-radius:12px;padding:10px 16px;background:var(--sf);color:var(--p2);box-shadow:0 1px 2px #1f456014,0 6px 20px #1f456010}
+.acoes a.pri{background:var(--p2);color:#fff}
+.aviso{margin:22px 0 8px;padding:14px 18px;border-radius:16px;background:var(--ceu);color:var(--p2);font-size:.95rem}
+h2{font:800 1.2rem Inter,sans-serif;color:var(--p2);margin:30px 0 10px;letter-spacing:-.01em}
+.grupo{font:700 .74rem Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mu);padding:18px 4px 6px}
+table{width:100%;border-collapse:separate;border-spacing:0 8px}
+th{text-align:left;font:700 .72rem Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);padding:0 14px}
+td{background:var(--sf);padding:14px;vertical-align:top;box-shadow:0 1px 0 var(--ln)}
+td:first-child{border-radius:16px 0 0 16px;width:54px;text-align:center}
+td:last-child{border-radius:0 16px 16px 0}
+tr.top td{transition:transform .15s}
+tr.top:hover td{background:#fbfdff}
+.num{display:inline-flex;width:34px;height:34px;border-radius:50%;align-items:center;justify-content:center;background:var(--ceu);color:var(--p2);font:700 .9rem 'JetBrains Mono',monospace}
+.tit a{font:700 1.02rem Inter,sans-serif;color:var(--p2);text-decoration:none}
+.tit a:hover{text-decoration:underline}
+.tit small{display:block;color:var(--mu);font-size:.88rem;margin-top:2px}
+.tag{display:inline-block;font:600 .72rem Inter,sans-serif;border-radius:999px;padding:2px 9px;margin-top:6px;background:#fff1e3;color:#a55a1f}
+.tag.p2{background:#e5f6ee;color:#1f7a50}
+.links a{display:inline-block;font:600 .8rem Inter,sans-serif;text-decoration:none;border-radius:8px;padding:3px 9px;margin:0 4px 4px 0;background:var(--ceu);color:var(--p2)}
+.links a.jogo{background:#fff1e3;color:#a55a1f}
+.links .nada{color:#a9b6c2;font-size:.85rem}
+.obra td{opacity:.65}
+.obra .tit a{color:var(--mu)}
+.rod{text-align:center;color:var(--mu);font-size:.9rem;margin:34px 0 40px;line-height:1.7}
+.rod i{color:var(--p)}
+@media (max-width:760px){
+  table,tbody,tr,td{display:block;width:100%}
+  thead{display:none}
+  tr{background:var(--sf);border-radius:16px;margin-bottom:10px;padding:12px 14px;box-shadow:0 1px 2px #1f456014}
+  td{background:none;box-shadow:none;padding:4px 0;border-radius:0!important}
+  td:first-child{width:auto;text-align:left;float:left;margin-right:10px}
+  td.links:before{content:attr(data-r);display:block;font:700 .68rem Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin:6px 0 2px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="sup">UFPR · Departamento de Informática</div>
+  <h1>CI1056 · Algoritmos e Estruturas de Dados II</h1>
+  <p class="sub">2º semestre de 2026 · material de apoio visual, tópico por tópico, na ordem das aulas</p>
+  <div class="acoes">
+    <a class="pri" href="01-introducao-a-recursao/index.html">Começar pelo tópico 1 ▸</a>
+    <a href="http://www.inf.ufpr.br/vignatti/v/cursos/ci1056.html">Página oficial da disciplina ↗</a>
+  </div>
+  <div class="aviso">Este material não substitui o material do professor: é uma ferramenta visual de apoio ao entendimento. Em cada tópico, os links da coluna "material da disciplina" levam ao material oficial.</div>
+</header>
+
+<h2>Aulas</h2>
+<table>
+  <thead><tr><th>#</th><th>Tópico</th><th>Material da disciplina</th><th>Praticar</th></tr></thead>
+  <tbody id="lista"></tbody>
+</table>
+
+<p class="rod">Feito a partir do material da disciplina CI1056 · Algoritmos e Estruturas de Dados II · UFPR<br>
+Este material não substitui o material do professor: é uma ferramenta visual de apoio ao entendimento.<br>
+<i>“Ninguém nasce feito, é experimentando-nos no mundo que nós nos fazemos.”</i> Paulo Freire, <i>Política e educação</i></p>
+</div>
+
+<script>
+const PROF='http://www.inf.ufpr.br/vignatti/v/cursos/ci1056/';
+// título, descrição, prova, material oficial [rótulo, arquivo], jogos [rótulo, página]
+const T=[
+ ['Introdução à Recursão','caso base, chamada recursiva, pilha de chamadas, fatorial, potência e Fibonacci','P1',[['aula','a02.pdf'],['slides','s02.pdf']],[['Torre da Recursão','torre.html']]],
+ ['Mínimo de Vetor','recursão em vetor: olha o último elemento e resolve o resto numa chamada menor','P1',[['aula','a03.pdf'],['slides','s03.pdf']],[['Torre da Recursão','torre.html']]],
+ ['Busca em Vetor','busca recursiva, base a > b, pior e melhor caso','P1',[['aula','a04.pdf'],['slides','s04.pdf']],[['Simulado','simulado.html']]],
+ ['Busca em Vetor Ordenado','BuscaSequencial: o lugar onde x deveria estar','P1',[['aula','a05.pdf'],['slides','s05.pdf']],[['Simulado','simulado.html']]],
+ ['Busca Binária','cortar pela metade, número de comparações, recorrência','P1',[['aula','a06.pdf'],['slides','s06.pdf']],[['Torre da Recursão','torre.html']]],
+ ['Insertion Sort','inserção passo a passo, comparações e trocas','P1',[['aula','a07.pdf'],['slides','s07.pdf']],[['Quebra-cabeça','quebra-cabeca.html']]],
+ ['Selection Sort','acha o menor e leva ao começo','P1',[['aula','a08.pdf'],['slides','s08.pdf']],[['Quebra-cabeça','quebra-cabeca.html']]],
+ ['Merge Sort','intercala, divisão e conquista, custo n log n','P1',[['aula','a09.pdf'],['slides','s09.pdf']],[['Detetive','detetive.html']]],
+ ['Quick Sort','particiona em volta do pivô, melhor e pior caso','P1',[['aula','a10.pdf'],['slides','s10.pdf']],[['Detetive','detetive.html']]],
+ ['Árvores Binárias (Quase) Completas','o que é uma árvore, quase completa, árvore guardada num vetor','P2',[['aula','a11.pdf'],['slides','s11.pdf']],[['Suika da Heap','suika.html']]],
+ ['Heap Binário','propriedade de heap, max-heapify, build-max-heap','P2',[['aula','a12.pdf'],['slides','s12.pdf']],[['Suika da Heap','suika.html']]],
+ ['Análise do Heap Binário e HeapSort','heapsort e o custo de cada operação','P2',[['aula','a13.pdf'],['slides','s13.pdf']],[['Suika da Heap','suika.html']]],
+ ['Implementação do Heap Binário','o heap.c linha por linha','P2',[['heap.c','codigos/heap.c']],[['Suika da Heap','suika.html']]],
+ ['Todos Vetores Binários','decidir uma coisa de cada vez: a árvore de decisões','P2',[['all-binary-strings.c','codigos/all-binary-strings.c']],[['Dominó','domino.html'],['Slide','slide.html']]],
+ ['Todos Subconjuntos','de vetores binários para subconjuntos, e a poda','P2',[['all-subsets.c','codigos/all-subsets.c']],[['Slide','slide.html']]],
+ ['Passeio do Cavalo','backtracking no tabuleiro, solveKTUtil','P2',[['cavalo.c','codigos/cavalo.c']],[['Cavalo no Campo Minado','cavalo.html']]],
+ ['Labirinto','o rato procurando o queijo, voltando dos becos','P2',[['labirinto.c','codigos/labirinto.c'],['slides','labirinto.pdf']],[['Ratinho no Labirinto','labirinto.html']]],
+ ['Removendo Recursividade','recursão de cauda vira laço; pilha explícita no lugar da pilha do sistema',null,[['aula','a14.pdf'],['slides','s14.pdf']],[['Bolhas da Pilha','bolhas.html?fase=1']]],
+ ['Quicksort Iterativo','quicksort sem recursão: uma pilha de intervalos [a, b]',null,[['código','codigos/quicksort-iterativo-e-recursivo.c']],[['Bolhas da Pilha','bolhas.html?fase=2']]]
+];
+const PRONTOS=19;
+const PASTAS=["01-introducao-a-recursao", "02-minimo-de-vetor", "03-busca-em-vetor", "04-busca-em-vetor-ordenado", "05-busca-binaria", "06-insertion-sort", "07-selection-sort", "08-merge-sort", "09-quick-sort", "10-arvores-binarias-quase-completas", "11-heap-binario", "12-heapsort", "13-implementacao-do-heap", "14-todos-vetores-binarios", "15-todos-subconjuntos", "16-passeio-do-cavalo", "17-labirinto", "18-removendo-recursividade", "19-quicksort-iterativo"];
+document.getElementById('lista').innerHTML=T.map(([t,d,p,mat,jg],i)=>{
+  const n=i+1, f=PASTAS[i]+'/index.html', ok=n<=PRONTOS;
+  return `<tr class="${ok?'top':'obra'}">
+    <td><span class="num">${n}</span></td>
+    <td class="tit"><a href="${f}">${t}</a><small>${d}</small>${p?`<span class="tag ${p==='P2'?'p2':''}">conteúdo da ${p}</span>`:''}</td>
+    <td class="links" data-r="material da disciplina">${mat.map(([r,a])=>`<a href="${PROF}${a}">${r} ↗</a>`).join('')}</td>
+    <td class="links" data-r="praticar">${jg.length?jg.map(([r,a])=>`<a class="jogo" href="${a}">🎮 ${r}</a>`).join(''):'<span class="nada">em breve</span>'}</td></tr>`;
+}).join('');
+</script>
+</body>
+</html>

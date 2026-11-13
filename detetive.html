@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · feito a partir do material da disciplina CI1056 (UFPR) · CC BY-NC-SA 4.0 · veja LICENSE.txt -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f2f7fb">
+<title>Detetive do código adulterado</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--titulo:#2f5d7c;--ceu:#e7f2fb;--gelo:#f2f7fb;--pessego:#ffd6b0;--rosa:#fdecef;--ink:#2b3440;--muted:#6b7785;--ok:#2f9e5a;--red:#d9485f;--gold:#f0a81c;--borda:#d5e6f3}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+body{font-family:'Fredoka',system-ui,sans-serif;color:var(--ink);background:var(--gelo);font-size:17px}
+header{display:flex;align-items:center;gap:12px;padding:12px 18px;flex-wrap:wrap;background:#fff;border-bottom:2px solid var(--borda);position:sticky;top:0;z-index:10}
+header h1{margin:0;font-size:1.45rem;color:var(--titulo)}
+.voltar{font:inherit;font-weight:600;text-decoration:none;color:var(--titulo);background:var(--ceu);border-radius:12px;padding:8px 14px}
+.placar{margin-left:auto;color:var(--muted);font-weight:600}
+main{max-width:1180px;margin:0 auto;padding:14px 18px 60px}
+.casos{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.casos button{font:inherit;font-weight:600;border:2px solid var(--borda);background:#fff;color:var(--titulo);border-radius:12px;padding:8px 12px;cursor:pointer;min-height:46px}
+.casos button.on{background:var(--titulo);color:#fff;border-color:var(--titulo)}
+.casos button.feito::after{content:' ✔';color:var(--ok)}
+.ficha{background:#fff8ef;border:2px dashed var(--pessego);border-radius:18px;padding:14px 18px;margin-bottom:14px;line-height:1.5}
+.ficha h2{margin:0 0 4px;color:var(--titulo)}
+.mesa{display:grid;grid-template-columns:1.1fr 1fr;gap:16px}
+@media (orientation:portrait),(max-width:900px){.mesa{grid-template-columns:1fr}}
+.col{background:#fff;border-radius:18px;border:1px solid var(--borda);padding:12px}
+.col h3{margin:0 0 8px;color:var(--titulo);font-size:1.02rem;display:flex;justify-content:space-between;gap:8px}
+.col h3 small{color:var(--muted);font-weight:400}
+.codigo{font-family:'JetBrains Mono',monospace;font-size:.84rem;background:#f8fbfe;border-radius:12px;padding:6px 0;overflow-x:auto}
+.codigo div{white-space:pre;padding:5px 12px;border-left:5px solid transparent;cursor:pointer;min-height:1.6em}
+.codigo div:hover{background:#eef6fd}
+.codigo div.sel{background:#fff4d6;border-left-color:var(--gold)}
+.codigo div.inoc{color:#b5c2cd;text-decoration:line-through;cursor:default}
+.codigo div.culpa{background:var(--rosa);border-left-color:var(--red)}
+.codigo div.nc{cursor:default;color:#8a9aa8}
+.pistas{display:flex;flex-direction:column;gap:10px}
+.pista{border-radius:14px;border:2px solid var(--borda);padding:12px 14px;background:var(--gelo)}
+.pista.fechada{background:repeating-linear-gradient(45deg,#e7f2fb 0 10px,#f2f7fb 10px 20px);cursor:pointer;text-align:center;font-weight:600;color:var(--titulo)}
+.pista .n{font-weight:700;color:var(--titulo);display:block;margin-bottom:4px}
+.pista pre{font-family:'JetBrains Mono',monospace;background:#fff;border-radius:8px;padding:6px 10px;margin:6px 0 0;font-size:.85rem;white-space:pre-wrap}
+.btn{font:inherit;font-weight:600;border-radius:12px;border:2px solid var(--borda);background:#fff;color:var(--titulo);min-height:50px;padding:8px 16px;cursor:pointer}
+.btn.pri{background:var(--titulo);border-color:var(--titulo);color:#fff}
+.btn:disabled{opacity:.4}
+.btn:active{transform:scale(.96)}
+.acoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.pontos{font-size:1.4rem;font-weight:700;color:var(--titulo)}
+.msg{margin-top:12px;border-radius:14px;padding:12px 14px;line-height:1.5;display:none}
+.msg.on{display:block}
+.msg.bom{background:#e5f6ec;border:2px solid #a9dcbc}
+.msg.ruim{background:var(--rosa);border:2px solid #f3b8c3}
+.msg.neutro{background:var(--ceu);border:2px solid var(--borda)}
+.ops{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.ops button{font:inherit;text-align:left;border-radius:12px;border:2px solid var(--borda);background:#fff;padding:10px 12px;cursor:pointer;min-height:46px}
+.ops button.certa{background:#e2f5ea;border-color:var(--ok)}
+.ops button.errada{background:var(--rosa);border-color:var(--red)}
+code{font-family:'JetBrains Mono',monospace;background:var(--gelo);border-radius:6px;padding:0 5px;font-size:.88em}
+.diff{font-family:'JetBrains Mono',monospace;font-size:.85rem;background:#fff;border-radius:10px;padding:8px 10px;margin-top:8px;white-space:pre-wrap}
+.diff .menos{color:#b02a3b;background:#fde2e6;display:block}
+.diff .mais{color:#1f6e3f;background:#dff3e6;display:block}
+</style>
+</head>
+<body>
+<header>
+  <a class="voltar" href="index.html">← Início</a>
+  <h1>🔎 Detetive do código adulterado</h1>
+  <span class="placar" id="placar"></span>
+</header>
+<main>
+  <div class="casos" id="casos"></div>
+  <div class="ficha" id="ficha"></div>
+  <div class="mesa">
+    <div class="col">
+      <h3>🧾 O código original do professor <small>toque na linha suspeita</small></h3>
+      <div class="codigo" id="codigo"></div>
+      <div class="acoes"><button class="btn pri" id="bAcusa" disabled>👉 Acusar esta linha</button><span class="pontos" id="pontos"></span></div>
+      <div class="msg" id="msg"></div>
+    </div>
+    <div class="col">
+      <h3>🗂 Pistas <small>cada pista aberta custa 15 pontos</small></h3>
+      <div class="pistas" id="pistas"></div>
+    </div>
+  </div>
+</main>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+/* ===================== simuladores (as versões em JS do código do professor) ===================== */
+function vb(n,mut){const v=Array(n).fill(0),out=[];let c=0;(function r(i){c++;if(i===n){out.push(v.join(' '));return;}v[i]=0;r(i+1);v[i]=mut?0:1;r(i+1);})(0);return {out,c};}
+function mh(v,i,n,m,cnt){if(cnt)cnt.c++;const e=2*i+1,d=2*i+2;let ma=(e<n&&v[e]>v[i])?e:i;if(d<n&&v[d]>(m==='dirVsI'?v[i]:v[ma]))ma=d;if(ma!==i){[v[i],v[ma]]=[v[ma],v[i]];mh(v,m==='recI'?i:ma,n,m,cnt);}}
+function build(a,m,cnt){const v=a.slice();for(let i=Math.floor(v.length/2)-1;i>=0;i--)mh(v,i,v.length,m,cnt);return v;}
+function hsort(a,m){const v=build(a);const n=v.length;for(let i=n-1;i>=1;i--){[v[0],v[i]]=[v[i],v[0]];mh(v,0,m==='hsN'?n:i,m);}return v;}
+function ins(xs,m){const v=[];for(const x of xs){v.push(x);let i=v.length-1;while(i!==0){const p=Math.floor((i-1)/2);if(m==='insGt'?v[p]>v[i]:v[p]<v[i]){[v[p],v[i]]=[v[i],v[p]];i=p;}else break;}}return v;}
+function ehHeap(v){for(let i=1;i<v.length;i++)if(v[Math.floor((i-1)/2)]<v[i])return false;return true;}
+function cavalo(mut){const N=5,xm=[2,1,-1,-2,-2,-1,1,2],ym=[1,2,2,1,-1,-2,-2,-1];const sol=Array.from({length:N},()=>Array(N).fill(-1));sol[0][0]=0;let c=0;
+  const safe=(x,y)=>x>=0&&x<N&&y>=0&&y<N&&sol[x][y]===-1;
+  function u(x,y,m){c++;if(m===N*N)return 1;for(let k=0;k<8;k++){const a=x+xm[k],b=y+ym[k];if(safe(a,b)){sol[a][b]=m;if(u(a,b,m+1)===1)return 1;else if(!mut)sol[a][b]=-1;}}return 0;}
+  const r=u(0,0,1);return {r,c,sol};}
+function labir(m,mut){const N=m.length,sol=m.map(r=>r.map(()=>0));let c=0;
+  function s(x,y){c++;if(x===N-1&&y===N-1&&m[x][y]===1){sol[x][y]=1;return true;}
+    if(x>=0&&x<N&&y>=0&&y<N&&m[x][y]===1){if(sol[x][y]===1)return false;sol[x][y]=1;
+      if(s(x+1,y))return true; if(mut==='dupDown'?s(x+1,y):s(x,y+1))return true;
+      sol[x][y]=mut==='noUnmark'?1:0;return false;}return false;}
+  const ok=s(0,0);return {ok,c,sol};}
+const mat=s=>s.map(r=>r.map(v=>String(v).padStart(3)).join('')).join('\n');
+const MPROF=[[1,0,0,0],[1,1,0,1],[0,1,0,0],[1,1,1,1]], MBECO=[[1,1,1,1],[1,0,0,1],[1,1,0,1],[0,1,0,1]], MLIVRE=[[1,1,1,1],[1,1,1,1],[1,1,1,1],[1,1,1,1]];
+
+/* ===================== os casos ===================== */
+const VB=['void vetores_binarios(int v[], int n, int i) {','    if (i == n) {','        imprime_vetor(v, n);','        return;','    }','    v[i] = 0;','    vetores_binarios(v, n, i + 1);','    v[i] = 1;','    vetores_binarios(v, n, i + 1);','}'];
+const MH=['void maxheapify(int v[], int i, int n) {','    int maior, esq, dir;','    esq = esquerda(i);','    dir = direita(i);','    if (esq < n && v[esq] > v[i])','       maior = esq;','    else','       maior = i;','    if (dir < n && v[dir] > v[maior])','       maior = dir;','    if (maior != i) {','       troca(&v[i], &v[maior]);','       maxheapify(v, maior, n);','    }','}'];
+const INS=['void insere(int v[], int x, int *n) {','    v[*n] = x;','    *n = *n+1;','    int i = *n-1;','    while (i != 0 && v[pai(i)] < v[i]) {','        troca(&v[pai(i)], &v[i]);','        i = pai(i);','    }','}'];
+const HS=['void heapsort(int v[], int n) {','    buildmaxheap(v, n);','    for (int i = n - 1; i >= 1; i--) {','        troca(&v[0], &v[i]);','        maxheapify(v, 0, i);','    }','}'];
+const KT=['int solveKTUtil(int x, int y, int movei, int sol[N][N], int xMove[], int yMove[]) {','    if (movei == N * N)','        return 1;','    for (int k = 0; k < 8; k++) {','        int next_x = x + xMove[k];','        int next_y = y + yMove[k];','        if (isSafe(next_x, next_y, sol)) {','            sol[next_x][next_y] = movei;','            if (solveKTUtil(next_x, next_y, movei + 1, sol, xMove, yMove) == 1)','                return 1;','            else','                sol[next_x][next_y] = -1; // backtracking','        }','    }','    return 0;','}'];
+const LB=['bool solveMazeUtil(int maze[N][N], int x, int y, int sol[N][N]) {','    if (x == N - 1 && y == N - 1 && maze[x][y] == 1) {','        sol[x][y] = 1;','        return true;','    }','    if (isSafe(maze, x, y) == true) {','        if (sol[x][y] == 1)','            return false;','        sol[x][y] = 1;','        if (solveMazeUtil(maze, x + 1, y, sol) == true)','            return true;','        if (solveMazeUtil(maze, x, y + 1, sol) == true)','            return true;','        sol[x][y] = 0;','        return false;','    }','    return false;','}'];
+
+const CASOS=[
+ {t:'O vetor teimoso',arq:'all-binary-strings.c',cod:VB,alvo:7,novo:'    v[i] = 0;',
+  hist:'Os alunos rodaram o programa e juraram que tinha algo estranho na saída. O número de chamadas parece normal...',
+  pistas:()=>{const a=vb(2,1),b=vb(3,1),o=vb(2,0);return [
+    ['Saída com n = 2',`<pre>${a.out.join('\n')}</pre>`],
+    ['Contagem de chamadas',`Com n = 2 foram <b>${a.c}</b> chamadas. O original também faz <b>${o.c}</b>.`],
+    ['Saída com n = 3',`<pre>${b.out.join('\n')}</pre>São ${b.out.length} linhas, a quantidade certa.`]];},
+  ops:['v[i] = 1 virou v[i] = 0','v[i] = 0 virou v[i] = 1','a base virou if (i == n - 1)','a segunda chamada virou vetores_binarios(v, n, i)'],c:0,
+  exp:'A árvore continua do mesmo tamanho (mesmas chamadas, mesmo número de linhas), mas o "ramo do 1" escreve 0. Todas as folhas saem iguais. Se fosse o v[i] = 0 virando 1, sairia tudo 1.'},
+ {t:'O filho direito apressado',arq:'heap.c',cod:MH,alvo:8,novo:'    if (dir < n && v[dir] > v[i])',
+  hist:'O buildmaxheap às vezes gera um vetor que não é heap. Às vezes funciona. O suspeito sabe se esconder.',
+  pistas:()=>{const a=build([1,5,3],'dirVsI'),b=build([1,3,5],'dirVsI'),c=build([2,9,4,7,1],'dirVsI');return [
+    ['buildmaxheap em 1 5 3',`<pre>${a.join(' ')}</pre>${ehHeap(a)?'É heap.':'<b>Não é heap!</b> O 5 ficou embaixo do 3.'}`],
+    ['buildmaxheap em 1 3 5',`<pre>${b.join(' ')}</pre>${ehHeap(b)?'Esse saiu certo.':'Não é heap.'}`],
+    ['buildmaxheap em 2 9 4 7 1',`<pre>${c.join(' ')}</pre>${ehHeap(c)?'É heap.':'<b>Não é heap!</b>'} Repara quem subiu pra raiz.`]];},
+  ops:['v[maior] virou v[i] na comparação do dir','> virou < na comparação do esq','esq < n virou esq <= n','maxheapify(v, maior, n) virou maxheapify(v, i, n)'],c:0,
+  exp:'Comparando o direito com v[i] em vez de v[maior], o direito ganha sempre que for maior que o pai, mesmo que o esquerdo seja ainda maior. Por isso 1 5 3 vira 3 5 1, mas 1 3 5 sai certo.'},
+ {t:'O heap preguiçoso',arq:'heap.c',cod:MH,alvo:12,novo:'       maxheapify(v, i, n);',
+  hist:'Em vetores pequenos ninguém percebeu nada. Em vetores maiores, o heap sai torto, sempre lá pra baixo.',
+  pistas:()=>{const a=build([1,2,3],'recI'),b=build([1,2,3,4,5,6,7],'recI'),c={c:0},d={c:0};build([1,2,3,4,5,6,7],'recI',c);build([1,2,3,4,5,6,7],'',d);return [
+    ['buildmaxheap em 1 2 3',`<pre>${a.join(' ')}</pre>${ehHeap(a)?'Saiu certo.':'Não é heap.'}`],
+    ['buildmaxheap em 1 2 3 4 5 6 7',`<pre>${b.join(' ')}</pre>${ehHeap(b)?'É heap.':'<b>Não é heap!</b> O 1 parou no meio da árvore.'}`],
+    ['Chamadas de maxheapify nesse vetor de 7',`Adulterado: <b>${c.c}</b> chamadas. Original: <b>${d.c}</b>.`]];},
+  ops:['a chamada recursiva passou a usar i em vez de maior','troca(&v[i], &v[maior]) sumiu','if (maior != i) virou if (maior == i)','o build passou a começar em n − 1'],c:0,
+  exp:'Depois da troca, a chamada recursiva olha de novo pra posição i, onde agora está o valor grande, e para. O valor pequeno que desceu nunca continua descendo. Com 3 elementos não existe "lá embaixo", por isso funciona.'},
+ {t:'O insere de ponta-cabeça',arq:'heap.c',cod:INS,alvo:4,novo:'    while (i != 0 && v[pai(i)] > v[i]) {',
+  hist:'Depois de várias inserções, quem está no topo do heap não é quem deveria.',
+  pistas:()=>{const a=ins([5,3,8],'insGt'),b=ins([4,9,2,7],'insGt'),c=ins([10,20,30],'insGt');return [
+    ['Inserindo 5, 3, 8 num heap vazio',`<pre>${a.join(' ')}</pre>`],
+    ['Inserindo 4, 9, 2, 7',`<pre>${b.join(' ')}</pre>`],
+    ['Inserindo 10, 20, 30',`<pre>${c.join(' ')}</pre>Nenhuma troca aconteceu.`]];},
+  ops:['< virou > no while','i = pai(i) virou i = esquerda(i)','v[*n] = x virou v[0] = x','i != 0 virou i != 1'],c:0,
+  exp:'Com >, o valor novo sobe quando é MENOR que o pai. O menor de todos vai pro topo: virou um heap de mínimo sem querer.'},
+ {t:'A ordenação bagunçada',arq:'heap.c + aula 13',cod:HS,alvo:4,novo:'        maxheapify(v, 0, n);',
+  hist:'O heapsort termina, mas o vetor não sai em ordem. O build-max-heap foi testado e está inocente.',
+  pistas:()=>{const a=hsort([3,1,2],'hsN'),b=hsort([15,35,40,10,20],'hsN'),c=hsort([5,4,3,2,1],'hsN');return [
+    ['heapsort em 3 1 2',`<pre>${a.join(' ')}</pre>`],
+    ['heapsort em 15 35 40 10 20',`<pre>${b.join(' ')}</pre>`],
+    ['heapsort em 5 4 3 2 1',`<pre>${c.join(' ')}</pre>Os maiores, que deviam ficar no fim, voltaram pro começo.`]];},
+  ops:['maxheapify(v, 0, i) virou maxheapify(v, 0, n)','troca(&v[0], &v[i]) virou troca(&v[0], &v[n-1])','o for passou a ir até i >= 0','buildmaxheap(v, n) sumiu'],c:0,
+  exp:'Depois da troca, as posições de i em diante já estão ordenadas e não fazem mais parte do heap. Com n, o maxheapify enxerga a parte ordenada e puxa os maiores de volta pra cima.'},
+ {t:'O cavalo que não esquece',arq:'cavalo.c',cod:KT,alvo:11,novo:'                ; // (a linha sumiu)',
+  hist:'No tabuleiro 5 × 5 o programa desiste rapidinho e diz que não existe solução. Mas o original acha!',
+  pistas:()=>{const a=cavalo(true),o=cavalo(false);const rep={};a.sol.flat().forEach(v=>{if(v>=0)rep[v]=(rep[v]||0)+1;});const dup=Object.keys(rep).filter(k=>rep[k]>1);return [
+    ['O que o programa imprime',`<pre>Solucao nao existe</pre>`],
+    ['Contagem de chamadas',`Adulterado: <b>${a.c}</b> chamadas. Original: <b>${o.c}</b> chamadas, e acha o passeio.`],
+    ['A matriz sol no fim (imprimimos à força)',`<pre>${mat(a.sol)}</pre>Repara nos números repetidos: ${dup.slice(0,3).join(', ')}...`]];},
+  ops:['a linha do backtracking (sol = -1) sumiu','sol[next_x][next_y] = movei virou movei + 1','if (movei == N * N) virou movei == N','o isSafe passou a aceitar casa com valor'],c:0,
+  exp:'Sem desfazer, toda casa tentada fica marcada pra sempre. O isSafe passa a recusar casas que só pertenciam a caminhos que falharam, e logo não sobra pra onde ir. Os números repetidos são de tentativas diferentes do mesmo passo que nunca foram apagadas.'},
+ {t:'As pegadas que ficaram',arq:'labirinto.c',cod:LB,alvo:13,novo:'        sol[x][y] = 1;',
+  hist:'O rato sempre chega no queijo, mas o mapa que o programa imprime mostra caminhos que ele não usou.',
+  pistas:()=>{const a=labir(MBECO,'noUnmark'),b=labir(MPROF,'noUnmark');return [
+    ['Labirinto com becos',`<pre>maze:\n${mat(MBECO)}\n\nsol impressa:\n${mat(a.sol)}</pre>`],
+    ['Labirinto do professor (main)',`<pre>${mat(b.sol)}</pre>Esse saiu igualzinho ao original!`],
+    ['Uma observação',`O programa nunca disse "Solution doesn't exist" nesses testes, e o rato chegou em todos.`]];},
+  ops:['sol[x][y] = 0 virou sol[x][y] = 1','o if (sol[x][y] == 1) sumiu','a chamada x + 1 virou x - 1','return true virou return false na saída'],c:0,
+  exp:'O BACKTRACK passou a "desmarcar" escrevendo 1. As casas dos becos continuam marcadas e aparecem na matriz. No labirinto do professor isso não aparece porque ele nunca precisa voltar!'},
+ {t:'O rato que só desce',arq:'labirinto.c',cod:LB,alvo:11,novo:'        if (solveMazeUtil(maze, x + 1, y, sol) == true)',
+  hist:'Até no labirinto mais fácil do mundo o programa diz que não tem saída.',
+  pistas:()=>{const a=labir(MPROF,'dupDown'),b=labir(MLIVRE,'dupDown');return [
+    ['Labirinto do professor',`<pre>Solution doesn't exist</pre>`],
+    ['Labirinto todo livre (só 1)',`<pre>Solution doesn't exist</pre>Foram ${b.c} chamadas.`],
+    ['A matriz sol no fim',`<pre>${mat(b.sol)}</pre>Nenhuma casa ficou marcada.`]];},
+  ops:['a chamada com y + 1 virou x + 1','o isSafe passou a recusar tudo','a condição da saída virou x == N','sol[x][y] = 1 sumiu'],c:0,
+  exp:'As duas tentativas descem. O rato nunca vai pra direita, então chega na última linha e não consegue andar até a coluna do queijo. Todas as casas são desmarcadas no caminho de volta.'},
+];
+
+/* ===================== jogo ===================== */
+let k=0, sel=-1, pts=100, abertas=0, fase='acusar', inoc=new Set(), resolvidos={};
+try{resolvidos=JSON.parse(localStorage.getItem('det-alg2')||'{}');}catch(e){}
+function casos(){
+  $('casos').innerHTML=CASOS.map((c,i)=>`<button data-i="${i}" class="${i===k?'on':''} ${resolvidos[i]?'feito':''}">Caso ${i+1}</button>`).join('');
+  $('casos').querySelectorAll('button').forEach(b=>b.onclick=()=>carrega(+b.dataset.i));
+  const tot=Object.values(resolvidos).reduce((a,b)=>a+b,0);
+  $('placar').textContent=`${Object.keys(resolvidos).length}/${CASOS.length} casos · ${tot} pontos`;
+}
+function carrega(i){
+  k=i; sel=-1; pts=100; abertas=0; fase='acusar'; inoc=new Set();
+  const c=CASOS[k], P=c.pistas();
+  $('ficha').innerHTML=`<h2>Caso ${k+1}: ${c.t}</h2>Arquivo: <code>${c.arq}</code><br>${c.hist}<br><b>Alguém mudou exatamente UMA linha.</b> Abra pistas, pense, e acuse a linha.`;
+  $('pistas').innerHTML=P.map((p,j)=>`<div class="pista fechada" data-j="${j}">🔒 Abrir pista ${j+1}: ${p[0]}</div>`).join('');
+  $('pistas').querySelectorAll('.pista').forEach(el=>el.onclick=()=>{ if(!el.classList.contains('fechada'))return; const p=P[+el.dataset.j];
+    el.classList.remove('fechada'); el.innerHTML=`<span class="n">Pista ${+el.dataset.j+1}: ${p[0]}</span>${p[1]}`; if(fase==='acusar'){pts=Math.max(0,pts-15);abertas++;} placar();});
+  $('msg').className='msg'; desenhaCod(); casos(); placar();
+}
+function placar(){$('pontos').textContent=`${pts} pts`;}
+function desenhaCod(){
+  const c=CASOS[k];
+  $('codigo').innerHTML=c.cod.map((l,i)=>`<div data-i="${i}" class="${/^\s*[{}]\s*$/.test(l)?'nc':''} ${inoc.has(i)?'inoc':''} ${i===sel?'sel':''} ${fase!=='acusar'&&i===c.alvo?'culpa':''}">${esc(l)||' '}</div>`).join('');
+  $('codigo').querySelectorAll('div').forEach(d=>d.onclick=()=>{ const i=+d.dataset.i; if(fase!=='acusar'||d.classList.contains('nc')||inoc.has(i))return; sel=i; $('bAcusa').disabled=false; desenhaCod(); });
+  $('bAcusa').disabled=fase!=='acusar'||sel<0;
+}
+$('bAcusa').onclick=()=>{
+  const c=CASOS[k]; if(sel<0) return;
+  if(sel!==c.alvo){ inoc.add(sel); pts=Math.max(0,pts-20); sel=-1; placar(); desenhaCod();
+    const m=$('msg'); m.className='msg on ruim'; m.innerHTML='🙅 Essa linha tem álibi: se ela tivesse sido mudada, as pistas seriam outras. (−20 pontos) Tente de novo.'; return; }
+  fase='como'; desenhaCod();
+  const m=$('msg'); m.className='msg on neutro';
+  m.innerHTML=`🎯 <b>Culpada encontrada!</b> Agora o interrogatório: <b>como</b> ela foi alterada?<div class="ops">${c.ops.map((o,j)=>[o,j]).sort(()=>Math.random()-.5).map(([o,j])=>`<button data-j="${j}">${esc(o)}</button>`).join('')}</div>`;
+  m.querySelectorAll('.ops button').forEach(b=>b.onclick=()=>{ if(fase!=='como')return; fase='fim'; const j=+b.dataset.j;
+    m.querySelector(`.ops button[data-j="${c.c}"]`).classList.add('certa'); if(j!==c.c){b.classList.add('errada');pts=Math.max(0,pts-10);}
+    resolvidos[k]=Math.max(resolvidos[k]||0,pts); try{localStorage.setItem('det-alg2',JSON.stringify(resolvidos));}catch(e){}
+    m.className='msg on '+(j===c.c?'bom':'ruim');
+    m.insertAdjacentHTML('beforeend',`<p>${j===c.c?'✅ Caso resolvido!':'❌ Quase: a linha estava certa, mas a alteração foi outra.'} <b>${pts} pontos.</b></p><div class="diff"><span class="menos">- ${esc(c.cod[c.alvo])}</span><span class="mais">+ ${esc(c.novo)}</span></div><p>${c.exp}</p><p style="color:var(--muted)">Abra as pistas que faltam pra conferir o raciocínio.</p>${k<CASOS.length-1?'<button class="btn pri" id="bProx">Próximo caso ▸</button>':''}`);
+    const bp=$('bProx'); if(bp) bp.onclick=()=>carrega(k+1); placar(); casos(); });
+};
+document.addEventListener('contextmenu',e=>e.preventDefault());
+carrega(0);
+</script>
+<script src="canto.js"></script>
+</body>
+</html>

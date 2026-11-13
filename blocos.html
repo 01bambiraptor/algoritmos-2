@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · feito a partir do material da disciplina CI1056 (UFPR) · CC BY-NC-SA 4.0 · veja LICENSE.txt -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#e7f2fb">
+<title>Fábrica de Ordenação</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--titulo:#2f5d7c;--ceu:#e7f2fb;--gelo:#f2f7fb;--pessego:#ffd6b0;--rosa:#fdecef;--ink:#2b3440;--muted:#6b7785;--ok:#2f9e5a;--red:#d9485f;--gold:#f0a81c;--borda:#d5e6f3}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{overflow-x:clip}
+html,body{margin:0}
+body{font-family:'Fredoka',system-ui,sans-serif;color:var(--ink);font-size:17px;line-height:1.5;touch-action:manipulation;
+  background:linear-gradient(180deg,#d4e8f6 0,#e7f2fb 40%,#f2f7fb 100%) fixed;min-height:100vh}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 18px;max-width:1160px;margin:0 auto}
+header h1{margin:0;font-size:1.5rem;color:var(--titulo)}
+header .sub{color:var(--muted);font-size:.95rem}
+.voltar{font:inherit;font-weight:600;text-decoration:none;color:var(--titulo);background:#fff;border:2px solid var(--borda);border-radius:12px;padding:7px 14px}
+main{max-width:1160px;margin:0 auto;padding:0 18px 60px}
+.barra{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:4px 0 14px}
+.chip{font:inherit;font-weight:600;border:2px solid var(--borda);background:#fff;color:var(--titulo);border-radius:999px;padding:6px 14px;cursor:pointer;min-height:42px}
+.chip.on{background:var(--titulo);border-color:var(--titulo);color:#fff}
+.chip small{font-weight:400;opacity:.85;margin-left:4px}
+.btn{font:inherit;font-weight:600;border-radius:12px;border:2px solid var(--borda);background:#fff;color:var(--titulo);min-height:48px;padding:8px 14px;cursor:pointer}
+.btn:active{transform:scale(.96)}
+.btn.pri{background:var(--titulo);border-color:var(--titulo);color:#fff}
+.btn.pes{background:#ffe3c9;border-color:#f3b884;color:#8a4b14}
+.btn:disabled{opacity:.4;cursor:default;transform:none}
+.palco{display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,370px);gap:18px;align-items:start}
+.palco>div{min-width:0}
+@media (min-width:861px){.palco>div:first-child{position:sticky;top:12px}}
+@media (max-width:860px){.palco{grid-template-columns:1fr}}
+.cartao{background:#ffffffe8;border:1.5px solid var(--borda);border-radius:22px;padding:16px 18px;box-shadow:0 6px 24px #2f5d7c12}
+.cartao h3{margin:0 0 6px;color:var(--titulo);font-size:1.1rem}
+.cartao p{margin:6px 0}
+
+/* ---------- a bancada ---------- */
+.bancada{position:relative;border-radius:26px;padding:18px 14px 14px;background:linear-gradient(180deg,#fdfaf4,#f4ead9);
+  box-shadow:inset 0 -10px 0 #e0c9a6,0 16px 30px #2f5d7c1f;border:1.5px solid #ead9bd;overflow:hidden}
+.hud{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;font-weight:600;color:var(--titulo)}
+.hud .vidas{letter-spacing:2px}
+.hud .pill{background:#fff;border:1.5px solid var(--borda);border-radius:999px;padding:2px 12px;font-size:.92rem}
+.relogio{height:7px;border-radius:9px;background:#e9eef3;overflow:hidden;margin:-2px 0 10px;visibility:hidden}
+.relogio i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#f6a6b3,#ffc98f,#9fd3a8);transform-origin:left}
+.linha{display:flex;align-items:flex-end;justify-content:center;gap:6px;min-height:250px;padding:0 4px;position:relative}
+.col{display:flex;flex-direction:column;align-items:center;flex:1 1 0;max-width:62px;min-width:0;position:relative}
+.col.gap{margin-left:22px}
+.blk{width:100%;border-radius:10px 10px 6px 6px;position:relative;display:flex;align-items:flex-start;justify-content:center;
+  font:700 clamp(12px,2.2vw,17px) 'JetBrains Mono',monospace;color:#3b4652;padding-top:5px;cursor:pointer;
+  background:linear-gradient(170deg,#f2f8fd,#cfe3f3);border:1.5px solid #a9cbe4;box-shadow:0 4px 0 #8fb6d3,0 8px 10px #2f5d7c22;
+  transition:height .25s,transform .22s cubic-bezier(.3,1.4,.5,1),background .2s}
+.blk.fora{opacity:.35;filter:saturate(.5)}
+.blk.ok{background:linear-gradient(170deg,#eefaf0,#bfe6c8);border-color:#8fd0a0;box-shadow:0 4px 0 #6fb985,0 8px 10px #2f9e5a22}
+.blk.solto{background:linear-gradient(170deg,#fff4e6,#ffd0a3);border-color:#f3b884;box-shadow:0 4px 0 #e39a5a,0 10px 16px #e39a5a44;transform:translateY(-16px)}
+.blk.cmp{outline:3px solid var(--titulo);outline-offset:2px}
+.blk.piv{background:linear-gradient(170deg,#fff6d6,#ffd877);border-color:#e9b949;box-shadow:0 4px 0 #d39a1e,0 8px 10px #d39a1e33}
+.blk.cerca{background:linear-gradient(170deg,#fff0f3,#fbd3dc);border-color:#eeb1c0;box-shadow:0 4px 0 #d996a8,0 8px 10px #b0607022}
+.blk.sel{outline:3px dashed #e08a2e;outline-offset:3px}
+.blk.erro{animation:treme .4s}
+@keyframes treme{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.blk.caixa{background:repeating-linear-gradient(135deg,#e9d3b2 0 10px,#e2c9a4 10px 20px);border-color:#c9a777;box-shadow:0 4px 0 #b08b58,0 8px 10px #5a3d1d22;color:#7a5a32;align-items:center;padding:0}
+.blk.caixa.cmp{outline-color:#e08a2e}
+.ind{font:600 12px 'JetBrains Mono',monospace;color:var(--muted);margin-top:8px}
+.ptr{position:absolute;bottom:-34px;left:50%;transform:translateX(-50%);font:700 12px 'JetBrains Mono',monospace;color:#c2410c;white-space:nowrap}
+.cols-wrap{padding-bottom:30px}
+.urow{display:flex;justify-content:center;gap:6px;margin-top:18px;padding:10px 6px 4px;border-top:2px dashed #e0c9a6;min-height:120px;align-items:flex-end}
+.urow .lbl{align-self:center;font:700 14px 'JetBrains Mono',monospace;color:var(--muted);margin-right:6px}
+.slot{flex:1 1 0;max-width:62px;min-width:0;height:24px;border:1.5px dashed #d8c4a3;border-radius:8px}
+.balanca{display:flex;justify-content:center;margin-top:8px;height:96px}
+.balanca svg{height:96px;overflow:visible}
+.balanca .beam{transition:transform .5s cubic-bezier(.3,1.5,.5,1);transform-origin:120px 30px}
+.acoes{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+.acoes .btn{flex:1 1 180px;max-width:280px}
+.msg{border-radius:14px;padding:10px 12px;background:var(--gelo);margin:8px 0;min-height:52px}
+.msg.ok{background:#e9f7ee}
+.msg.err{background:var(--rosa)}
+.cod{font:13px/1.55 'JetBrains Mono',monospace;background:#f7fafc;border:1.5px solid var(--borda);border-radius:12px;padding:8px 0;margin:8px 0;white-space:pre;overflow-x:auto}
+.cod div{padding:0 10px}
+.cod .on{background:#ffe3c9;box-shadow:inset 3px 0 0 #e08a2e}
+.log{font:13px 'JetBrains Mono',monospace;max-height:120px;overflow:auto;background:#fbf6ee;border-radius:10px;padding:6px 10px;margin:6px 0}
+.estrelas{font-size:1.5rem;letter-spacing:4px}
+.fim{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#fdfaf4ee;z-index:5;padding:20px;text-align:center}
+.fim.on{display:flex}
+.fim h2{color:var(--titulo);margin:0 0 6px}
+.fim .acoes{margin-top:10px}
+.lev{display:flex;gap:6px;margin:6px 0 2px}
+.lev button{flex:1;font:inherit;font-weight:600;border:1.5px solid var(--borda);background:#fff;border-radius:10px;padding:4px 0;color:var(--titulo);cursor:pointer}
+.lev button.on{background:var(--ceu);border-color:var(--titulo)}
+kbd{font:600 12px 'JetBrains Mono',monospace;background:#fff;border:1px solid #cbd6e0;border-bottom-width:2px;border-radius:5px;padding:0 5px}
+</style>
+<script src="modo.js"></script>
+</head>
+<body>
+<header>
+  <a class="voltar" href="index.html">← Início</a>
+  <div><h1>🏭 Fábrica de Ordenação</h1><div class="sub">você é o algoritmo: cada troca, cada comparação, na ordem do pseudocódigo das aulas 7 a 10</div></div>
+</header>
+<main>
+  <div class="barra"><span id="modoSlot"></span></div>
+  <div class="barra" id="fases"></div>
+  <div class="palco">
+    <div>
+      <div class="bancada">
+        <div class="hud"><span class="vidas" id="vidas"></span><span class="pill" id="nivelTxt"></span><span class="pill" id="contaTxt"></span><span class="pill" id="erroTxt"></span></div>
+        <div class="relogio" id="relogio"><i id="relBar"></i></div>
+        <div class="cols-wrap"><div class="linha" id="linha"></div></div>
+        <div id="extra"></div>
+        <div class="acoes" id="acoes"></div>
+        <div class="fim" id="fim"></div>
+      </div>
+    </div>
+    <div>
+      <div class="cartao">
+        <h3 id="titFase"></h3>
+        <div class="lev" id="lev"></div>
+        <div class="msg" id="msg"></div>
+        <div class="cod" id="cod"></div>
+        <div id="dica" class="soAprender" style="font-size:.92rem;color:var(--muted)"></div>
+        <div class="soEsp" style="font-size:.92rem;color:var(--muted)">🏆 Especialista: sem dicas, sem a linha do código acesa e com relógio. Errou muito? Troque pro 🌱 aprender lá em cima, a qualquer momento.</div>
+      </div>
+    </div>
+  </div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const embaralha=a=>{for(let i=a.length-1;i>0;i--){const j=rnd(0,i);[a[i],a[j]]=[a[j],a[i]];}return a;};
+function vetor(n,lo,hi,dups){ // valores com alguns repetidos de propósito
+  const s=new Set(); while(s.size<n-dups) s.add(rnd(lo,hi));
+  const v=[...s]; for(let k=0;k<dups;k++) v.push(v[rnd(0,v.length-1)]);
+  return embaralha(v);
+}
+let melhor={}; try{melhor=JSON.parse(localStorage.getItem('blocos-melhor')||'{}');}catch(e){}
+function marcaJogado(){try{const k='fliperama-alg2',f=JSON.parse(localStorage.getItem(k)||'{}');f.blocos=1;localStorage.setItem(k,JSON.stringify(f));}catch(e){}}
+
+/* ================= as fases ================= */
+const FASES=[
+ {nome:'Inserção',tit:'Fase 1 · Insere: o bloco solto escorrega',
+  cod:['Ordenaᵢ(v, a, b)','  Se a ≥ b','    Devolva v','  Ordenaᵢ(v, a, b − 1)','  Insere(v, a, b)','','Insere(v, a, b)','  p ← Busca(v[b], v, a, b − 1)','  i ← b','  Enquanto i > p + 1','    Troca(v, i, i − 1)','    i ← i − 1'],
+  niveis:[{n:6,dups:1,t:0},{n:8,dups:2,t:0},{n:10,dups:2,t:3.2}],
+  dica:'O Busca da aula 5 devolve o <b>maior</b> p com v[p] ≤ v[b]. Então o bloco solto para no primeiro vizinho <b>menor ou igual</b> a ele, mesmo se for igual. <kbd>←</kbd> troca, <kbd>Enter</kbd> para.'},
+ {nome:'Seleção',tit:'Fase 2 · Mínimo com balança (caixas fechadas)',
+  cod:['Ordenaₛ(v, a, b)','  Se a ≥ b','    Devolva v','  Troca(v, a, Minimo(v, a, b))','  Devolva Ordenaₛ(v, a + 1, b)','','Minimo(v, a, b)','  m ← i ← a','  Enquanto i < b','    i ← i + 1','    Se v[i] < v[m]','      m ← i','  Devolva m'],
+  niveis:[{n:5,dups:0},{n:7,dups:0},{n:9,dups:1}],
+  dica:'As caixas estão fechadas: você só sabe o que a balança mostrar. Toque em duas caixas pra pesar. Cada pesagem é uma comparação, e o Minimo usa exatamente <b>b − a</b> por rodada. Achou a mais leve? Toque nela e aperte <b>É o mínimo</b>.'},
+ {nome:'Intercala',tit:'Fase 3 · Intercala: duas filas ordenadas, uma saída',
+  cod:['Intercala(v, a, m, b)','  i ← a','  j ← m + 1','  Para k ← 0 até b − a','    Se j > b ou (i ≤ m e v[i] ≤ v[j])','      u[k] ← v[i]','      i ← i + 1','    Senão','      u[k] ← v[j]','      j ← j + 1','  copia u em v[a..b]'],
+  niveis:[{n:8,dups:2,t:0},{n:10,dups:3,t:3.5},{n:12,dups:3,t:2.4}],
+  dica:'Compare as duas frentes (i e j) e mande o menor pra u. No empate o código usa <b>v[i] ≤ v[j]</b>: sai o da esquerda. <kbd>←</kbd> esquerda, <kbd>→</kbd> direita, ou toque no bloco da frente.'},
+ {nome:'Particiona',tit:'Fase 4 · Particiona: o cercadinho dos pequenos',
+  cod:['Particiona(v, a, b, x)','  m ← a − 1','  Para i ← a até b','    Se v[i] ≤ x','      m ← m + 1','      Troca(v, m, i)','  Devolva m'],
+  niveis:[{n:7,dups:2,t:0},{n:9,dups:2,t:3.5},{n:11,dups:3,t:2.6}],
+  dica:'O pivô é x = v[b] (amarelo). O cercadinho rosa é v[a..m]. Pra cada v[i]: se <b>v[i] ≤ x</b> ele entra (m cresce e troca com v[i]), senão passa. O próprio pivô também é testado no fim. <kbd>←</kbd> entra, <kbd>→</kbd> passa.'},
+ {nome:'Quicksort',tit:'Fase 5 · Quicksort inteiro, na ordem da recursão',
+  cod:['Ordenaq(v, a, b)','  Se a ≥ b','    Devolva v','  m ← Particiona(v, a, b, v[b])','  Ordenaq(v, a, m − 1)','  Ordenaq(v, m + 1, b)'],
+  niveis:[{n:8,dups:1},{n:11,dups:2}],
+  dica:'Você particiona e também escolhe <b>qual pedaço ordenar agora</b>: toque num bloco do pedaço. A recursão termina tudo do lado esquerdo (a, m − 1) antes de voltar pro direito, que fica esperando na pilha. Pedaços de 0 ou 1 bloco são a base.'}
+];
+
+/* ================= estado ================= */
+let F=0,L=0,S=null,timer=null,tFim=0,tDur=0,bloq=false;
+function altura(x){return 34+x*9;}
+
+function novo(){
+  clearTimer(); bloq=false;
+  const nv=FASES[F].niveis[L];
+  S={vidas:3,erros:0,comps:0,fim:false,nv};
+  $('fim').classList.remove('on');
+  if(F===0){const v=vetor(nv.n,1,19,nv.dups); S.v=[null,...v]; S.n=nv.n; S.b=2; S.i=2;}
+  if(F===1){const v=vetor(nv.n,1,19,nv.dups); S.v=[null,...v.map((x,k)=>({x,l:'ABCDEFGHIJ'[k]}))]; S.n=nv.n; S.a=1; S.sel=[]; S.rc=0; S.log=[]; S.ultimo=null;}
+  if(F===2){const n=nv.n,m=Math.ceil(n/2); let v=vetor(n,1,19,nv.dups); const E=v.slice(0,m).sort((p,q)=>p-q), D=v.slice(m).sort((p,q)=>p-q);
+    // garante pelo menos um empate entre as filas
+    if(!E.some(x=>D.includes(x))){D[rnd(0,D.length-1)]=E[rnd(0,E.length-1)];D.sort((p,q)=>p-q);}
+    S.v=[null,...E,...D]; S.n=n; S.m=m; S.i=1; S.j=m+1; S.u=[];}
+  if(F===3){let v=vetor(nv.n,1,19,0); const x=v[nv.n-1]; // repetidos do pivô
+    for(let k=0;k<nv.dups;k++){v[rnd(0,nv.n-2)]=k%2?x:v[rnd(0,nv.n-2)];}
+    S.v=[null,...v]; S.n=nv.n; S.a=1; S.b=nv.n; S.x=S.v[S.b]; S.m=0; S.i=1;}
+  if(F===4){const v=vetor(nv.n,1,19,nv.dups); S.v=[null,...v]; S.n=nv.n; S.pend=[[1,nv.n]]; S.okk=new Set(); S.part=null; S.chamadas=0;}
+  desenha(); armaTimer();
+}
+
+/* ---------- decisão correta em cada fase ---------- */
+function correta(){
+  if(F===0) return S.v[S.i-1]>S.v[S.i]?'troca':'para';
+  if(F===2) return S.v[S.i]<=S.v[S.j]?'esq':'dir';
+  if(F===3||F===4&&S.part){const P=F===3?S:S.part; return S.v[P.i]<=P.x?'entra':'passa';}
+}
+const NOMEACAO={troca:'◀ Troca com o da esquerda',para:'✔ Para aqui',esq:'◀ Sai o da esquerda',dir:'Sai o da direita ▶',entra:'◀ ≤ x: entra no cercadinho',passa:'> x: passa ▶'};
+
+function acao(a){
+  if(S.fim||bloq) return;
+  if(F===1) return;
+  if(F===4&&!S.part) return;
+  const c=correta();
+  S.comps++;
+  if(a!==c){ erro(a,c); aplica(c); }
+  else { aplica(c); }
+  if(!S.fim){desenha(); armaTimer();}
+}
+function erro(a,c,porTempo){
+  S.erros++; if(ESP()) S.vidas--;
+  diz((porTempo?'⏰ O tempo acabou. ':'')+explica(c)+' Fiz a jogada certa pra você seguir.','err');
+  sacode();
+  if(S.vidas<=0){bloq=true; setTimeout(perdeu,250);}
+}
+function explica(c){
+  let t='';
+  if(F===0){const y=S.v[S.i-1],x=S.v[S.i];
+    t+=c==='para'?(y===x?`Empate: ${y} = ${x}. O Busca acha o maior p com v[p] ≤ v[b], e o igual já serve. Então para aqui.`:`${y} ≤ ${x}: o vizinho já é menor. O bloco para aqui.`)
+                 :`${y} > ${x}: o vizinho é maior, então o ${x} ainda tem que escorregar.`;}
+  if(F===2){const p=S.v[S.i],q=S.v[S.j];
+    t+=p===q?`Empate (${p} e ${q}): o teste é v[i] ≤ v[j], então sai o da esquerda. É isso que deixa o mergesort estável.`:`O menor era ${Math.min(p,q)}, da ${c==='esq'?'esquerda':'direita'}.`;}
+  if(F===3||F===4){const P=F===3?S:S.part, y=S.v[P.i];
+    t+=c==='entra'?(y===P.x?`${y} = x: o teste é v[i] ≤ x, então o igual também entra.`:`${y} ≤ ${P.x}: entra no cercadinho.`):`${y} > ${P.x}: fica fora do cercadinho.`;}
+  return t;
+}
+/* 🤖 a máquina mostra: faz o próximo passo certo, explicando, sem custo */
+function maquina(){
+  if(!S||S.fim||bloq) return; S.maq=(S.maq||0)+1;
+  if(F===1){ // segue o Minimo: campeão m, compara com o próximo i
+    if(S.mqA!==S.a){S.mqA=S.a; S.mqM=S.a; S.mqI=S.a;}
+    if(S.mqI<S.n){ S.mqI++; S.sel=[]; S.rc=Math.min(S.rc,S.n-S.a-1); toqueSel(S.mqM); toqueSel(S.mqI);
+      if(S.v[S.mqI].x<S.v[S.mqM].x) S.mqM=S.mqI;
+      diz(`🤖 Minimo: compara o campeão com a próxima caixa. ${S.log[0]}. Campeão agora: ${S.v[S.mqM].l}.`,'ok'); S.sel=[S.mqM]; desenha(); }
+    else { S.sel=[S.mqM]; escolheMin(); }
+    return; }
+  if(F===4&&!S.part){ const [a,b]=S.pend[0]; toqueQuick(a); diz(`🤖 A recursão faz primeiro Ordenaq(v, ${a}, ${b}): é o lado esquerdo mais recente que ainda não terminou.`,'ok'); return; }
+  const c=correta(); S.comps++; const t=explica(c); aplica(c); if(!S.fim){ diz('🤖 '+t,'ok'); desenha(); armaTimer(); }
+}
+function sacode(){document.querySelectorAll('.blk.cmp').forEach(b=>{b.classList.remove('erro');void b.offsetWidth;b.classList.add('erro');});}
+
+function aplica(c){
+  if(F===0){
+    if(c==='troca'){[S.v[S.i],S.v[S.i-1]]=[S.v[S.i-1],S.v[S.i]]; S.i--; if(S.i===1) proxIns();}
+    else proxIns();
+    return;
+  }
+  if(F===2){ if(c==='esq'){S.u.push(S.v[S.i]);S.i++;} else {S.u.push(S.v[S.j]);S.j++;}
+    while(S.i<=S.m&&S.j>S.n){S.u.push(S.v[S.i]);S.i++;} while(S.j<=S.n&&S.i>S.m){S.u.push(S.v[S.j]);S.j++;}
+    if(S.u.length===S.n){ desenha(); bloq=true; const eu=S; setTimeout(()=>{if(S!==eu)return; S.v=[null,...S.u];S.u=[];S.copiado=true;bloq=false;venceu();},700);} return; }
+  const P=F===3?S:S.part;
+  if(c==='entra'){P.m++; [S.v[P.m],S.v[P.i]]=[S.v[P.i],S.v[P.m]];}
+  P.i++;
+  if(P.i>P.b){ // acabou o Particiona: o pivô está em m
+    if(F===3){ S.pronto=P.m; desenha(); venceu(); return; }
+    const m=P.m, a=P.a, b=P.b; S.okk.add(m); S.part=null;
+    const nov=[]; [[a,m-1],[m+1,b]].forEach(([p,q])=>{ if(q-p>=1) nov.push([p,q]); else if(q===p) S.okk.add(p); });
+    S.pend=[...nov,...S.pend];
+    diz(`Pivô ${S.v[m]} no lugar final (posição ${m}). ${S.pend.length?'Agora: qual pedaço a recursão ordena primeiro?':''}`,'ok');
+    if(!S.pend.length){ venceu(); }
+  }
+}
+function proxIns(){
+  S.b++; S.i=S.b;
+  if(S.b>S.n){ venceu(); return; }
+}
+
+/* ---------- seleção: toques nas caixas ---------- */
+function toqueSel(k){
+  if(S.fim||bloq||k<S.a) return;
+  const i=S.sel.indexOf(k);
+  if(i>=0){S.sel.splice(i,1);desenha();return;}
+  if(S.sel.length===2) S.sel.shift();
+  S.sel.push(k);
+  if(S.sel.length===2){
+    const orc=S.n-S.a;
+    if(S.rc>=orc){diz(`Sem pesagens nesta rodada: o Minimo de v[${S.a}..${S.n}] faz só ${orc} comparações. Use o que você já anotou e escolha.`,'err');S.sel=[k];desenha();return;}
+    const [p,q]=S.sel, A=S.v[p],B=S.v[q]; S.comps++; S.rc++;
+    const r=A.x<B.x?'<':A.x>B.x?'>':'=';
+    S.ultimo={p,q,r}; S.log.unshift(`${A.l} ${r} ${B.l}`);
+    diz(r==='='?`${A.l} e ${B.l} pesam igual.`:`${r==='<'?A.l:B.l} é mais leve que ${r==='<'?B.l:A.l}.`);
+    S.sel=[r==='>'?q:p];
+  }
+  desenha();
+}
+function escolheMin(){
+  if(S.fim||bloq||S.sel.length!==1) {if(S.sel.length!==1)diz('Toque em uma caixa só, a que você acha que é a mais leve.');return;}
+  const k=S.sel[0]; let mn=S.a; for(let i=S.a+1;i<=S.n;i++) if(S.v[i].x<S.v[mn].x) mn=i;
+  const certo=S.v[k].x===S.v[mn].x;
+  if(!certo){S.erros++; if(ESP()) S.vidas--; diz(`A caixa ${S.v[k].l} não era a mais leve: era a ${S.v[mn].l} (${S.v[mn].x}). Pense no Minimo: guarde o campeão m e compare cada caixa só com ele.`,'err'); }
+  else diz(`Isso! ${S.v[k].l} = ${S.v[k].x} é o mínimo de v[${S.a}..${S.n}]. Troca com v[${S.a}].`,'ok');
+  const m=certo?k:mn; [S.v[S.a],S.v[m]]=[S.v[m],S.v[S.a]]; S.a++; S.sel=[]; S.rc=0; S.ultimo=null;
+  if(S.a===S.n) S.a++; // sobrou um: base
+  if(S.vidas<=0){desenha();setTimeout(perdeu,250);return;}
+  if(S.a>S.n){desenha();venceu();return;}
+  desenha();
+}
+
+/* ---------- quicksort: escolher o pedaço ---------- */
+function toqueQuick(k){
+  if(S.fim||bloq||S.part) return;
+  const alvo=S.pend[0]; const seg=S.pend.find(([a,b])=>k>=a&&k<=b);
+  if(!seg){ if(S.okk.has(k)) diz('Esse bloco já está no lugar final.'); return; }
+  S.chamadas++;
+  if(seg!==alvo){ S.erros++; if(ESP()) S.vidas--;
+    diz(`A recursão ainda não chegou em v[${seg[0]}..${seg[1]}]. Ordenaq chama primeiro o lado esquerdo e só volta pro direito quando o esquerdo inteiro termina: o próximo é v[${alvo[0]}..${alvo[1]}].`,'err');
+    if(S.vidas<=0){desenha();setTimeout(perdeu,250);return;} }
+  else diz(`Ordenaq(v, ${alvo[0]}, ${alvo[1]}): particiona com pivô v[${alvo[1]}] = ${S.v[alvo[1]]}.`);
+  S.pend.shift(); const [a,b]=alvo; S.part={a,b,x:S.v[b],m:a-1,i:a};
+  desenha(); armaTimer();
+}
+
+/* ---------- toque num bloco ---------- */
+function toqueBloco(k){
+  if(F===1) return toqueSel(k);
+  if(F===4&&!S.part) return toqueQuick(k);
+  if(F===2){ if(k===S.i) acao('esq'); else if(k===S.j) acao('dir'); return; }
+}
+
+/* ---------- relógio ---------- */
+function tempo(){ if(!ESP()) return 0; const T=[[4,3.5,3],null,[4,3.2,2.4],[4,3.2,2.6],[4.5,3.5]][F]; return T?T[L]:0; }
+function clearTimer(){ if(timer){cancelAnimationFrame(timer);timer=null;} $('relogio').style.visibility='hidden'; }
+function armaTimer(){
+  clearTimer(); const t=tempo(); if(!t||S.fim) return;
+  if(F===4&&!S.part) return;
+  $('relogio').style.visibility='visible'; tDur=t*1000; tFim=performance.now()+tDur;
+  const passo=now=>{ const r=Math.max(0,(tFim-now)/tDur); $('relBar').style.transform=`scaleX(${r})`;
+    if(r<=0){ timer=null; if(S.fim||bloq) return; const c=correta(); S.comps++; erro(null,c,true); aplica(c); if(!S.fim){desenha();armaTimer();} return; }
+    timer=requestAnimationFrame(passo); };
+  timer=requestAnimationFrame(passo);
+}
+
+/* ---------- fim de nível ---------- */
+function estrelas(){return S.erros===0?3:S.erros<=2?2:1;}
+function venceu(){
+  S.fim=true; clearTimer(); desenha();
+  const esp=ESP(), e=estrelas(), key=F+'-'+L; if(esp&&!(melhor[key]>=e)){melhor[key]=e; try{localStorage.setItem('blocos-melhor',JSON.stringify(melhor));}catch(x){}}
+  marcaJogado(); fasesBar(); levBar();
+  const ult=L===FASES[F].niveis.length-1, prox=ult?(F<FASES.length-1?'Próxima fase ▶':null):'Próximo nível ▶';
+  const fala=[
+   ()=>`Inserção completa: ${S.comps} comparações. Pior caso pra n = ${S.n}: n(n − 1)/2 = ${S.n*(S.n-1)/2}. Melhor caso (já ordenado): n − 1 = ${S.n-1}.`,
+   ()=>`Seleção completa: ${S.comps} pesagens. O Minimo sempre faz n(n − 1)/2 = ${S.n*(S.n-1)/2}, não importa a entrada.`,
+   ()=>`Intercalado: ${S.comps} comparações de verdade, e o laço rodou n = ${S.n} vezes. Intercala é Θ(n).`,
+   ()=>`O pivô ${S.x} caiu na posição ${S.pronto}, que é o lugar dele no vetor ordenado. Particiona devolve m = ${S.pronto}, com n = ${S.n} comparações.`,
+   ()=>`Ordenado! ${S.comps} comparações e ${S.chamadas} escolhas de pedaço. Pior caso do quicksort: n(n − 1)/2 = ${S.n*(S.n-1)/2}; caso médio ≈ n lg n.`][F]();
+  $('fim').innerHTML=`<div><h2>${esp?(S.erros===0?'Perfeito!':'Nível concluído'):'🌱 Concluído no modo aprender'}</h2>${esp?`<div class="estrelas">${'⭐'.repeat(e)}${'☆'.repeat(3-e)}</div>`:''}
+    <p>${fala}</p><p style="color:var(--muted)">${S.erros} ${S.erros===1?'erro':'erros'}${S.maq?` · a máquina mostrou ${S.maq} ${S.maq===1?'passo':'passos'}`:''}</p>
+    ${esp?'':`<p>Acha que pegou? Tente este nível no especialista: é lá que as estrelas contam.</p>`}
+    <div class="acoes"><button class="btn" onclick="novo()">↻ De novo (vetor novo)</button>${esp?'':`<button class="btn pes" onclick="setModo('especialista')">🏆 Tentar no especialista</button>`}${prox?`<button class="btn pri" onclick="avanca()">${prox}</button>`:''}</div></div>`;
+  const eu=S; setTimeout(()=>{if(S===eu)$('fim').classList.add('on');},F===2?50:500);
+}
+function perdeu(){
+  S.fim=true; clearTimer(); desenha();
+  $('fim').innerHTML=`<div><h2>Acabaram as vidas</h2><p>Leia a dica do lado e tente de novo. Os vetores mudam a cada tentativa.</p>
+    <div class="acoes"><button class="btn" onclick="setModo('aprender')">🌱 Rever no aprender</button><button class="btn pri" onclick="novo()">↻ Tentar de novo</button></div></div>`;
+  $('fim').classList.add('on');
+}
+function avanca(){ if(L<FASES[F].niveis.length-1) L++; else {F++;L=0;} trocaFase(); }
+
+/* ================= desenho ================= */
+function diz(t,c){const m=$('msg'); m.innerHTML=t; m.className='msg'+(c?' '+c:'');}
+function linhaCod(){
+  if(F===0) return S.fim?-1:(S.i>1?9:4);
+  if(F===1) return S.sel.length===1&&S.ultimo?11:10;
+  if(F===2) return S.fim?10:4;
+  if(F===3) return S.fim?6:3;
+  if(F===4) return S.part?3:(S.pend.length?4:-1);
+}
+function desenha(){
+  const fa=FASES[F];
+  $('vidas').textContent=ESP()?'❤️'.repeat(Math.max(0,S.vidas))+'🤍'.repeat(3-Math.max(0,S.vidas)):'🌱';
+  $('nivelTxt').textContent=`${fa.nome} · nível ${L+1}`;
+  $('contaTxt').textContent=`comparações: ${S.comps}`;
+  $('erroTxt').textContent=`erros: ${S.erros}`;
+  const lc=linhaCod();
+  $('cod').innerHTML=fa.cod.map((l,k)=>`<div class="${k===lc?'on':''}">${l||' '}</div>`).join('');
+  const L1=$('linha'); let h=''; const ptrs={};
+  for(let k=1;k<=S.n;k++){
+    let cls='blk', txt='', alt=0, ptr='', gap='';
+    if(F===0){ const x=S.v[k]; alt=altura(x); txt=x;
+      if(S.fim||k<=S.b) cls+=' ok';
+      if(!S.fim&&k===S.i){cls=cls.replace(' ok','')+' solto'; ptr='i';}
+      if(!S.fim&&k===S.i-1){cls+=' cmp';}
+      if(!S.fim&&k>S.b) cls+=' fora'; }
+    if(F===1){ const o=S.v[k];
+      if(k<S.a||S.fim){alt=altura(o.x);txt=o.x;cls+=' ok';}
+      else {alt=96;cls+=' caixa';txt=`<span style="font-size:1.3em">${o.l}</span>`; if(S.sel.includes(k))cls+=' cmp';
+        if(S.ultimo&&(S.ultimo.p===k||S.ultimo.q===k)&&!S.sel.includes(k)) cls+=' sel';}
+      if(k===S.a&&!S.fim) ptr='a'; }
+    if(F===2){ const x=S.v[k]; alt=altura(x); txt=x;
+      if(S.copiado){cls+=' ok';}
+      else { const usado=k<=S.m?k<S.i:k<S.j; if(usado) cls+=' fora';
+        if(k===S.i&&S.i<=S.m){cls+=' cmp';ptr='i';} if(k===S.j&&S.j<=S.n){cls+=' cmp';ptr='j';} }
+      if(k===S.m+1) gap=' gap'; }
+    if(F===3){ const x=S.v[k]; alt=altura(x); txt=x;
+      if(S.fim){cls+=k===S.pronto?' piv':(k<S.pronto?' cerca':'');}
+      else { if(k===S.b) cls+=' piv'; else if(k<=S.m) cls+=' cerca'; if(k===S.i){cls+=' cmp';}
+        const pp=[]; if(k===S.i)pp.push('i'); if(k===S.m)pp.push('m'); ptr=pp.join(' '); } }
+    if(F===4){ const x=S.v[k]; alt=altura(x); txt=x; const P=S.part;
+      if(S.okk.has(k)||S.fim) cls+=' ok';
+      else if(P&&k>=P.a&&k<=P.b){ if(k===P.b) cls+=' piv'; else if(k<=P.m) cls+=' cerca'; if(k===P.i) cls+=' cmp';
+        const pp=[]; if(k===P.i)pp.push('i'); if(k===P.m)pp.push('m'); ptr=pp.join(' '); }
+      else if(P) cls+=' fora'; }
+    h+=`<div class="col${gap}"><div class="${cls}" style="height:${alt}px" data-k="${k}">${txt}</div><div class="ind">${k}</div>${ptr?`<div class="ptr">${ptr}</div>`:''}</div>`;
+  }
+  L1.innerHTML=h;
+  L1.querySelectorAll('.blk').forEach(b=>b.onclick=()=>toqueBloco(+b.dataset.k));
+  // extras
+  let ex='';
+  if(F===2&&!S.copiado){ ex=`<div class="urow"><span class="lbl">u</span>${Array.from({length:S.n},(_,k)=>k<S.u.length?`<div class="col"><div class="blk ok" style="height:${altura(S.u[k])*.55}px;font-size:13px">${S.u[k]}</div></div>`:'<div class="slot"></div>').join('')}</div>`; }
+  if(F===1&&!S.fim){ const u=S.ultimo, orc=S.n-S.a;
+    const tilt=u?(u.r==='<'?-12:u.r==='>'?12:0):0;
+    ex=`<div class="balanca"><svg viewBox="0 0 240 96"><polygon points="120,30 106,86 134,86" fill="#c9a777"/><rect x="92" y="84" width="56" height="8" rx="4" fill="#b08b58"/>
+      <g class="beam" style="transform:rotate(${tilt}deg)"><rect x="20" y="27" width="200" height="6" rx="3" fill="#8a6239"/>
+      <line x1="34" y1="30" x2="34" y2="52" stroke="#8a6239" stroke-width="2"/><line x1="206" y1="30" x2="206" y2="52" stroke="#8a6239" stroke-width="2"/>
+      <path d="M12 52 h44 a22 10 0 0 1 -44 0z" fill="#f4dfbf" stroke="#c9a777"/><path d="M184 52 h44 a22 10 0 0 1 -44 0z" fill="#f4dfbf" stroke="#c9a777"/>
+      <text x="34" y="50" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="18" fill="#7a5a32">${u?S.v[u.p]?.l??'':''}</text>
+      <text x="206" y="50" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="18" fill="#7a5a32">${u?S.v[u.q]?.l??'':''}</text></g>
+      <circle cx="120" cy="30" r="5" fill="#8a6239"/></svg></div>
+      <div style="text-align:center;font-weight:600;color:var(--titulo)">rodada v[${S.a}..${S.n}] · pesagens ${S.rc} de ${orc}</div>
+      <div class="log soAprender">${S.log.length?S.log.slice(0,14).join('<br>'):'anotações da balança aparecem aqui'}</div>`; }
+  if(F===4&&!S.part&&!S.fim){ ex=`<div style="text-align:center;margin-top:10px;font-weight:600;color:var(--titulo)">👆 toque num bloco do pedaço que a recursão ordena agora</div>
+     <div style="text-align:center;color:var(--muted);font-size:.92rem">pedaços esperando: ${S.pend.length}</div>`; }
+  if(F===4&&S.part) ex=`<div style="text-align:center;margin-top:8px;color:var(--titulo);font-weight:600">Particiona(v, ${S.part.a}, ${S.part.b}, ${S.part.x})</div>`;
+  if(F===3&&!S.fim) ex=`<div style="text-align:center;margin-top:8px;color:var(--titulo);font-weight:600">x = ${S.x} · m = ${S.m}</div>`;
+  $('extra').innerHTML=ex;
+  // botões
+  let ac=[];
+  if(!S.fim){
+    if(F===0) ac=['troca','para'];
+    if(F===2) ac=['esq','dir'];
+    if(F===3||(F===4&&S.part)) ac=['entra','passa'];
+  }
+  $('acoes').innerHTML=ac.map(a=>`<button class="btn ${a==='troca'||a==='esq'||a==='entra'?'pes':'pri'}" data-a="${a}">${NOMEACAO[a]}</button>`).join('')+
+    (F===1&&!S.fim?`<button class="btn pri" id="bMin">✔ É o mínimo</button>`:'')+
+    (!S.fim?`<button class="btn maqBt soAprender" id="bMaq">🤖 a máquina mostra</button>`:'');
+  $('acoes').querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>acao(b.dataset.a));
+  if($('bMin')) $('bMin').onclick=escolheMin;
+  if($('bMaq')) $('bMaq').onclick=maquina;
+}
+
+/* ================= barra de fases ================= */
+function somaEst(f){return FASES[f].niveis.reduce((s,_,l)=>s+(melhor[f+'-'+l]||0),0);}
+function fasesBar(){
+  $('fases').innerHTML=FASES.map((fa,f)=>`<button class="chip${f===F?' on':''}" data-f="${f}">${f+1}. ${fa.nome}<small>${somaEst(f)}/${fa.niveis.length*3}⭐</small></button>`).join('');
+  $('fases').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{F=+b.dataset.f;L=0;trocaFase();});
+}
+function levBar(){
+  $('lev').innerHTML=FASES[F].niveis.map((nv,l)=>`<button class="${l===L?'on':''}" data-l="${l}">nível ${l+1} ${melhor[F+'-'+l]?'⭐'.repeat(melhor[F+'-'+l]):''}</button>`).join('');
+  $('lev').querySelectorAll('button').forEach(b=>b.onclick=()=>{L=+b.dataset.l;trocaFase();});
+}
+function trocaFase(){
+  fasesBar(); levBar(); $('titFase').textContent=FASES[F].tit; $('dica').innerHTML=FASES[F].dica;
+  novo();
+  diz(['Os blocos verdes já estão ordenados. O laranja é o v[b] solto: ele compara com o vizinho da esquerda.',
+       'Comece pesando duas caixas. O Minimo guarda o campeão m e compara cada caixa com ele.',
+       'As duas metades já estão ordenadas. Compare as frentes i e j.',
+       'O primeiro teste é v[a] contra o pivô.',
+       'Toque num bloco pra chamar Ordenaq(v, 1, n).'][F]);
+}
+document.addEventListener('keydown',e=>{
+  if(!S||S.fim) return;
+  const m={ArrowLeft:F===0?'troca':F===2?'esq':'entra',ArrowRight:F===2?'dir':F>=3?'passa':null,Enter:F===0?'para':null};
+  const a=m[e.key]; if(a&&(F!==1)){e.preventDefault();acao(a);}
+});
+const q=new URLSearchParams(location.search); if(q.get('fase')){F=Math.min(4,Math.max(0,+q.get('fase')-1));}
+window.addEventListener('modo',()=>{ trocaFase(); diz(ESP()?'🏆 Especialista: relógio, 3 vidas e nenhuma dica. Boa!':'🌱 Aprender: sem relógio e sem perder vida. Use 🤖 quando travar.'); });
+trocaFase();
+</script>
+<script src="canto.js"></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+Algoritmos II com jogos e animações (c) 2026 01bambiraptor
+Feito a partir do material da disciplina CI1056 (Algoritmos e Estruturas de Dados II), UFPR
+
+Esta obra é licenciada sob a
+Creative Commons Atribuição-NãoComercial-CompartilhaIgual 4.0 Internacional
+(Attribution-NonCommercial-ShareAlike 4.0 International, CC BY-NC-SA 4.0).
+
+Texto da licença: https://creativecommons.org/licenses/by-nc-sa/4.0/
+Texto legal oficial (inglês): https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode.txt
+
+Em resumo, você pode copiar, redistribuir e adaptar este material desde que:
+  - dê o crédito a este projeto, com link para a licença e indicando as mudanças;
+  - não use para fins comerciais;
+  - distribua as adaptações sob a mesma licença.
+
+NÃO fazem parte desta licença, e seguem os termos dos próprios autores:
+  - os códigos em C das aulas (heap.c, all-binary-strings.c, all-subsets.c, cavalo.c,
+    labirinto.c, quicksort-iterativo-e-recursivo.c) e os pseudocódigos das notas de aula,
+    material do professor André Vignatti (UFPR);
+  - os enunciados das listas de exercícios 1, 2 e 3 citados em idioma.html, dos professores
+    Marcos Castilho, André Vignatti e Daniel Oliveira (UFPR).

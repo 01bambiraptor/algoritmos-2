@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · feito a partir do material da disciplina CI1056 (UFPR) · CC BY-NC-SA 4.0 · veja LICENSE.txt -->
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tópico 18: Removendo Recursividade</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>:root{--titulo:#2f5d7c;--ceu:#e7f2fb;--gelo:#f2f7fb;--pessego:#ffd6b0;--rosa:#fdecef;--ink:#2b3440;--muted:#6b7785;--borda:#d5e6f3}
+body{margin:0;font-family:'Fredoka',system-ui,sans-serif;color:var(--ink);background:var(--gelo);font-size:17px;line-height:1.55}
+header{position:sticky;top:0;z-index:20;background:#fffffff0;border-bottom:2px solid var(--borda)}
+.top{display:flex;align-items:center;gap:12px;padding:10px 18px;flex-wrap:wrap}.top h1{margin:0;font-size:1.45rem;color:var(--titulo)}
+.voltar,.btn{font:inherit;font-weight:600;text-decoration:none;color:var(--titulo);background:var(--ceu);border-radius:12px;padding:8px 14px;display:inline-block}
+.btn.pri{background:#1f4560;color:#fff}
+main{max-width:1080px;margin:0 auto;padding:10px 18px 60px}
+section{background:#fff;border-radius:22px;padding:22px 24px;margin:18px 0;border:1px solid var(--borda)}
+section h2{color:var(--titulo);margin:0 0 8px}
+.cod{font-family:'JetBrains Mono',monospace;font-size:.86rem;white-space:pre;background:#f8fbfe;border:2px solid var(--borda);border-radius:14px;padding:12px 16px;overflow-x:auto;line-height:1.6}
+.cod i{color:#8a9aa8;font-style:normal}</style></head>
+<body data-arquivo="t18.html" data-eu="../18-removendo-recursividade/index.html" data-titulo="Removendo Recursividade" data-topico="18" data-ordem='[["../01-introducao-a-recursao/index.html", "Introdução à Recursão"], ["../02-minimo-de-vetor/index.html", "Mínimo de Vetor"], ["../03-busca-em-vetor/index.html", "Busca em Vetor"], ["../04-busca-em-vetor-ordenado/index.html", "Busca em Vetor Ordenado"], ["../05-busca-binaria/index.html", "Busca Binária"], ["../06-insertion-sort/index.html", "Insertion Sort"], ["../07-selection-sort/index.html", "Selection Sort"], ["../08-merge-sort/index.html", "Merge Sort"], ["../09-quick-sort/index.html", "Quick Sort"], ["../10-arvores-binarias-quase-completas/index.html", "Árvores Binárias (Quase) Completas"], ["../11-heap-binario/index.html", "Heap Binário"], ["../12-heapsort/index.html", "Análise do Heap Binário e HeapSort"], ["../13-implementacao-do-heap/index.html", "Implementação do Heap Binário"], ["../14-todos-vetores-binarios/index.html", "Todos Vetores Binários"], ["../15-todos-subconjuntos/index.html", "Todos Subconjuntos"], ["../16-passeio-do-cavalo/index.html", "Passeio do Cavalo"], ["../17-labirinto/index.html", "Labirinto"], ["../18-removendo-recursividade/index.html", "Removendo Recursividade"], ["../19-quicksort-iterativo/index.html", "Quicksort Iterativo"]]'>
+<header><div class="top"><a class="voltar" href="../index.html">← Tópicos</a><h1>📖 Removendo Recursividade</h1></div></header>
+<main><section><h2>Recursão de cauda vira laço</h2>
+<p>Quando a chamada recursiva é a <b>última coisa</b> que a função faz (recursão de cauda), nada precisa ser lembrado depois que ela volta. Então dá pra trocar a chamada por um <b>laço</b>: em vez de chamar de novo com novos parâmetros, só atualiza as variáveis e repete.</p>
+<div class="cod">BuscaBinariaI(x, v, a, b)
+  enquanto a ≤ b
+    m ← ⌊(a + b) / 2⌋
+    se x = v[m]: devolva m
+    se x &lt; v[m]: b ← m − 1      <i>// era: devolva BuscaBinaria(x, v, a, m − 1)</i>
+    senão: a ← m + 1             <i>// era: devolva BuscaBinaria(x, v, m + 1, b)</i>
+  devolva NÃO</div>
+<p>O Fibonacci recursivo não é de cauda (soma o resultado de duas chamadas), mas com dois acumuladores passados como parâmetro ele vira de cauda, e aí vira laço também.</p></section>
+<section><h2>E quando não é de cauda? Pilha explícita</h2>
+<p>A técnica geral da aula: põe o algoritmo dentro de um laço e usa uma <b>pilha sua</b> pra guardar o "mini-ambiente" de cada chamada pendente (só os dados do problema). Empilha no começo, desempilha no fim de cada volta. Comparado com a pilha do sistema, que guarda também registradores e endereço de volta, a sua pilha guarda só o necessário.</p>
+<p><a class="btn pri" href="../bolhas.html?fase=1">🫧 Jogar: Bolhas da Pilha, fase 1 (busca binária sem recursão) ▸</a></p></section>
+<section><h2>Material da disciplina</h2><p><a class="btn" href="http://www.inf.ufpr.br/vignatti/v/cursos/ci1056/a14.pdf">aula ↗</a> <a class="btn" href="http://www.inf.ufpr.br/vignatti/v/cursos/ci1056/s14.pdf">slides ↗</a> </p></section></main>
+<script src="../aula-fatia.js"></script></body></html>

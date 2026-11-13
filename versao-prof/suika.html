@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · feito a partir do material da disciplina CI1056 (UFPR) · CC BY-NC-SA 4.0 · veja LICENSE.txt -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#fff4e4">
+<title>Suika da Heap</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#2d2a26;--muted:#7a7266;--card:#fffdf8;--red:#e0483a;--ok:#2f9e5a;--gold:#f0a81c;--blue:#2c7be5;--orange:#e8590c}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:none}
+body{font-family:'Fredoka',system-ui,sans-serif;color:var(--ink);background:radial-gradient(circle at 15% 10%,#ffe3ec 0,transparent 40%),radial-gradient(circle at 90% 30%,#e3f6e8 0,transparent 40%),#fff6e8 fixed}
+header{display:flex;align-items:center;gap:12px;padding:14px 20px 4px;flex-wrap:wrap}
+h1{margin:0;font-size:1.9rem;font-weight:700}
+h1 span{color:var(--orange)}
+.sub{color:var(--muted);margin:0 20px 8px;font-size:1rem}
+.btn{font:inherit;font-weight:600;border-radius:14px;border:2px solid #e2d4bb;background:var(--card);padding:10px 16px;min-height:50px;cursor:pointer;color:var(--ink);font-size:1.03rem;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:transform .08s}
+.btn:active{transform:scale(.95)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.verde{background:var(--ok);border-color:#23804a;color:#fff}
+.btn.laranja{background:#ff922b;border-color:#e8590c;color:#fff}
+.btn.azul{background:var(--blue);border-color:#1b5fbd;color:#fff}
+.btn.main{background:var(--gold);border-color:#d8920f;color:#3a2600}
+.tabs{display:flex;gap:6px;background:#efe1c8;padding:5px;border-radius:16px;margin-left:auto}
+.tab{border:0;background:transparent;font:inherit;padding:11px 18px;border-radius:12px;cursor:pointer;color:var(--muted);font-weight:600;font-size:1.02rem}
+.tab.on{background:var(--card);color:var(--ink);box-shadow:0 2px 6px #0001}
+main{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(320px,1fr);gap:18px;padding:6px 20px 30px}
+@media (orientation:portrait),(max-width:980px){main{grid-template-columns:1fr;padding-bottom:140px}
+  #controles{position:fixed;left:0;right:0;bottom:0;z-index:20;background:#fff8ecf2;box-shadow:0 -4px 14px #0002;padding:12px 16px calc(12px + env(safe-area-inset-bottom));backdrop-filter:blur(6px);justify-content:center}}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:6px 20px}
+.card{background:var(--card);border-radius:18px;padding:14px 16px;box-shadow:0 2px 10px #0000000f;border:1px solid #f0e2c8}
+.card h3{margin:0 0 8px;font-size:1.08rem;cursor:pointer;display:flex;justify-content:space-between}
+.card h3::after{content:'▾';color:var(--muted)}
+.card.fechado h3::after{content:'▸'}
+.card.fechado>:not(h3){display:none!important}
+.card.fechado h3{margin:0}
+.lado{display:flex;flex-direction:column;gap:14px}
+.msg{font-size:1.1rem;line-height:1.45;min-height:58px;padding:12px 14px;border-radius:14px;background:#eef7ff;border:2px solid #cfe6fb}
+.msg.ruim{background:#fdecea;border-color:#f5b7ae;color:#9b2a1e}
+.msg.bom{background:#e5f6ec;border-color:#a9dcbc;color:#1f6e3f}
+/* caixote */
+.caixote{position:relative;height:420px;border-radius:24px;background:linear-gradient(#fff9ef,#ffeccd);border:10px solid #d9a066;box-shadow:inset 0 0 0 3px #f3c891,0 6px 18px #0001;overflow:hidden}
+.caixote svg.arestas{position:absolute;inset:0;width:100%;height:100%}
+.vaga{position:absolute;width:38px;height:38px;border-radius:50%;border:2px dashed #e0c49b;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;font-size:.8rem;color:#c9a978;font-weight:600}
+.fruta{position:absolute;transform:translate(-50%,-50%);border-radius:50%;display:flex;align-items:center;justify-content:center;
+  transition:left .42s cubic-bezier(.4,1.3,.6,1),top .42s cubic-bezier(.4,1.3,.6,1),width .3s,height .3s,box-shadow .2s;box-shadow:0 3px 0 #0000001a;z-index:3}
+.fruta .em{line-height:1}
+.fruta .v{position:absolute;bottom:-6px;right:-6px;background:#fff;border-radius:10px;font-size:.8rem;font-weight:700;padding:0 6px;border:2px solid #0000001f}
+.fruta.cur{box-shadow:0 0 0 5px var(--gold),0 0 20px #f0a81c;z-index:5}
+.fruta.cmp{box-shadow:0 0 0 5px var(--blue),0 0 16px #2c7be588;z-index:4}
+.fruta.sai{animation:colhe .55s forwards}
+@keyframes colhe{50%{transform:translate(-50%,-90%) scale(1.25)}100%{transform:translate(-50%,-200%) scale(.4);opacity:0}}
+.fruta.amassa{animation:amassa .45s}
+@keyframes amassa{25%{transform:translate(-50%,-50%) scale(1.25,.75)}60%{transform:translate(-50%,-50%) scale(.9,1.1)}}
+.prox{position:absolute;top:10px;right:12px;background:#fff;border-radius:14px;padding:6px 10px;box-shadow:0 2px 6px #0001;display:flex;align-items:center;gap:6px;font-size:.85rem;color:var(--muted);z-index:6}
+.prox .bola{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px}
+.regra{position:absolute;left:12px;top:10px;background:#fff;border-radius:12px;padding:5px 10px;font-size:.85rem;color:var(--muted);z-index:6}
+/* vetor */
+.vetor{display:grid;grid-template-columns:repeat(15,1fr);gap:3px;margin-top:12px}
+.cel{background:#fff;border:2px solid #efe0c6;border-radius:9px;text-align:center;padding:2px 0 4px;min-width:0}
+.cel .i{font-size:.7rem;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.cel .f{font-size:1.15rem;height:24px}
+.cel .n{font-size:.72rem;font-weight:700}
+.cel.vazia{opacity:.4}
+.cel.cur{border-color:var(--gold);background:#fff4d6}
+.cel.cmp{border-color:var(--blue);background:#e8f1ff}
+.dicaVet{font-size:.85rem;color:var(--muted);margin-top:6px}
+.cesta{display:flex;flex-wrap:wrap;gap:4px;min-height:40px;align-items:center;font-size:1.5rem}
+.cesta small{font-size:.8rem;color:var(--muted)}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.stat{flex:1;min-width:76px;background:#f8ecd8;border-radius:12px;padding:6px 8px;text-align:center}
+.stat b{display:block;font-size:1.4rem}
+.stat small{color:var(--muted);font-size:.78rem}
+pre.code{margin:0;font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:1.6;background:#fbf6ea;border-radius:12px;padding:8px 0;overflow-x:auto;max-height:420px}
+pre.code div{padding:0 12px;white-space:pre;border-left:5px solid transparent;min-height:1em}
+pre.code div.on{background:#ffe7a8;border-left-color:var(--gold)}
+.cm{color:#9a8f7d}
+.ideia{font-size:.98rem;line-height:1.5}
+.ideia p{margin:4px 0}
+.vel{display:flex;align-items:center;gap:6px;color:var(--muted)}
+.vel input{width:150px;height:34px}
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:30;background:#fff8;backdrop-filter:blur(2px)}
+.overlay .box{background:#fff;border-radius:22px;padding:20px 24px;max-width:420px;text-align:center;box-shadow:0 10px 30px #0003;border:3px solid var(--red)}
+.overlay h2{margin:0 0 6px;font-size:1.8rem}
+.cel.ord{background:#eaf6ee;border-color:#bfe3c8;opacity:.75}
+.cel.ord .i{color:#2f9e5a}
+.seg{display:inline-flex;background:#f3e6cf;border-radius:12px;padding:3px;gap:3px;vertical-align:middle}
+.seg button{border:0;background:transparent;font:inherit;font-size:.88rem;padding:6px 10px;border-radius:9px;cursor:pointer;color:var(--muted);font-weight:600}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px #0001}
+.vetHead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.hide{display:none!important}
+</style>
+<script src="modo.js"></script>
+</head>
+<body>
+<header>
+  <a class="btn" href="index.html" >🕹 Início</a>
+  <h1>Suika da <span>Heap</span></h1>
+  <div class="tabs">
+    <button class="tab on" data-modo="jogar">🎮 Você é a heap</button>
+    <button class="tab" data-modo="ver">▶ Assistir o heapsort</button>
+  </div>
+</header>
+<p class="sub">Com o código das aulas 11 a 13 e o <code>heap.c</code>: todo pai é maior ou igual aos filhos, então a maior fruta fica no topo. A nova entra no fim e <b>sobe</b>; colheu o topo, o <b>max-heapify</b> faz a de cima afundar.</p>
+
+<div style="max-width:1200px;margin:0 auto;padding:0 18px 10px"><span id="modoSlot" data-ap='sem perder fruta e com as fórmulas de pai e filhos' data-esp='3 vidas e sem as fórmulas de pai e filhos'></span></div>
+<main>
+  <section>
+    <div class="card" style="margin-bottom:12px"><div class="msg" id="msg"></div></div>
+    <div class="caixote" id="caixote">
+      <svg class="arestas" id="arestas"></svg>
+      <div class="regra">v[pai(i)] ≥ v[i]</div>
+      <div class="prox" id="proxBox">próxima <div class="bola" id="prox"></div></div>
+      <div class="overlay hide" id="overlay"><div class="box" id="ovBox"></div></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="vetHead"><div style="font-weight:600">O vetor da heap <span style="color:var(--muted);font-weight:400">(é assim que ela fica na memória)</span></div>
+        <div class="seg" id="segBase"><button data-b="1" class="on">índice 1 (notas de aula)</button><button data-b="0">índice 0 (heap.c)</button></div></div>
+      <div class="vetor" id="vetor"></div>
+      <div class="dicaVet soAprender"><span id="formulas"></span> <span id="dicaI"></span></div>
+    </div>
+  </section>
+
+  <aside class="lado">
+    <div class="card" id="cardIdeia">
+      <h3>💡 A ideia</h3>
+      <div class="ideia">
+        <p>Um caixote de frutas em casinhas que segue a <b>propriedade de heap</b> da aula 12: <code>v[pai(i)] ≥ v[i]</code>. Entre irmãos não tem ordem nenhuma, só entre pai e filho. Mesmo assim, a maior fruta sempre fica no topo.</p>
+        <p>As casinhas formam uma <b>árvore binária quase completa</b> (aula 11): enchem por nível, da esquerda pra direita. Por isso cabem num vetor, e pai e filhos são só contas com o índice.</p>
+        <p><b>Soltar</b> é o <code>insere</code> do <code>heap.c</code>: entra no fim e troca com o pai enquanto for maior.<br><b>Colher</b> é o passo do heapsort: troca o topo com o último e chama <code>max-heapify</code>, que desce trocando com o <b>maior</b> filho.</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="stats">
+        <div class="stat"><b id="sN">0</b><small>frutas na heap</small></div>
+        <div class="stat"><b id="sTrocas">0</b><small>trocas</small></div>
+        <div class="stat jogo"><b id="sPts">0</b><small>pontos</small></div>
+        <div class="stat jogo"><b id="sVidas">🍉🍉🍉</b><small>antes de amassar</small></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>🧺 Cesta (o que foi colhido)</h3>
+      <div class="cesta" id="cesta"></div>
+      <div class="dicaVet soAprender" id="cestaDica"></div>
+    </div>
+    <div class="card">
+      <h3>🧩 O código do professor</h3>
+      <pre class="code" id="codigo"></pre>
+    </div>
+  </aside>
+</main>
+
+<div class="bar" id="controles"></div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const FR=[null,
+ {e:'🫐',c:'#d6dcf5'},{e:'🍒',c:'#ffd3d6'},{e:'🍓',c:'#ffd0e0'},{e:'🍇',c:'#ead3f2'},
+ {e:'🍋',c:'#fff4a8'},{e:'🍊',c:'#ffe1b8'},{e:'🍎',c:'#ffcfcf'},{e:'🍑',c:'#ffd6b0'},
+ {e:'🍍',c:'#fff0c0'},{e:'🍈',c:'#e1f0cf'},{e:'🍉',c:'#cdeccf'}];
+const MAXN=15;
+let B=1;                                   // 1 = notas de aula, 0 = heap.c
+const d=i=>i-1+B;                          // índice que aparece pro aluno
+const fPai=()=>B?'i / 2':'(i − 1) / 2', fEsq=()=>B?'2i':'2i + 1', fDir=()=>B?'2i + 1':'2i + 2';
+const nomeF=f=>`${FR[f.k].e}${f.v}`;
+let nextId=1;
+const nova=()=>{const r=Math.random();const v=r<.5?1+Math.floor(Math.random()*5):r<.85?5+Math.floor(Math.random()*4):9+Math.floor(Math.random()*3);return {id:nextId++,v,k:v};};
+
+/* ---------- código do professor ---------- */
+const COD1=[
+ ['insere(v, x, n)          // heap.c, no índice 1',''],
+ ['  n ← n + 1;  v[n] ← x','ins-poe'],
+ ['  i ← n','ins-poe'],
+ ['  enquanto i ≠ 1 e v[pai(i)] < v[i]','ins-while'],
+ ['    troca(v[pai(i)], v[i])','ins-troca'],
+ ['    i ← pai(i)','ins-troca'],
+ ['',''],
+ ['max-heapify(v, i, n)      // aula 12',''],
+ ['  esq ← esquerda(i)','mh-esq'],
+ ['  dir ← direita(i)','mh-esq'],
+ ['  se esq ≤ n e v[esq] > v[i] então','mh-esq'],
+ ['    maior ← esq','mh-esq'],
+ ['  senão','mh-esq'],
+ ['    maior ← i','mh-esq'],
+ ['  se dir ≤ n e v[dir] > v[maior] então','mh-dir'],
+ ['    maior ← dir','mh-dir'],
+ ['  se maior ≠ i então','mh-se'],
+ ['    troca(v[i], v[maior])','mh-troca'],
+ ['    max-heapify(v, maior, n)','mh-rec'],
+ ['',''],
+ ['build-max-heap(v, n)      // aula 12',''],
+ ['  para i ← ⌊n/2⌋ até 1 faça','bmh-for'],
+ ['    max-heapify(v, i, n)','bmh-for'],
+ ['',''],
+ ['heapsort(v, n)            // aula 13',''],
+ ['  build-max-heap(v, n)','hs-build'],
+ ['  para i ← n até 2 faça','hs-for'],
+ ['    troca(v[1], v[i])','hs-troca'],
+ ['    max-heapify(v, 1, i − 1)  // o heap agora vai até i − 1','hs-mh'],
+];
+const COD0=[
+ ['int pai(int i)      { return (i-1)/2; }',''],
+ ['int esquerda(int i) { return 2*i + 1; }',''],
+ ['int direita(int i)  { return 2*i + 2; }',''],
+ ['',''],
+ ['void maxheapify(int v[], int i, int n) {',''],
+ ['    int maior, esq, dir;',''],
+ ['    esq = esquerda(i);','mh-esq'],
+ ['    dir = direita(i);','mh-esq'],
+ ['    if (esq < n && v[esq] > v[i])','mh-esq'],
+ ['       maior = esq;','mh-esq'],
+ ['    else','mh-esq'],
+ ['       maior = i;','mh-esq'],
+ ['    if (dir < n && v[dir] > v[maior])','mh-dir'],
+ ['       maior = dir;','mh-dir'],
+ ['    if (maior != i) {','mh-se'],
+ ['       troca(&v[i], &v[maior]);','mh-troca'],
+ ['       maxheapify(v, maior, n);','mh-rec'],
+ ['    }',''],
+ ['}',''],
+ ['',''],
+ ['void insere(int v[], int x, int *n) {',''],
+ ['    v[*n] = x;','ins-poe'],
+ ['    *n = *n+1;','ins-poe'],
+ ['    int i = *n-1;','ins-poe'],
+ ['    while (i != 0 && v[pai(i)] < v[i]) {','ins-while'],
+ ['        troca(&v[pai(i)], &v[i]);','ins-troca'],
+ ['        i = pai(i);','ins-troca'],
+ ['    }',''],
+ ['}',''],
+ ['',''],
+ ['void buildmaxheap(int v[], int n) {',''],
+ ['    for (int i = n/2 - 1; i >= 0; i--)','bmh-for'],
+ ['       maxheapify(v, i, n);','bmh-for'],
+ ['}',''],
+ ['',''],
+ ['/* o heap.c não tem heapsort: este é o da aula 13 em C */',''],
+ ['void heapsort(int v[], int n) {',''],
+ ['    buildmaxheap(v, n);','hs-build'],
+ ['    for (int i = n - 1; i >= 1; i--) {','hs-for'],
+ ['        troca(&v[0], &v[i]);','hs-troca'],
+ ['        maxheapify(v, 0, i);   /* heap com i elementos */','hs-mh'],
+ ['    }',''],
+ ['}',''],
+];
+const esc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function montaCodigo(){
+  const C=B?COD1:COD0;
+  $('codigo').innerHTML=C.map(([t,id])=>{const k=t.indexOf('//')>=0?t.indexOf('//'):t.indexOf('/*');
+    const h=k>=0?esc(t.slice(0,k))+`<span class="cm">${esc(t.slice(k))}</span>`:esc(t);
+    return `<div data-id="${id}">${h||' '}</div>`;}).join('');
+}
+function marca(ids){ids=[].concat(ids);
+  document.querySelectorAll('#codigo div').forEach(x=>x.className=x.dataset.id&&ids.includes(x.dataset.id)?'on':'');
+  const a=document.querySelector('#codigo div.on'); if(a){const p=$('codigo');const t=a.offsetTop-p.offsetTop;if(t<p.scrollTop||t>p.scrollTop+p.clientHeight-30)p.scrollTop=Math.max(0,t-60);}}
+function setMsg(h,c=''){$('msg').innerHTML=h;$('msg').className='msg '+c;}
+
+/* ---------- geometria e desenho ---------- */
+const nivel=i=>Math.floor(Math.log2(i));
+function pos(i){const W=$('caixote').clientWidth,lv=nivel(i),k=i-2**lv;return {x:(k+.5)/2**lv*W,y:62+lv*96};}
+const diam=k=>{const W=$('caixote').clientWidth;const max=Math.min(70,W/8-4);return Math.round(max*(.45+.55*k/11));};
+const elems=new Map();
+function desenhaVagas(){
+  const cx=$('caixote'); cx.querySelectorAll('.vaga').forEach(v=>v.remove());
+  let lin='';
+  for(let i=1;i<=MAXN;i++){const p=pos(i);
+    cx.insertAdjacentHTML('beforeend',`<div class="vaga" style="left:${p.x}px;top:${p.y}px">${d(i)}</div>`);
+    if(i>1){const q=pos(i>>1);lin+=`<line x1="${q.x}" y1="${q.y}" x2="${p.x}" y2="${p.y}" stroke="#ecd3ad" stroke-width="3"/>`;}}
+  $('arestas').innerHTML=lin;
+  $('formulas').innerHTML=`pai(i) = <b>${fPai()}</b> · esquerda(i) = <b>${fEsq()}</b> · direita(i) = <b>${fDir()}</b>`;
+}
+function render(S){
+  const cx=$('caixote'), vivos=new Set();
+  for(let i=1;i<=S.n;i++){
+    const f=S.h[i]; if(!f) continue; vivos.add(f.id);
+    const p=pos(i), dm=diam(f.k); let el=elems.get(f.id);
+    if(!el){
+      el=document.createElement('div'); el.className='fruta';
+      el.innerHTML=`<span class="em">${FR[f.k].e}</span><span class="v">${f.v}</span>`;
+      el.style.background=FR[f.k].c; el.style.left=p.x+'px'; el.style.top=S.semQueda?p.y+'px':'-50px';
+      cx.appendChild(el); elems.set(f.id,el); el.getBoundingClientRect();
+    }
+    el.style.left=p.x+'px'; el.style.top=p.y+'px'; el.style.width=el.style.height=dm+'px';
+    el.querySelector('.em').style.fontSize=Math.round(dm*.55)+'px';
+    el.classList.toggle('cur',i===S.cur); el.classList.toggle('cmp',!!(S.cmp&&S.cmp.includes(i)));
+  }
+  for(const [id,el] of elems) if(!vivos.has(id)){elems.delete(id);
+    if(S.cesta&&S.cesta.some(f=>f.id===id)){el.classList.remove('cur','cmp');el.classList.add('sai');setTimeout(()=>el.remove(),600);} else el.remove();}
+  let v='';
+  for(let i=1;i<=MAXN;i++){const f=S.h[i]; const noHeap=i<=S.n&&f, ord=i>S.n&&f;
+    v+=`<div class="cel ${noHeap?'':ord?'ord':'vazia'} ${i===S.cur?'cur':''} ${S.cmp&&S.cmp.includes(i)?'cmp':''}"><div class="i">${d(i)}</div><div class="f">${f?FR[f.k].e:''}</div><div class="n">${f?f.v:''}</div></div>`;}
+  $('vetor').innerHTML=v;
+  const c=S.cur;
+  $('dicaI').innerHTML=c?` · agora: i = <b>${d(c)}</b>${c>1?`, pai = ${d(c>>1)}`:' (raiz)'}${2*c<=S.n?`, filhos = ${d(2*c)}${2*c+1<=S.n?' e '+d(2*c+1):''}`:''}`:'';
+  const ord=S.cesta.every((f,k)=>!k||S.cesta[k-1].v>=f.v);
+  $('cesta').innerHTML=S.cesta.length?S.cesta.map(f=>`<span title="${f.v}">${FR[f.k].e}</span>`).join('')+`<small>&nbsp;${S.cesta.map(f=>f.v).join(ord?' ≥ ':', ')}</small>`:'<small>vazia</small>';
+  $('cestaDica').textContent=S.dicaCesta!==undefined?S.dicaCesta:S.cesta.length<3?'':ord?'Cada colheita pegou o maior que tinha, então a cesta saiu em ordem decrescente. É o heapsort!':'Cada colheita pega o maior daquele momento. Como entraram frutas novas no meio, a cesta não ficou toda em ordem.';
+  $('sN').textContent=S.n; $('sTrocas').textContent=S.trocas;
+  if(S.prox){$('prox').textContent=FR[S.prox.k].e;$('prox').style.background=FR[S.prox.k].c;}
+}
+
+/* ================= MODO JOGAR ================= */
+let modo='jogar', P;
+function iniciaJogo(){
+  limpa();
+  P={h:[null],n:0,cur:0,cmp:null,fase:'livre',prox:nova(),cesta:[],pts:0,vidas:3,trocas:0};
+  $('proxBox').classList.remove('hide');
+  setMsg('Toque em <b>Soltar fruta</b>: é o <code>insere</code> do <code>heap.c</code>. Ela cai na próxima posição livre do vetor, e aí você decide se ela sobe.');
+  marca([]); atualiza();
+}
+function atualiza(){
+  render(P);
+  $('sPts').textContent=P.pts; $('sVidas').textContent=ESP()?'🍉'.repeat(P.vidas)+'🤍'.repeat(3-P.vidas):'🌱';
+  const c=$('controles');
+  if(P.fase==='livre') c.innerHTML=`<button class="btn laranja" id="bSoltar" ${P.n>=MAXN?'disabled':''}>⬇ Soltar fruta (insere)</button><button class="btn verde" id="bColher" ${P.n?'':'disabled'}>🧺 Colher o maior</button><button class="btn" id="bRe">⟲ Recomeçar</button>`;
+  if(P.fase==='sobe') c.innerHTML=`<button class="btn azul" id="bPai">⬆ Trocar com o pai</button><button class="btn verde" id="bFica">✔ Para o while</button>`;
+  if(P.fase==='desce') c.innerHTML=`<button class="btn azul" id="bEsq">↙ maior ← esq (troca)</button><button class="btn azul" id="bDir">↘ maior ← dir (troca)</button><button class="btn verde" id="bFica">✔ maior = i (para)</button>`;
+  const on=(id,f)=>{const b=$(id);if(b)b.onclick=f;};
+  on('bSoltar',soltar);on('bColher',colher);on('bRe',iniciaJogo);on('bPai',trocaPai);on('bFica',fica);on('bEsq',()=>trocaFilho(0));on('bDir',()=>trocaFilho(1));
+}
+function erro(txt){
+  if(ESP()) P.vidas--; const el=elems.get(P.h[P.cur].id); if(el){el.classList.remove('amassa');void el.offsetWidth;el.classList.add('amassa');}
+  if(P.vidas<=0){
+    $('ovBox').innerHTML=`<h2>🥤 Amassou tudo!</h2><p>${txt}</p><p style="color:var(--muted)">O heap só funciona se <b>v[pai(i)] ≥ v[i]</b> valer em todas as posições.</p><button class="btn main" id="ovRe">⟲ Tentar de novo</button>`;
+    $('overlay').classList.remove('hide'); $('ovRe').onclick=()=>{$('overlay').classList.add('hide');iniciaJogo();};
+    $('controles').innerHTML=''; return;
+  }
+  setMsg('😬 Amassou uma fruta! '+txt,'ruim'); atualiza();
+}
+function soltar(){
+  if(P.fase!=='livre'||P.n>=MAXN) return;
+  const f=P.prox; P.prox=nova(); P.n++; P.h[P.n]=f; P.cur=P.n; marca(['ins-poe']);
+  if(P.n===1){P.cur=0;P.fase='livre';setMsg(`${nomeF(f)} foi pra <code>v[${d(1)}]</code>, a raiz. O <code>while</code> nem roda: ${B?'i ≠ 1':'i != 0'} é falso.`);atualiza();return;}
+  const p=P.n>>1; P.cmp=[p]; P.fase='sobe';
+  setMsg(`${nomeF(f)} foi pra <code>v[${d(P.n)}]</code>, a próxima posição livre (assim a árvore continua quase completa). <code>pai(${d(P.n)}) = ${d(p)}</code>, com ${nomeF(P.h[p])}. <code>v[pai(i)] &lt; v[i]</code>?`);
+  atualiza(); setTimeout(()=>marca(['ins-while']),500);
+}
+function trocaPai(){
+  const i=P.cur, p=i>>1, f=P.h[i], pai=P.h[p];
+  if(!(pai.v<f.v)) return erro(`<code>v[pai(i)] &lt; v[i]</code> é falso: o pai ${nomeF(pai)} é maior ou igual a ${nomeF(f)}. O <code>while</code> já tinha parado.`);
+  P.h[i]=pai; P.h[p]=f; P.cur=p; P.trocas++; P.pts+=5; marca(['ins-troca']);
+  if(p===1){P.cmp=null;P.fase='livre';P.cur=0;setMsg(`✅ Trocou e chegou na raiz, <code>v[${d(1)}]</code>. Agora ${nomeF(f)} é a maior de todas.`,'bom');atualiza();return;}
+  P.cmp=[p>>1];
+  setMsg(`✅ <code>troca</code> e <code>i = pai(i) = ${d(p)}</code>. Novo pai: <code>v[${d(p>>1)}]</code> = ${nomeF(P.h[p>>1])}. E agora?`,'bom');
+  atualiza(); setTimeout(()=>marca(['ins-while']),450);
+}
+function filhos(i){const r=[];if(2*i<=P.n)r.push(2*i);if(2*i+1<=P.n)r.push(2*i+1);return r;}
+function maiorDe(i){ // exatamente como o max-heapify do professor
+  const e=2*i, r=2*i+1; let m=(e<=P.n&&P.h[e].v>P.h[i].v)?e:i; if(r<=P.n&&P.h[r].v>P.h[m].v) m=r; return m;}
+function fica(){
+  const i=P.cur, f=P.h[i];
+  if(P.fase==='sobe'){
+    const pai=P.h[i>>1];
+    if(pai.v<f.v) return erro(`${nomeF(f)} é maior que o pai ${nomeF(pai)}: <code>v[pai(i)] &lt; v[i]</code> ainda é verdade, o <code>while</code> continua.`);
+    P.pts+=5; P.fase='livre'; P.cur=0; P.cmp=null; marca(['ins-while']);
+    setMsg(`✅ Isso: o pai ${nomeF(pai)} já é maior ou igual. O <code>while</code> para e o heap está certo.`,'bom'); atualiza(); return;
+  }
+  const m=maiorDe(i);
+  if(m!==i) return erro(`O ${nomeF(P.h[m])} em <code>v[${d(m)}]</code> é maior que ${nomeF(f)}, então <code>maior ≠ i</code>: tem troca e chamada recursiva.`);
+  P.pts+=5; P.fase='livre'; P.cur=0; P.cmp=null; marca(['mh-se']);
+  setMsg(filhos(i).length?`✅ <code>maior == i</code>: ${nomeF(f)} é maior ou igual aos filhos. O max-heapify termina sem chamar ninguém.`:`✅ <code>esq</code> e <code>dir</code> passam de n: ${nomeF(f)} é folha, <code>maior == i</code>. Termina.`,'bom');
+  atualiza();
+}
+function trocaFilho(lado){
+  const i=P.cur, f=P.h[i], k=2*i+lado;
+  if(k>P.n) return erro(`<code>${lado?'dir':'esq'} = ${d(k)}</code> passa de n: ${nomeF(f)} não tem filho ${lado?'direito':'esquerdo'}.`);
+  const m=maiorDe(i);
+  if(m===i) return erro(`${nomeF(f)} já é maior ou igual aos filhos, então <code>maior == i</code>. Trocar estragaria o heap.`);
+  if(m!==k){
+    if(P.h[m].v===P.h[k].v){ setMsg(`🤏 Quase! Deu empate entre os filhos, e no código o <code>maior</code> fica com o <b>esquerdo</b>: ele só troca pra <code>dir</code> se <code>v[dir] &gt; v[maior]</code> (maior estrito). Tenta de novo.`,'ruim'); return; }
+    return erro(`<code>maior</code> é o filho com ${nomeF(P.h[m])}, o maior dos dois. Se subir ${nomeF(P.h[k])}, ele vira pai de ${nomeF(P.h[m])}, que é maior que ele.`);
+  }
+  P.h[i]=P.h[k]; P.h[k]=f; P.cur=k; P.trocas++; P.pts+=5; marca(['mh-troca','mh-rec']);
+  const nf=filhos(k);
+  if(!nf.length){P.fase='livre';P.cur=0;P.cmp=null;setMsg(`✅ <code>troca</code> e chama <code>max-heapify(v, ${d(k)}, n)</code>. Lá ${nomeF(f)} é folha: termina. Heap arrumado.`,'bom');atualiza();return;}
+  P.cmp=nf; setMsg(`✅ <code>troca(v[${d(i)}], v[${d(k)}])</code> e chama <code>max-heapify(v, ${d(k)}, n)</code>. Filhos agora: ${nf.map(j=>`v[${d(j)}] = ${nomeF(P.h[j])}`).join(' e ')}. Quem é o maior?`,'bom');
+  atualiza(); setTimeout(()=>marca(['mh-esq','mh-dir']),450);
+}
+function colher(){
+  if(P.fase!=='livre'||!P.n) return;
+  const max=P.h[1], n=P.n; P.pts+=max.v; marca(['hs-troca']);
+  if(n===1){P.cesta.push(max);P.h=[null];P.n=0;setMsg(`🧺 Colheu ${nomeF(max)}! O caixote ficou vazio.`,'bom');atualiza();return;}
+  const ult=P.h[n];
+  P.h[1]=ult; P.h[n]=max; P.cur=0; atualiza();
+  setMsg(`🧺 Igual ao passo do heapsort: <code>troca(v[${d(1)}], v[${d(n)}])</code>. O maior, ${nomeF(max)}, vai pro fim e sai do heap (n vira ${n-1}). ${nomeF(ult)} foi pro topo...`);
+  $('controles').innerHTML='';
+  setTimeout(()=>{
+    P.cesta.push(max); P.h[n]=undefined; P.n--; P.cur=1; marca(['hs-mh']);
+    const fs=filhos(1);
+    if(!fs.length){P.fase='livre';P.cur=0;setMsg(`${nomeF(ult)} ficou sozinho no topo. Pronto.`,'bom');atualiza();return;}
+    P.fase='desce'; P.cmp=fs;
+    setMsg(`Agora <code>max-heapify(v, ${d(1)}, n)</code>. Filhos: ${fs.map(j=>`v[${d(j)}] = ${nomeF(P.h[j])}`).join(' e ')}. Quem fica com o <code>maior</code>?`);
+    atualiza(); setTimeout(()=>marca(['mh-esq','mh-dir']),450);
+  },900);
+}
+
+/* ================= MODO ASSISTIR ================= */
+let EV=[], idx=0, timer=null, exemplo='aula13';
+function geraEventos(){
+  const h=[null]; let n=0, trocas=0; const cesta=[], ev=[];
+  const snap=o=>ev.push({h:h.slice(),n,cesta:cesta.slice(),trocas,cur:0,cmp:null,semQueda:true,...o});
+  function mh(i,nn,ctx){
+    const e=2*i, r=2*i+1, fs=[]; if(e<=nn)fs.push(e); if(r<=nn)fs.push(r);
+    let m=(e<=nn&&h[e].v>h[i].v)?e:i;
+    snap({ids:['mh-esq'],cur:i,cmp:fs,dicaCesta:ctx,msg:`<code>max-heapify(v, ${d(i)}, n)</code> em ${nomeF(h[i])}. ${e<=nn?`esq = ${d(e)} (${nomeF(h[e])}): ${h[e].v>h[i].v?'é maior, então maior ← esq':'não é maior, maior ← i'}.`:'esq passa de n.'}`});
+    if(r<=nn){const t=h[r].v>h[m].v; snap({ids:['mh-dir'],cur:i,cmp:fs,dicaCesta:ctx,msg:`dir = ${d(r)} (${nomeF(h[r])}) &gt; v[maior] (${nomeF(h[m])})? ${t?'Sim: maior ← dir.':'Não.'}`}); if(t)m=r;}
+    if(m===i){snap({ids:['mh-se'],cur:i,dicaCesta:ctx,msg:`<code>maior == i</code>: ${nomeF(h[i])} já é maior ou igual aos filhos. Termina.`});return;}
+    [h[i],h[m]]=[h[m],h[i]]; trocas++;
+    snap({ids:['mh-troca'],cur:m,cmp:[i],dicaCesta:ctx,msg:`<code>troca(v[${d(i)}], v[${d(m)}])</code>: ${nomeF(h[i])} sobe, ${nomeF(h[m])} desce.`});
+    snap({ids:['mh-rec'],cur:m,dicaCesta:ctx,msg:`Chamada recursiva: <code>max-heapify(v, ${d(m)}, n)</code>.`});
+    mh(m,nn,ctx);
+  }
+  if(exemplo==='aula13'){
+    const vals=[15,35,40,10,20,5,45,70,25,90];
+    const ord=[...new Set(vals)].sort((a,b)=>a-b);
+    vals.forEach(v=>{n++;h[n]={id:nextId++,v,k:1+Math.round(ord.indexOf(v)*10/(ord.length-1))};});
+    snap({ids:[],msg:`Exemplo da aula 13: <code>v = ${vals.join(' ')}</code>. Ainda não é heap (olha o 15 no topo). Primeiro o <code>build-max-heap</code>.`});
+    snap({ids:['hs-build'],msg:`<code>build-max-heap(v, n)</code>: começa do último pai, <code>i = ${B?'⌊n/2⌋':'n/2 − 1'} = ${d(n>>1)}</code>, e vai até a raiz. As folhas já são heaps sozinhas.`});
+    for(let i=n>>1;i>=1;i--){snap({ids:['bmh-for'],cur:i,msg:`<code>build-max-heap</code>, i = ${d(i)}: chama <code>max-heapify(v, ${d(i)}, n)</code>.`});mh(i,n);}
+    snap({ids:[],msg:`Heap pronto: <code>${h.slice(1,n+1).map(f=>f.v).join(' ')}</code>. Confere com a aula 13! Agora o laço do heapsort.`});
+  } else {
+    const vals=Array.from({length:9},()=>nova().v);
+    snap({ids:[],msg:`Vamos inserir ${vals.join(', ')} uma por uma com o <code>insere</code> do <code>heap.c</code>, e depois fazer o heapsort.`});
+    for(const v of vals){
+      n++; h[n]={id:nextId++,v,k:v};
+      snap({ids:['ins-poe'],cur:n,semQueda:false,msg:`insere(${v}): vai pra <code>v[${d(n)}]</code>, a próxima posição livre.`});
+      let i=n;
+      while(i!==1&&h[i>>1].v<h[i].v){
+        snap({ids:['ins-while'],cur:i,cmp:[i>>1],msg:`<code>v[pai(${d(i)})] = ${h[i>>1].v}</code> &lt; ${h[i].v}? Sim.`});
+        [h[i>>1],h[i]]=[h[i],h[i>>1]]; trocas++; i>>=1;
+        snap({ids:['ins-troca'],cur:i,msg:`Troca e <code>i = pai(i) = ${d(i)}</code>.`});
+      }
+      snap({ids:['ins-while'],cur:i,cmp:i>1?[i>>1]:null,msg:i===1?`Chegou na raiz: o <code>while</code> para.`:`<code>v[pai(${d(i)})] = ${h[i>>1].v}</code> &lt; ${h[i].v}? Não: o <code>while</code> para.`});
+    }
+    snap({ids:[],msg:`Já é heap (cada insere manteve a propriedade), então o build-max-heap não mudaria nada. Agora o laço do heapsort.`});
+  }
+  const ctx='O fim do vetor (em verde) vai ficando ordenado: é o mesmo vetor, o heap só encolhe.';
+  for(let i=n;i>=2;i--){
+    snap({ids:['hs-for'],cur:1,cmp:[i],dicaCesta:ctx,msg:`Laço do heapsort, i = ${d(i)}: o maior está no topo, <code>v[${d(1)}]</code> = ${nomeF(h[1])}.`});
+    [h[1],h[i]]=[h[i],h[1]]; trocas++; cesta.push(h[i]); n=i-1;
+    snap({ids:['hs-troca'],cur:1,dicaCesta:ctx,msg:`<code>troca(v[${d(1)}], v[${d(i)}])</code>: ${nomeF(h[i])} vai pra posição ${d(i)} e não mexe mais. O heap agora tem ${n} elemento(s).`});
+    snap({ids:['hs-mh'],cur:1,dicaCesta:ctx,msg:`${nomeF(h[1])} foi pro topo e quebrou o heap. <code>max-heapify(v, ${d(1)}, ${B?'i − 1':'i'})</code> conserta.`});
+    mh(1,n,ctx);
+  }
+  cesta.push(h[1]); n=0;
+  snap({ids:[],fim:true,dicaCesta:'Vetor inteiro em ordem crescente, sem usar vetor extra: heapsort in-place.',msg:`Pronto! O vetor ficou <code>${h.slice(1).filter(Boolean).map(f=>f.v).join(' ')}</code>, em ordem crescente. ${trocas} trocas no total.`});
+  return ev;
+}
+function iniciaVer(){
+  limpa(); pausa(); EV=geraEventos(); idx=0; $('proxBox').classList.add('hide');
+  $('controles').innerHTML=`<select class="btn" id="selEx"><option value="aula13">Exemplo da aula 13 (build-max-heap)</option><option value="insere">Inserir uma a uma (heap.c)</option></select><button class="btn main" id="bPasso">▶| Um passo</button><button class="btn verde" id="bPlay">▶ Rodar</button><button class="btn" id="bRe">⟲ Recomeçar</button><label class="vel">devagar <input type="range" id="vel" min="150" max="1800" value="900" style="direction:rtl"> rápido</label>`;
+  $('selEx').value=exemplo; $('selEx').onchange=e=>{exemplo=e.target.value;iniciaVer();};
+  $('bPasso').onclick=()=>{pausa();passo();}; $('bPlay').onclick=()=>{if(timer)pausa();else{$('bPlay').textContent='⏸ Pausar';roda();}}; $('bRe').onclick=iniciaVer;
+  passo();
+}
+function passo(){const e=EV[idx];if(!e)return;render(e);marca(e.ids);setMsg(e.msg,e.fim?'bom':'');idx++;if(idx>=EV.length){pausa();$('bPasso').disabled=$('bPlay').disabled=true;}}
+function pausa(){clearTimeout(timer);timer=null;const b=$('bPlay');if(b)b.textContent='▶ Rodar';}
+function roda(){passo();if(idx<EV.length)timer=setTimeout(roda,+$('vel').value);else pausa();}
+
+/* ================= geral ================= */
+function limpa(){for(const el of elems.values())el.remove();elems.clear();$('overlay').classList.add('hide');}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  modo=t.dataset.modo; document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===t));
+  document.querySelectorAll('.stat.jogo').forEach(s=>s.classList.toggle('hide',modo!=='jogar'));
+  pausa(); if(modo==='jogar') iniciaJogo(); else iniciaVer();
+});
+document.querySelectorAll('#segBase button').forEach(b=>b.onclick=()=>{
+  B=+b.dataset.b; document.querySelectorAll('#segBase button').forEach(x=>x.classList.toggle('on',x===b));
+  montaCodigo(); desenhaVagas();
+  if(modo==='ver') iniciaVer(); else {render(P); setMsg(B?'Índices como nas <b>notas de aula</b>: a raiz é <code>v[1]</code>, pai(i) = i / 2.':'Índices como no <b>heap.c</b>: a raiz é <code>v[0]</code>, pai(i) = (i − 1) / 2. A árvore é a mesma, só muda a conta!');}
+});
+document.querySelectorAll('.card h3').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('fechado')));
+document.addEventListener('contextmenu',e=>e.preventDefault());
+let rz; window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{desenhaVagas();if(modo==='jogar')render(P);else if(idx)render(EV[idx-1]);},150);});
+montaCodigo(); desenhaVagas(); iniciaJogo();
+
+</script>
+<script>window.addEventListener('modo',()=>location.reload());</script>
+<script src="canto.js"></script>
+</body>
+</html>

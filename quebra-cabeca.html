@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · feito a partir do material da disciplina CI1056 (UFPR) · CC BY-NC-SA 4.0 · veja LICENSE.txt -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f2f7fb">
+<title>Quebra-cabeça de código</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--titulo:#2f5d7c;--ceu:#e7f2fb;--gelo:#f2f7fb;--pessego:#ffd6b0;--rosa:#fdecef;--ink:#2b3440;--muted:#6b7785;--ok:#2f9e5a;--red:#d9485f;--gold:#f0a81c;--borda:#d5e6f3}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+body{font-family:'Fredoka',system-ui,sans-serif;color:var(--ink);background:var(--gelo);font-size:17px}
+header{display:flex;align-items:center;gap:12px;padding:12px 18px;flex-wrap:wrap;background:#fff;border-bottom:2px solid var(--borda);position:sticky;top:0;z-index:10}
+header h1{margin:0;font-size:1.45rem;color:var(--titulo)}
+.voltar{font:inherit;font-weight:600;text-decoration:none;color:var(--titulo);background:var(--ceu);border-radius:12px;padding:8px 14px}
+main{max-width:1180px;margin:0 auto;padding:14px 18px 60px}
+.niveis{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.niveis button{font:inherit;font-weight:600;border:2px solid var(--borda);background:#fff;color:var(--titulo);border-radius:12px;padding:8px 12px;cursor:pointer;min-height:46px}
+.niveis button.on{background:var(--titulo);color:#fff;border-color:var(--titulo)}
+.niveis button.feito::after{content:' ✔';color:var(--ok)}
+.niveis button.on.feito::after{color:#bff0cf}
+.niveis .grupo{width:100%;font-size:.85rem;color:var(--muted);margin:6px 0 -2px}
+.enun{background:#fff;border-radius:18px;border:1px solid var(--borda);padding:14px 18px;margin-bottom:14px}
+.enun h2{margin:0 0 4px;color:var(--titulo);font-size:1.3rem}
+.enun .tipo{display:inline-block;font-size:.8rem;font-weight:600;border-radius:8px;padding:2px 8px;background:var(--ceu);color:var(--titulo);margin-right:6px}
+.enun .tipo.alt{background:var(--rosa);color:#9b2a1e}
+.mesa{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (orientation:portrait),(max-width:900px){.mesa{grid-template-columns:1fr}}
+.col{background:#fff;border-radius:18px;border:1px solid var(--borda);padding:12px}
+.col h3{margin:0 0 8px;color:var(--titulo);font-size:1rem;display:flex;justify-content:space-between}
+.col h3 small{color:var(--muted);font-weight:400}
+.lista{display:flex;flex-direction:column;gap:6px;min-height:80px}
+.peca{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:.86rem;background:var(--gelo);border:2px solid var(--borda);border-radius:10px;padding:8px 10px;cursor:pointer;white-space:pre;overflow-x:auto;min-height:44px}
+.peca:active{transform:scale(.98)}
+.banco .peca{background:#fffaf3;border-color:#f3dcc0}
+.montado .peca{background:#f8fbfe}
+.peca .txt{flex:1;overflow-x:auto}
+.peca .mv{display:flex;gap:4px;flex:none}
+.peca .mv button{font:inherit;width:38px;height:36px;border-radius:9px;border:2px solid var(--borda);background:#fff;cursor:pointer;color:var(--titulo);font-family:'Fredoka'}
+.peca.certa{border-color:var(--ok);background:#e2f5ea}
+.peca.errada{border-color:var(--red);background:var(--rosa)}
+.peca.arm{border-color:var(--red);background:var(--rosa);text-decoration:line-through}
+.vazio{color:var(--muted);font-size:.9rem;padding:10px;border:2px dashed var(--borda);border-radius:10px;text-align:center}
+.acoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btn{font:inherit;font-weight:600;border-radius:12px;border:2px solid var(--borda);background:#fff;color:var(--titulo);min-height:50px;padding:8px 16px;cursor:pointer}
+.btn.pri{background:var(--titulo);border-color:var(--titulo);color:#fff}
+.btn:active{transform:scale(.96)}
+.fb{margin-top:14px;border-radius:16px;padding:14px 16px;display:none;line-height:1.5}
+.fb.on{display:block}
+.fb.bom{background:#e5f6ec;border:2px solid #a9dcbc}
+.fb.ruim{background:var(--rosa);border:2px solid #f3b8c3}
+.fb ul{margin:6px 0 0;padding-left:20px}
+.fb code{font-family:'JetBrains Mono',monospace;background:#fff;border-radius:6px;padding:0 5px;font-size:.88em}
+.placar{margin-left:auto;color:var(--muted);font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <a class="voltar" href="index.html">← Início</a>
+  <h1>🧩 Quebra-cabeça de código</h1>
+  <span class="placar" id="placar"></span>
+</header>
+<main>
+  <div class="niveis" id="niveis"></div>
+  <div class="enun" id="enun"></div>
+  <div class="mesa">
+    <div class="col"><h3>Peças <small>toque pra colocar no código</small></h3><div class="lista banco" id="banco"></div></div>
+    <div class="col"><h3>Seu código <small>toque pra devolver · ▲▼ pra mover</small></h3><div class="lista montado" id="montado"></div>
+      <div class="acoes"><button class="btn pri" id="bConf">✔ Conferir</button><button class="btn" id="bDica">💡 Dica</button><button class="btn" id="bRe">⟲ Embaralhar de novo</button></div>
+    </div>
+  </div>
+  <div class="fb" id="fb"></div>
+</main>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+/* Cada puzzle: linhas certas (com grupo opcional pra linhas que podem trocar de ordem), armadilhas com o porquê. */
+const P=[
+ {g:'Backtracking',t:'vetores_binarios',arq:'all-binary-strings.c',e:'Monte a função que imprime todos os vetores binários de tamanho n.',
+  L:[['void vetores_binarios(int v[], int n, int i) {'],['    if (i == n) {'],['        imprime_vetor(v, n);'],['        return;'],['    }'],['    v[i] = 0;'],['    vetores_binarios(v, n, i + 1);'],['    v[i] = 1;'],['    vetores_binarios(v, n, i + 1);'],['}']],
+  A:[['    if (i == n - 1) {','A base com n − 1 para cedo demais: a última posição nunca é decidida.'],['    vetores_binarios(v, n, i);','Sem o + 1 a chamada nunca anda: recursão infinita.']],
+  dica:'Pense na árvore: primeiro a folha (base), depois o ramo do 0, depois o ramo do 1.'},
+ {g:'Backtracking',t:'imprime_vetor dos subconjuntos',arq:'all-subsets.c',e:'Monte a função que imprime o subconjunto: só os elementos de set onde v[i] vale 1.',
+  L:[['void imprime_vetor(int set[], int v[], int n) {'],['    for (int i = 0; i < n; i++)'],['        if (v[i])'],['            printf("%d ", set[i]);'],['    printf("\\n");'],['}']],
+  A:[['            printf("%d ", v[i]);','Isso imprimiria os 0 e 1 do vetor, não os elementos do conjunto.'],['        if (!v[i])','Com o ! imprime quem ficou de fora, o complemento do subconjunto.']],
+  dica:'v[i] diz SE o elemento entra; set[i] diz QUAL é o elemento.'},
+ {g:'Backtracking',t:'solveKTUtil (cavalo)',arq:'cavalo.c',e:'Monte a função recursiva do passeio do cavalo.',
+  L:[['int solveKTUtil(int x, int y, int movei, int sol[N][N], int xMove[], int yMove[]) {'],['    if (movei == N * N)'],['        return 1;'],['    for (int k = 0; k < 8; k++) {'],['        int next_x = x + xMove[k];','nx'],['        int next_y = y + yMove[k];','nx'],['        if (isSafe(next_x, next_y, sol)) {'],['            sol[next_x][next_y] = movei;'],['            if (solveKTUtil(next_x, next_y, movei + 1, sol, xMove, yMove) == 1)'],['                return 1;'],['            else'],['                sol[next_x][next_y] = -1; // backtracking'],['        }'],['    }'],['    return 0;'],['}']],
+  A:[['        if (isSafe(x, y, sol)) {','Testaria a casa onde o cavalo JÁ está, não a próxima.'],['            sol[next_x][next_y] = movei + 1;','A casa nova recebe movei; o movei + 1 é passado pra próxima chamada.'],['    if (movei == N)','O passeio só termina quando passou pelas N * N casas.']],
+  dica:'Ordem: base, for dos 8 saltos, calcula a próxima casa, testa, marca, chama, desmarca no else.'},
+ {g:'Backtracking',t:'solveMazeUtil (labirinto)',arq:'labirinto.c',e:'Monte a função do rato no labirinto, que anda ↓ e →.',
+  L:[['bool solveMazeUtil(int maze[N][N], int x, int y, int sol[N][N]) {'],['    if (x == N - 1 && y == N - 1 && maze[x][y] == 1) {'],['        sol[x][y] = 1;'],['        return true;'],['    }'],['    if (isSafe(maze, x, y) == true) {'],['        if (sol[x][y] == 1)'],['            return false;'],['        sol[x][y] = 1;'],['        if (solveMazeUtil(maze, x + 1, y, sol) == true)'],['            return true;'],['        if (solveMazeUtil(maze, x, y + 1, sol) == true)'],['            return true;'],['        sol[x][y] = 0;'],['        return false;'],['    }'],['    return false;'],['}']],
+  A:[['        if (solveMazeUtil(maze, x + 1, y + 1, sol) == true)','x + 1 e y + 1 juntos é andar na diagonal, que o rato não faz.'],['        sol[x][y] = -1;','No labirinto o caminho é marcado com 1 e desmarcado com 0, não -1 (isso é do cavalo).']],
+  dica:'Primeiro a saída, depois o isSafe. Dentro dele: já visitei?, marca, tenta ↓, tenta →, desmarca.'},
+ {g:'Heap',t:'maxheapify',arq:'heap.c',e:'Monte o maxheapify do heap.c (índice 0).',
+  L:[['void maxheapify(int v[], int i, int n) {'],['    int maior, esq, dir;'],['    esq = esquerda(i);','ed'],['    dir = direita(i);','ed'],['    if (esq < n && v[esq] > v[i])'],['       maior = esq;'],['    else'],['       maior = i;'],['    if (dir < n && v[dir] > v[maior])'],['       maior = dir;'],['    if (maior != i) {'],['       troca(&v[i], &v[maior]);'],['       maxheapify(v, maior, n);'],['    }'],['}']],
+  A:[['    if (dir < n && v[dir] > v[i])','Tem que comparar com v[maior], senão o direito pode ganhar mesmo sendo menor que o esquerdo.'],['    if (esq <= n && v[esq] > v[i])','Com índice 0 as posições válidas vão até n − 1: o certo é esq < n.'],['       maxheapify(v, i, n);','A recursão continua de onde o valor desceu, que é maior, não i.']],
+  dica:'Calcula esq e dir, escolhe o maior dos três em duas comparações, troca e desce.'},
+ {g:'Heap',t:'insere',arq:'heap.c',e:'Monte o insere do heap.c.',
+  L:[['void insere(int v[], int x, int *n) {'],['    v[*n] = x;'],['    *n = *n+1;'],['    int i = *n-1;'],['    while (i != 0 && v[pai(i)] < v[i]) {'],['        troca(&v[pai(i)], &v[i]);'],['        i = pai(i);'],['    }'],['}']],
+  A:[['    while (i != 0 && v[pai(i)] > v[i]) {','Com > o valor sobe quando é MENOR que o pai: isso montaria um heap de mínimo.'],['        i = esquerda(i);','O valor está subindo: i vai pro pai, não pro filho.']],
+  dica:'Coloca no fim, aumenta n, e sobe enquanto o pai for menor.'},
+ {g:'Heap',t:'buildmaxheap e heapsort',arq:'heap.c + aula 13',e:'Monte o build e o heapsort em C, índice 0.',
+  L:[['void buildmaxheap(int v[], int n) {'],['    for (int i = n/2 - 1; i >= 0; i--)'],['       maxheapify(v, i, n);'],['}'],['void heapsort(int v[], int n) {'],['    buildmaxheap(v, n);'],['    for (int i = n - 1; i >= 1; i--) {'],['        troca(&v[0], &v[i]);'],['        maxheapify(v, 0, i);'],['    }'],['}']],
+  A:[['    for (int i = 0; i < n/2; i++)','O build tem que ir de baixo pra cima: quando arruma i, os filhos já precisam ser heaps.'],['        maxheapify(v, 0, n);','Depois da troca o heap tem só i elementos; com n ele bagunça a parte já ordenada.']],
+  dica:'O build desce o índice (de n/2 − 1 até 0). O heapsort troca o topo com o fim e encolhe o heap.'},
+ {g:'Alterações',alt:1,t:'heap de mínimo',arq:'alteração do heap.c',e:'Altere o maxheapify para um minheapify: todo pai menor ou igual aos filhos.',
+  L:[['void minheapify(int v[], int i, int n) {'],['    int menor, esq, dir;'],['    esq = esquerda(i);','ed'],['    dir = direita(i);','ed'],['    if (esq < n && v[esq] < v[i])'],['       menor = esq;'],['    else'],['       menor = i;'],['    if (dir < n && v[dir] < v[menor])'],['       menor = dir;'],['    if (menor != i) {'],['       troca(&v[i], &v[menor]);'],['       minheapify(v, menor, n);'],['    }'],['}']],
+  A:[['    if (esq < n && v[esq] > v[i])','Ainda está procurando o maior. Pra heap de mínimo a comparação vira <.'],['    if (dir < n && v[dir] > v[menor])','Mesma coisa: no heap de mínimo o filho só sobe se for MENOR.']],
+  dica:'A estrutura é idêntica ao maxheapify. Só as duas comparações com os filhos mudam.'},
+ {g:'Alterações',alt:1,t:'vetores sem "1 1"',arq:'alteração do all-binary-strings.c',e:'Altere vetores_binarios para imprimir só vetores sem dois 1 seguidos, podando o galho.',
+  L:[['void sem_11(int v[], int n, int i) {'],['    if (i == n) {'],['        imprime_vetor(v, n);'],['        return;'],['    }'],['    v[i] = 0;'],['    sem_11(v, n, i + 1);'],['    if (i == 0 || v[i-1] == 0) {'],['        v[i] = 1;'],['        sem_11(v, n, i + 1);'],['    }'],['}']],
+  A:[['    if (v[i-1] == 0) {','Sem o i == 0 primeiro, na primeira posição isso lê v[-1], fora do vetor.'],['    if (i == 0 || v[i+1] == 0) {','Quem já foi decidido é a posição anterior, i − 1. A posição i + 1 ainda é lixo.']],
+  dica:'O ramo do 0 é sempre permitido. O ramo do 1 só se a posição anterior não for 1.'},
+ {g:'Alterações',alt:1,t:'labirinto com 4 direções',arq:'alteração do labirinto.c',e:'Complete o miolo do solveMazeUtil para o rato andar ↓, →, ↑ e ←.',
+  L:[['        sol[x][y] = 1;'],['        if (solveMazeUtil(maze, x + 1, y, sol) == true)'],['            return true;'],['        if (solveMazeUtil(maze, x, y + 1, sol) == true)'],['            return true;'],['        if (solveMazeUtil(maze, x - 1, y, sol) == true)'],['            return true;'],['        if (solveMazeUtil(maze, x, y - 1, sol) == true)'],['            return true;'],['        sol[x][y] = 0;'],['        return false;']],
+  A:[['        sol[x][y] = 0;  // logo depois de marcar','Desmarcar antes de tentar as direções apagaria o caminho e o rato andaria em círculos.'],['        if (solveMazeUtil(maze, x + 1, y + 1, sol) == true)','Diagonal não é uma das 4 direções.']],
+  dica:'Marca, tenta as quatro direções (cada uma com seu return true), e só no fim desmarca.'},
+];
+let atual=0, banco=[], montado=[], feitos={}, tent=0;
+try{feitos=JSON.parse(localStorage.getItem('qc-alg2')||'{}');}catch(e){}
+function embaralha(v){for(let i=v.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[v[i],v[j]]=[v[j],v[i]];}return v;}
+function niveis(){
+  let h='',g='';
+  P.forEach((p,k)=>{ if(p.g!==g){g=p.g;h+=`<div class="grupo">${g}</div>`;} h+=`<button data-k="${k}" class="${k===atual?'on':''} ${feitos[k]?'feito':''}">${p.t}</button>`; });
+  $('niveis').innerHTML=h; $('niveis').querySelectorAll('button').forEach(b=>b.onclick=()=>carrega(+b.dataset.k));
+  $('placar').textContent=`${Object.keys(feitos).length} / ${P.length} montados`;
+}
+function carrega(k){
+  atual=k; const p=P[k]; tent=0;
+  banco=embaralha([...p.L.map((l,i)=>({t:l[0],g:l[1]||null,i,arm:false})),...p.A.map((a,i)=>({t:a[0],arm:true,porq:a[1],i:100+i}))]);
+  montado=[]; $('fb').className='fb';
+  $('enun').innerHTML=`<h2>${p.t}</h2><span class="tipo ${p.alt?'alt':''}">${p.alt?'alteração':'código do professor'}</span><span class="tipo">${p.arq}</span><p style="margin:8px 0 0">${p.e} <b>Cuidado:</b> tem ${p.A.length} peça${p.A.length>1?'s':''}-armadilha que não fazem parte do código certo.</p>`;
+  niveis(); desenha();
+}
+function desenha(marcas){
+  $('banco').innerHTML=banco.length?banco.map((x,j)=>`<div class="peca" data-j="${j}"><span class="txt">${esc(x.t)}</span></div>`).join(''):'<div class="vazio">todas as peças estão no código</div>';
+  $('montado').innerHTML=montado.length?montado.map((x,j)=>`<div class="peca ${marcas?marcas[j]:''}" data-j="${j}"><span class="txt">${esc(x.t)}</span><span class="mv"><button data-a="up">▲</button><button data-a="dn">▼</button></span></div>`).join(''):'<div class="vazio">toque nas peças da esquerda pra montar o código aqui, de cima pra baixo</div>';
+  $('banco').querySelectorAll('.peca').forEach(el=>el.onclick=()=>{montado.push(banco.splice(+el.dataset.j,1)[0]);$('fb').className='fb';desenha();});
+  $('montado').querySelectorAll('.peca').forEach(el=>{
+    const j=+el.dataset.j;
+    el.querySelector('.txt').onclick=()=>{banco.push(montado.splice(j,1)[0]);$('fb').className='fb';desenha();};
+    el.querySelectorAll('.mv button').forEach(b=>b.onclick=e=>{e.stopPropagation();const k=b.dataset.a==='up'?j-1:j+1;if(k<0||k>=montado.length)return;[montado[j],montado[k]]=[montado[k],montado[j]];$('fb').className='fb';desenha();});
+  });
+}
+function confere(){
+  const p=P[atual]; tent++;
+  const arms=montado.filter(x=>x.arm), certo=p.L.length;
+  // posição a posição, aceitando troca dentro do mesmo grupo
+  const marcas=montado.map((x,j)=>{ if(x.arm) return 'arm'; const c=p.L[j]; if(!c) return 'errada'; if(x.t===c[0]) return 'certa'; if(x.g&&c[1]===x.g) return 'certa'; return 'errada'; });
+  const ok=!arms.length&&montado.length===certo&&marcas.every(m=>m==='certa');
+  desenha(marcas);
+  const fb=$('fb');
+  if(ok){ feitos[atual]=1; try{localStorage.setItem('qc-alg2',JSON.stringify(feitos));}catch(e){}
+    fb.className='fb on bom'; fb.innerHTML=`🎉 <b>Código montado!</b> ${tent===1?'De primeira!':`Em ${tent} tentativas.`} Desviou das armadilhas:<ul>${p.A.map(a=>`<li><code>${esc(a[0].trim())}</code>: ${a[1]}</li>`).join('')}</ul>${atual<P.length-1?'<button class="btn pri" id="bProx" style="margin-top:8px">Próximo ▸</button>':''}`;
+    const b=$('bProx'); if(b) b.onclick=()=>carrega(atual+1); niveis(); return; }
+  let h='';
+  if(arms.length) h+=`<b>Caiu em armadilha:</b><ul>${arms.map(a=>`<li><code>${esc(a.t.trim())}</code>: ${a.porq}</li>`).join('')}</ul>`;
+  const faltam=certo-montado.filter(x=>!x.arm).length;
+  if(faltam>0) h+=`<p>Ainda falta${faltam>1?'m':''} <b>${faltam}</b> linha${faltam>1?'s':''} do código.</p>`;
+  const erradas=marcas.filter(m=>m==='errada').length;
+  if(erradas) h+=`<p><b>${erradas}</b> linha${erradas>1?'s estão':' está'} fora do lugar (em vermelho).</p>`;
+  fb.className='fb on ruim'; fb.innerHTML='❌ Quase! '+h;
+}
+$('bConf').onclick=confere;
+$('bDica').onclick=()=>{const fb=$('fb');fb.className='fb on bom';fb.innerHTML='💡 '+P[atual].dica;};
+$('bRe').onclick=()=>carrega(atual);
+document.addEventListener('contextmenu',e=>e.preventDefault());
+carrega(0);
+</script>
+<script src="canto.js"></script>
+</body>
+</html>

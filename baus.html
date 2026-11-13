@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · feito a partir do material da disciplina CI1056 (UFPR) · CC BY-NC-SA 4.0 · veja LICENSE.txt -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#e7f2fb">
+<title>Masmorra dos Baús</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--titulo:#2f5d7c;--ceu:#e7f2fb;--gelo:#f2f7fb;--pessego:#ffd6b0;--rosa:#fdecef;--ink:#2b3440;--muted:#6b7785;--ok:#2f9e5a;--red:#d9485f;--gold:#f0a81c;--borda:#d5e6f3}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{overflow-x:clip}
+html,body{margin:0}
+body{font-family:'Fredoka',system-ui,sans-serif;color:var(--ink);font-size:17px;line-height:1.5;touch-action:manipulation;
+  background:linear-gradient(180deg,#d4e8f6 0,#e7f2fb 40%,#f2f7fb 100%) fixed;min-height:100vh}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 18px;max-width:1160px;margin:0 auto}
+header h1{margin:0;font-size:1.5rem;color:var(--titulo)}
+header .sub{color:var(--muted);font-size:.95rem}
+.voltar{font:inherit;font-weight:600;text-decoration:none;color:var(--titulo);background:#fff;border:2px solid var(--borda);border-radius:12px;padding:7px 14px}
+main{max-width:1160px;margin:0 auto;padding:0 18px 60px}
+.barra{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:4px 0 14px}
+.chip{font:inherit;font-weight:600;border:2px solid var(--borda);background:#fff;color:var(--titulo);border-radius:999px;padding:6px 14px;cursor:pointer;min-height:42px}
+.chip.on{background:var(--titulo);border-color:var(--titulo);color:#fff}
+.chip small{font-weight:400;opacity:.85;margin-left:4px}
+.btn{font:inherit;font-weight:600;border-radius:12px;border:2px solid var(--borda);background:#fff;color:var(--titulo);min-height:48px;padding:8px 14px;cursor:pointer}
+.btn:active{transform:scale(.96)}
+.btn.pri{background:var(--titulo);border-color:var(--titulo);color:#fff}
+.btn.pes{background:#ffe3c9;border-color:#f3b884;color:#8a4b14}
+.palco{display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,360px);gap:18px;align-items:start}
+.palco>div{min-width:0}
+@media (min-width:861px){.palco>div:first-child{position:sticky;top:12px}}
+@media (max-width:860px){.palco{grid-template-columns:1fr}}
+.cartao{background:#ffffffe8;border:1.5px solid var(--borda);border-radius:22px;padding:16px 18px;box-shadow:0 6px 24px #2f5d7c12}
+.cartao h3{margin:0 0 6px;color:var(--titulo);font-size:1.1rem}
+
+/* ---------- o corredor da masmorra (claro) ---------- */
+.corredor{position:relative;border-radius:26px;padding:16px 14px 14px;overflow:hidden;
+  background:linear-gradient(180deg,#eef3f8 0,#e4ebf2 58%,#d9cdb9 58.2%,#e8dcc6 100%);
+  box-shadow:inset 0 -10px 0 #cdbb9c,0 16px 30px #2f5d7c1f;border:1.5px solid #d7dee6}
+.corredor:before{content:"";position:absolute;left:0;right:0;top:0;height:58%;
+  background:linear-gradient(#d9e2ea 2px,transparent 2px) 0 0/100% 34px,linear-gradient(90deg,#d9e2ea 2px,transparent 2px) 0 0/68px 68px;opacity:.7;pointer-events:none}
+.tocha{position:absolute;top:44px;font-size:22px;filter:drop-shadow(0 0 8px #ffc96a)}
+.hud{position:relative;display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px;font-weight:600;color:var(--titulo)}
+.hud .pill{background:#fff;border:1.5px solid var(--borda);border-radius:999px;padding:2px 12px;font-size:.92rem}
+.missao{position:relative;text-align:center;margin:4px 0 6px;font-weight:700;color:#8a4b14}
+.missao b{font:700 1.15em 'JetBrains Mono',monospace;background:#fff3e6;border:1.5px solid #f3b884;border-radius:10px;padding:0 10px}
+.relogio{position:relative;height:7px;border-radius:9px;background:#e9eef3;overflow:hidden;margin:0 0 8px;visibility:hidden}
+.relogio i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#f6a6b3,#ffc98f,#9fd3a8);transform-origin:left}
+.chao{position:relative;padding:58px 2px 30px}
+.heroi{position:absolute;top:0;font-size:34px;transition:left .35s cubic-bezier(.3,1.3,.5,1);transform:translateX(-50%);z-index:3;filter:drop-shadow(0 4px 2px #0002)}
+.heroi.pula{animation:pula .45s}
+@keyframes pula{40%{transform:translate(-50%,-14px)}}
+.fila{display:flex;gap:4px;justify-content:center;align-items:flex-end}
+.c{flex:1 1 0;max-width:58px;min-width:0;display:flex;flex-direction:column;align-items:center;position:relative}
+.bau{width:100%;aspect-ratio:1/.86;position:relative;cursor:pointer;transition:transform .2s,opacity .2s}
+.bau .tampa{position:absolute;left:0;right:0;top:0;height:42%;border-radius:10px 10px 3px 3px;background:linear-gradient(180deg,#d9a46a,#b97d43);border:1.5px solid #9a6533;transform-origin:50% 0;transition:transform .35s;z-index:2}
+.bau .corpo{position:absolute;left:0;right:0;bottom:0;height:62%;border-radius:3px 3px 8px 8px;background:linear-gradient(180deg,#c88c52,#a8723c);border:1.5px solid #8f5d2e;box-shadow:0 4px 0 #7d5226}
+.bau .tampa:after{content:"";position:absolute;left:50%;bottom:-6px;width:22%;max-width:12px;aspect-ratio:1;transform:translateX(-50%);border-radius:3px;background:#ffd56b;border:1.5px solid #c99a1e}
+.bau .val{position:absolute;inset:auto 0 18% 0;text-align:center;font:700 clamp(10px,1.9vw,16px) 'JetBrains Mono',monospace;color:#fff;opacity:0;transition:opacity .25s;z-index:1;text-shadow:0 1px 0 #7d5226}
+.bau.aberto .tampa{transform:translateY(-34%) rotateX(62deg) scaleY(.6)}
+.bau.aberto .corpo{background:linear-gradient(180deg,#fff2c4 0,#ffd977 30%,#c88c52 31%,#a8723c)}
+.bau.aberto .val{opacity:1;color:#5a3a12;text-shadow:none;bottom:40%}
+.bau.fora{opacity:.28;filter:saturate(.4)}
+.bau.foco{transform:translateY(-6px)}
+.bau.foco .corpo{box-shadow:0 4px 0 #7d5226,0 0 0 3px #2f5d7c}
+.bau.acho .corpo{box-shadow:0 4px 0 #7d5226,0 0 0 3px #2f9e5a,0 0 16px #2f9e5a88}
+.bau.erro{animation:treme .4s}
+@keyframes treme{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.coroa{position:absolute;top:-22px;font-size:18px}
+.ind{font:600 11px 'JetBrains Mono',monospace;color:#7a6a55;margin-top:6px}
+.marcas{position:absolute;bottom:-24px;font:700 11px 'JetBrains Mono',monospace;color:#c2410c;white-space:nowrap}
+.acoes{position:relative;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.acoes .btn{flex:1 1 170px;max-width:270px}
+.msg{border-radius:14px;padding:10px 12px;background:var(--gelo);margin:8px 0;min-height:52px}
+.msg.ok{background:#e9f7ee}
+.msg.err{background:var(--rosa)}
+.cod{font:13px/1.55 'JetBrains Mono',monospace;background:#f7fafc;border:1.5px solid var(--borda);border-radius:12px;padding:8px 0;margin:8px 0;white-space:pre;overflow-x:auto}
+.cod div{padding:0 10px}
+.cod .on{background:#ffe3c9;box-shadow:inset 3px 0 0 #e08a2e}
+.pilha{display:flex;flex-direction:column-reverse;gap:3px;max-height:230px;overflow:auto;margin:6px 0}
+.fr{font:12.5px 'JetBrains Mono',monospace;background:#f2f7fb;border:1.5px solid var(--borda);border-radius:8px;padding:2px 8px;display:flex;justify-content:space-between;gap:8px}
+.fr.topo{background:#ffe3c9;border-color:#f3b884}
+.fr .r{color:var(--ok);font-weight:700}
+.pilhaT{font-weight:600;color:var(--titulo);font-size:.95rem;margin-top:6px}
+.lev{display:flex;gap:6px;margin:6px 0 2px}
+.lev button{flex:1;font:inherit;font-weight:600;border:1.5px solid var(--borda);background:#fff;border-radius:10px;padding:4px 0;color:var(--titulo);cursor:pointer;font-size:.92rem}
+.lev button.on{background:var(--ceu);border-color:var(--titulo)}
+.fim{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#f6f8fbee;z-index:5;padding:20px;text-align:center}
+.fim.on{display:flex}
+.fim h2{color:var(--titulo);margin:0 0 6px}
+.estrelas{font-size:1.5rem;letter-spacing:4px}
+kbd{font:600 12px 'JetBrains Mono',monospace;background:#fff;border:1px solid #cbd6e0;border-bottom-width:2px;border-radius:5px;padding:0 5px}
+html.modo-esp .tipoBusca .bau.fora{opacity:1;filter:none}
+html.modo-esp .tipoBusca .marcas{display:none}
+</style>
+<script src="modo.js"></script>
+</head>
+<body>
+<header>
+  <a class="voltar" href="index.html">← Início</a>
+  <div><h1>🗝️ Masmorra dos Baús</h1><div class="sub">cada baú aberto é uma comparação: siga a recursão das aulas 3 a 6 e não gaste energia à toa</div></div>
+</header>
+<main>
+  <div class="barra"><span id="modoSlot"></span></div>
+  <div class="barra" id="fases"></div>
+  <div class="palco">
+    <div>
+      <div class="corredor">
+        <span class="tocha" style="left:14px">🔥</span><span class="tocha" style="right:14px">🔥</span>
+        <div class="hud"><span id="vidas"></span><span class="pill" id="nivelTxt"></span><span class="pill" id="energia"></span><span class="pill" id="erroTxt"></span></div>
+        <div class="missao" id="missao"></div>
+        <div class="relogio" id="relogio"><i id="relBar"></i></div>
+        <div class="chao"><div class="heroi" id="heroi">🧙</div><div class="fila" id="fila"></div></div>
+        <div class="acoes" id="acoes"></div>
+        <div class="fim" id="fim"></div>
+      </div>
+    </div>
+    <div>
+      <div class="cartao">
+        <h3 id="titFase"></h3>
+        <div class="lev" id="lev"></div>
+        <div class="msg" id="msg"></div>
+        <div class="cod" id="cod"></div>
+        <div class="pilhaT">Pilha de chamadas</div>
+        <div class="pilha" id="pilha"></div>
+        <div id="dica" class="soAprender" style="font-size:.92rem;color:var(--muted);margin-top:8px"></div>
+        <div class="soEsp" style="font-size:.92rem;color:var(--muted);margin-top:8px">🏆 Especialista: o trecho [a, b] não aparece nos baús nem na pilha, o Mínimo fecha os baús e tem relógio. Guarde a e b de cabeça! Dá pra voltar pro 🌱 aprender a qualquer momento.</div>
+      </div>
+    </div>
+  </div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const embaralha=a=>{for(let i=a.length-1;i>0;i--){const j=rnd(0,i);[a[i],a[j]]=[a[j],a[i]];}return a;};
+const distintos=(n,lo,hi)=>{const s=new Set();while(s.size<n)s.add(rnd(lo,hi));return [...s];};
+const lg=n=>Math.floor(Math.log2(n));
+let melhor={}; try{melhor=JSON.parse(localStorage.getItem('baus-melhor')||'{}');}catch(e){}
+
+/* ================= fases ================= */
+// tipo 'busca': trecho [a,b], olha(a,b) diz qual baú a chamada examina, para(k) diz se devolve k, prox() dá o novo trecho
+const FASES=[
+ {nome:'Busca',tipo:'busca',tit:'Fase 1 · Busca: de trás pra frente',
+  cod:['Busca(x, v, a, b)','  Se a > b','    Devolva não','  Se x = v[b]','    Devolva b','  Devolva Busca(x, v, a, b − 1)'],
+  olha:(a,b)=>b, para:k=>S.v[k]===S.x, prox:(a,b,k)=>[a,b-1], base:()=>'não', pior:n=>n,
+  linhas:{olha:3,para:4,prox:5,base:2},
+  porque:{olha:(a,b,k)=>`Busca(x, v, ${a}, ${b}) testa o v[b], o último do trecho: o baú ${k}.`,para:k=>`x = v[${k}] = ${S.v[k]}: achou, devolve ${k}.`,naopara:k=>`${S.v[k]} ≠ ${S.x}: chama Busca no trecho sem o último.`,base:()=>`O trecho ficou vazio (a > b): devolve não.`},
+  niveis:[{n:8,modo:'tem'},{n:10,modo:'dup'},{n:12,modo:'nao',t:3.5}],
+  gera(nv){const v=distintos(nv.n,1,40); let x;
+    if(nv.modo==='tem') x=v[rnd(0,nv.n-1)];
+    else if(nv.modo==='dup'){x=v[rnd(0,nv.n-1)]; const i=rnd(0,nv.n-1); v[i]=x; if(v.filter(y=>y===x).length<2) v[(i+3)%nv.n]=x;}
+    else { x=Math.random()<.5?41+rnd(0,8):v[rnd(0,2)]; } // às vezes não tem, às vezes está lá no comecinho
+    return {v,x};},
+  dica:'Repare que a Busca da aula começa pelo <b>fim</b> (v[b]) e anda pra esquerda. Se o x aparece duas vezes, ela devolve o de <b>maior índice</b>. Toque no baú que a chamada do topo examina.'},
+ {nome:'BuscaSequencial',tipo:'busca',tit:'Fase 2 · BuscaSequencial: onde o x entra',
+  cod:['BuscaSequencial(x, v, a, b)','  Se a > b','    Devolva a − 1','  Se x ≥ v[b]','    Devolva b','  Devolva BuscaSequencial(x, v, a, b − 1)'],
+  olha:(a,b)=>b, para:k=>S.x>=S.v[k], prox:(a,b,k)=>[a,b-1], base:()=>S.a-1, pior:n=>n,
+  linhas:{olha:3,para:4,prox:5,base:2},
+  porque:{olha:(a,b,k)=>`BuscaSequencial(x, v, ${a}, ${b}) testa o v[b]: o baú ${k}.`,para:k=>`${S.x} ≥ v[${k}] = ${S.v[k]}: devolve ${k}. O x entraria logo depois dele.`,naopara:k=>`${S.x} < ${S.v[k]}: ainda é maior que x, continua pra esquerda.`,base:()=>`Trecho vazio: devolve a − 1 = ${S.a-1}. O x é menor que todos.`},
+  niveis:[{n:8,modo:'meio'},{n:10,modo:'baixo'},{n:12,modo:'mix',t:3}],
+  gera(nv){const v=distintos(nv.n,3,45).sort((p,q)=>p-q); let x;
+    if(nv.modo==='meio') x=v[rnd(1,nv.n-2)]+(Math.random()<.5?0:1);
+    else if(nv.modo==='baixo') x=Math.random()<.6?v[0]-rnd(1,2):v[rnd(0,2)];
+    else x=[v[0]-1,v[rnd(0,nv.n-1)],v[rnd(0,nv.n-2)]+1][rnd(0,2)];
+    return {v,x};},
+  dica:'Os baús estão em ordem crescente (mas fechados). O teste agora é <b>x ≥ v[b]</b>: devolve o maior índice com v[p] ≤ x. É exatamente o Busca que o Insere da aula 7 usa. Igual também para!'},
+ {nome:'Busca binária',tipo:'busca',tit:'Fase 3 · BuscaBinaria: abra só o meio',
+  cod:['BuscaBinaria(x, v, a, b)','  Se a > b','    Devolva NÃO','  m ← ⌊(a + b) / 2⌋','  Se x = v[m]','    Devolva m','  Se x < v[m]','    Devolva BuscaBinaria(x, v, a, m − 1)','  Devolva BuscaBinaria(x, v, m + 1, b)'],
+  olha:(a,b)=>Math.floor((a+b)/2), para:k=>S.v[k]===S.x, prox:(a,b,k)=>S.x<S.v[k]?[a,k-1]:[k+1,b], base:()=>'NÃO', pior:n=>lg(n)+1,
+  linhas:{olha:3,para:5,prox:7,base:2},
+  porque:{olha:(a,b,k)=>`m = ⌊(${a} + ${b}) / 2⌋ = ${k}.`,para:k=>`x = v[${k}]: achou, devolve ${k}.`,naopara:k=>S.x<S.v[k]?`${S.x} < ${S.v[k]}: só a metade esquerda pode ter o x.`:`${S.x} > ${S.v[k]}: só a metade direita pode ter o x.`,base:()=>`Trecho vazio (a > b): devolve NÃO.`},
+  niveis:[{n:10,modo:'tem'},{n:20,modo:'mix'},{n:31,modo:'mix',t:4}],
+  gera(nv){const v=distintos(nv.n,2,99).sort((p,q)=>p-q); let x;
+    if(nv.modo==='tem'||Math.random()<.55) x=v[rnd(0,nv.n-1)];
+    else { do{x=rnd(1,100);}while(v.includes(x)); }
+    return {v,x};},
+  dica:'Baús em ordem crescente. A energia é ⌊lg n⌋ + 1: só dá pra abrir o meio. Use o <b>piso</b> de (a + b) / 2. Se o x não está lá, continue até o trecho ficar vazio e aí devolva NÃO.'},
+ {nome:'Mínimo',tipo:'min',tit:'Fase 4 · Minimo: o campeão volta pela pilha',
+  cod:['Minimo(v, a, b)','  Se a = b','    Devolva a','  m ← Minimo(v, a, b − 1)','  Se v[b] < v[m]','    m ← b','  Devolva m'],
+  pior:n=>n-1,
+  niveis:[{n:7},{n:9,dups:2},{n:10,dups:2,memoria:true,t:4.5}],
+  gera(nv){const v=distintos(nv.n,1,40); for(let k=0;k<(nv.dups||0);k++) v[rnd(1,nv.n-1)]=v[rnd(0,nv.n-1)]; return {v,x:null};},
+  dica:'A recursão desce até Minimo(v, a, a) e só então começa a comparar, na <b>volta</b>. Em cada volta o baú b abre e você decide: v[b] &lt; v[m] troca o campeão 👑, senão mantém. No empate o &lt; é estrito: mantém o antigo. No nível 3 os baús fecham de novo: guarde o valor do campeão de cabeça. <kbd>←</kbd> troca, <kbd>→</kbd> mantém.'}
+];
+
+/* ================= estado ================= */
+let F=0,L=0,S=null,timer=null,tFim=0,tDur=0,bloq=false;
+function novo(){
+  clearTimer(); bloq=false; $('fim').classList.remove('on');
+  const fa=FASES[F], nv=fa.niveis[L], g=fa.gera(nv);
+  S={vidas:3,erros:0,comps:0,fim:false,nv,n:nv.n,v:[null,...g.v],x:g.x,abertos:new Set(),pilha:[]};
+  if(fa.tipo==='busca'){ S.a=1;S.b=S.n;S.k=null; S.pilha=[{t:chamada(1,S.n)}]; S.foco=null; }
+  else { // desce a pilha até a base
+    for(let b=S.n;b>=1;b--) S.pilha.push({t:`Minimo(v, 1, ${b})`});
+    S.m=1; S.bb=1; S.pilha[S.pilha.length-1].r=1; S.abertos.add(1); S.foco=1; S.pend=null;
+    bloq=true; const eu=S; setTimeout(()=>{if(S!==eu)return; S.pilha.pop(); S.bb=2; abreMin(); desenha(); armaTimer(); bloq=false;},900);
+  }
+  desenha(); armaTimer();
+}
+function chamada(a,b){const fa=FASES[F]; return F===0?`Busca(${S.x}, v, ${a}, ${b})`:F===1?`BuscaSequencial(${S.x}, v, ${a}, ${b})`:`BuscaBinaria(${S.x}, v, ${a}, ${b})`;}
+
+/* ---------- o que a recursão faria agora ---------- */
+function esperado(){
+  const fa=FASES[F];
+  if(fa.tipo==='min') return {t:S.v[S.bb]<S.v[S.m]?'novo':'mantem'};
+  if(S.k===null){ if(S.a>S.b) return {t:'base'}; return {t:'bau',k:fa.olha(S.a,S.b),why:fa.porque.olha(S.a,S.b,fa.olha(S.a,S.b))}; }
+  if(fa.para(S.k)) return {t:'devolve',why:fa.porque.para(S.k)};
+  const [a,b]=fa.prox(S.a,S.b,S.k);
+  if(a>b) return {t:'base',why:fa.porque.naopara(S.k)+' '+fa.porque.base()};
+  const k=fa.olha(a,b); return {t:'bau',k,why:fa.porque.naopara(S.k)+' '+fa.porque.olha(a,b,k)};
+}
+function aplica(e){
+  const fa=FASES[F];
+  if(fa.tipo==='min'){
+    S.comps++;
+    if(e.t==='novo') S.m=S.bb;
+    S.pilha[S.pilha.length-1].r=S.m;
+    const fechaJa=memoria();
+    bloq=true; desenha();
+    const eu=S; setTimeout(()=>{ if(S!==eu) return; if(fechaJa) S.abertos.clear();
+      S.pilha.pop(); S.bb++;
+      if(S.bb>S.n){ bloq=false; S.final=S.m; venceu(`Minimo(v, 1, ${S.n}) devolve ${S.m}: v[${S.m}] = ${S.v[S.m]}. Foram ${S.comps} comparações, sempre n − 1 = ${S.n-1}.`); return; }
+      abreMin(); bloq=false; desenha(); armaTimer(); },memoria()?650:450);
+    return;
+  }
+  if(e.t==='bau'){
+    if(S.k!==null){ const [a,b]=fa.prox(S.a,S.b,S.k); S.a=a;S.b=b; S.pilha.push({t:chamada(a,b)}); }
+    S.k=e.k; S.abertos.add(e.k); S.comps++; S.foco=e.k;
+    pulaHeroi(); return;
+  }
+  if(e.t==='base'){
+    if(S.k!==null){ const [a,b]=fa.prox(S.a,S.b,S.k); S.a=a;S.b=b; S.pilha.push({t:chamada(a,b)}); S.k=null; }
+    return desempilha(fa.base());
+  }
+  if(e.t==='devolve') return desempilha(S.k);
+}
+function abreMin(){ S.abertos.add(S.bb); if(S.nv.memoria) S.abertos.add(S.bb); S.foco=S.bb; pulaHeroi(); }
+
+/* volta da recursão: cada quadro repassa o valor pra cima */
+function desempilha(r){
+  bloq=true; clearTimer(); S.res=r;
+  let i=S.pilha.length-1;
+  const eu=S;
+  const passo=()=>{ if(S!==eu) return; if(i<0){ bloq=false;
+      const fa=FASES[F];
+      const txt=F===0?(r==='não'?`Busca devolve não: o ${S.x} não está em nenhum baú.`:`Busca devolve ${r}. ${S.v.slice(1).filter(y=>y===S.x).length>1?'Tinha outro '+S.x+' antes, mas ela acha o de maior índice.':''}`)
+        :F===1?`BuscaSequencial devolve ${r}: o ${S.x} entraria na posição ${r+1}.`
+        :(r==='NÃO'?`O ${S.x} não está no vetor.`:`Achou o ${S.x} na posição ${r}.`);
+      venceu(`${txt} Você abriu ${S.comps} ${S.comps===1?'baú':'baús'}; pior caso: ${fa.pior(S.n)}.`); return; }
+    S.pilha[i].r=r; i--; desenha(); setTimeout(passo,Math.max(90,500-S.pilha.length*35)); };
+  passo();
+}
+
+/* ---------- jogadas ---------- */
+function joga(j){ // j = {t, k?}
+  if(!S||S.fim||bloq) return;
+  const e=esperado(), certo=j.t===e.t&&(e.t!=='bau'||j.k===e.k);
+  if(certo){ diz(ESP()?'Certo ✔':(e.why||(e.t==='devolve'?'Isso.':'Certo.')),'ok'); }
+  else erro(j,e);
+  if(S.vidas<=0) return;
+  aplica(e);
+  if(!S.fim&&!bloq){desenha(); armaTimer();}
+}
+function erro(j,e,tempo){
+  S.erros++; if(ESP()) S.vidas--; const fa=FASES[F];
+  let t=tempo?'⏰ O tempo acabou. ':'';
+  if(fa.tipo==='min'){ const vb=S.v[S.bb],vm=S.v[S.m];
+    t+=e.t==='novo'?`${vb} < ${vm}: o baú ${S.bb} vira o novo campeão.`:(vb===vm?`Empate (${vb} = ${vm}): o teste é v[b] < v[m], estrito. O campeão antigo fica.`:`${vb} > ${vm}: o campeão continua o baú ${S.m}.`); }
+  else {
+    if(e.t==='bau') t+=(j&&j.t==='devolve'&&S.k!==null?`Não para aqui. `:'')+(j&&j.t==='base'?'O trecho ainda não está vazio. ':'')+e.why;
+    else if(e.t==='devolve') t+=e.why;
+    else t+=(e.why||fa.porque.base());
+  }
+  diz(t+' Fiz a jogada certa pra você seguir.','err');
+  document.querySelectorAll('.bau.foco').forEach(b=>{b.classList.remove('erro');void b.offsetWidth;b.classList.add('erro');});
+  if(S.vidas<=0){ bloq=true; desenha(); setTimeout(perdeu,300); }
+}
+function toque(k){
+  if(FASES[F].tipo==='min') return;
+  joga({t:'bau',k});
+}
+
+/* ---------- relógio ---------- */
+function tempo(){ return ESP()?[[5,4,3.5],[5,4,3],[6,5,4],[5,4.5,4]][F][L]:0; }
+function memoria(){ return S.nv.memoria||ESP(); }
+function maquina(){ if(!S||S.fim||bloq) return; S.maq=(S.maq||0)+1; const e=esperado(); joga(e.t==='bau'?{t:'bau',k:e.k}:{t:e.t}); const m=$('msg'); if(!m.textContent.startsWith('🤖')) m.innerHTML='🤖 '+m.innerHTML; }
+function clearTimer(){ if(timer){cancelAnimationFrame(timer);timer=null;} $('relogio').style.visibility='hidden'; }
+function armaTimer(){
+  clearTimer(); const t=tempo(); if(!t||S.fim||bloq) return;
+  $('relogio').style.visibility='visible'; tDur=t*1000; tFim=performance.now()+tDur;
+  const passo=now=>{ const r=Math.max(0,(tFim-now)/tDur); $('relBar').style.transform=`scaleX(${r})`;
+    if(r<=0){ timer=null; if(S.fim||bloq) return; const e=esperado(); erro(null,e,true); if(S.vidas<=0) return; aplica(e); if(!S.fim&&!bloq){desenha();armaTimer();} return; }
+    timer=requestAnimationFrame(passo); };
+  timer=requestAnimationFrame(passo);
+}
+
+/* ---------- fim ---------- */
+function estrelas(){return S.erros===0?3:S.erros<=2?2:1;}
+function venceu(txt){
+  S.fim=true; clearTimer(); desenha();
+  const esp=ESP(), e=estrelas(), key=F+'-'+L; if(esp&&!(melhor[key]>=e)){melhor[key]=e; try{localStorage.setItem('baus-melhor',JSON.stringify(melhor));}catch(x){}}
+  try{const k='fliperama-alg2',f=JSON.parse(localStorage.getItem(k)||'{}');f.baus=1;localStorage.setItem(k,JSON.stringify(f));}catch(x){}
+  fasesBar(); levBar();
+  const ult=L===FASES[F].niveis.length-1, prox=ult?(F<FASES.length-1?'Próxima fase ▶':null):'Próximo nível ▶';
+  $('fim').innerHTML=`<div><h2>${esp?(S.erros===0?'Tesouro perfeito!':'Nível concluído'):'🌱 Concluído no modo aprender'}</h2>${esp?`<div class="estrelas">${'⭐'.repeat(e)}${'☆'.repeat(3-e)}</div>`:''}
+    <p>${txt}</p><p style="color:var(--muted)">${S.erros} ${S.erros===1?'erro':'erros'}${S.maq?` · a máquina mostrou ${S.maq} ${S.maq===1?'passo':'passos'}`:''}</p>
+    ${esp?'':`<p>Acha que pegou? Tente no especialista: lá o trecho fica escondido e as estrelas contam.</p>`}
+    <div class="acoes"><button class="btn" onclick="novo()">↻ De novo (baús novos)</button>${esp?'':`<button class="btn pes" onclick="setModo('especialista')">🏆 Tentar no especialista</button>`}${prox?`<button class="btn pri" onclick="avanca()">${prox}</button>`:''}</div></div>`;
+  const eu=S; setTimeout(()=>{if(S===eu)$('fim').classList.add('on');},700);
+}
+function perdeu(){ S.fim=true; clearTimer(); desenha();
+  $('fim').innerHTML=`<div><h2>A energia acabou</h2><p>Leia a dica do lado e tente de novo. Os baús mudam a cada tentativa.</p><div class="acoes"><button class="btn" onclick="setModo('aprender')">🌱 Rever no aprender</button><button class="btn pri" onclick="novo()">↻ Tentar de novo</button></div></div>`;
+  $('fim').classList.add('on'); }
+function avanca(){ if(L<FASES[F].niveis.length-1) L++; else {F++;L=0;} trocaFase(); }
+
+/* ================= desenho ================= */
+function diz(t,c){const m=$('msg'); m.innerHTML=t; m.className='msg'+(c?' '+c:'');}
+function pulaHeroi(){const h=$('heroi'); h.classList.remove('pula'); void h.offsetWidth; h.classList.add('pula');}
+function linhaCod(){
+  const fa=FASES[F]; if(S.fim) return -1;
+  if(fa.tipo==='min') return 4;
+  if(S.k===null) return S.a>S.b?1:fa.linhas.olha;
+  return fa.linhas.para;
+}
+function desenha(){
+  const fa=FASES[F];
+  $('vidas').textContent=ESP()?'❤️'.repeat(Math.max(0,S.vidas))+'🤍'.repeat(3-Math.max(0,S.vidas)):'🌱';
+  $('nivelTxt').textContent=`${fa.nome} · nível ${L+1}`;
+  $('energia').textContent=`⚡ baús abertos ${S.comps} / pior caso ${fa.pior(S.n)}`;
+  $('erroTxt').textContent=`erros: ${S.erros}`;
+  $('missao').innerHTML=fa.tipo==='min'?`missão: achar o índice do menor tesouro em v[1..${S.n}]`:`missão: procurar <b>x = ${S.x}</b>`;
+  const lc=linhaCod(); $('cod').innerHTML=fa.cod.map((l,k)=>`<div class="${k===lc?'on':''}">${l}</div>`).join('');
+  // pilha
+  $('pilha').innerHTML=S.pilha.map((p,i)=>`<div class="fr${i===S.pilha.length-1?' topo':''}"><span>${ESP()&&fa.tipo==='busca'&&!S.fim&&p.r===undefined?p.t.replace(/, -?\d+, -?\d+\)$/,', ?, ?)'):p.t}</span>${p.r!==undefined?`<span class="r">→ ${p.r}</span>`:''}</div>`).join('');
+  $('pilha').scrollTop=0;
+  // baús
+  let h='';
+  for(let k=1;k<=S.n;k++){
+    let cls='bau', marca=[];
+    const aberto=S.abertos.has(k)||S.fim;
+    if(aberto) cls+=' aberto';
+    if(fa.tipo==='busca'){
+      if(!S.fim&&(k<S.a||k>S.b)) cls+=' fora';
+      if(!S.fim&&k===S.k) cls+=' foco';
+      if(S.fim&&k===S.res) cls+=' acho';
+      if(!S.fim&&S.a<=S.b){ if(k===S.a) marca.push('a'); if(k===S.b) marca.push('b'); }
+    } else {
+      if(!S.fim&&k>S.bb) cls+=' fora';
+      if(!S.fim&&k===S.bb) cls+=' foco';
+      if(S.fim&&k===S.final) cls+=' acho';
+      if(!S.fim&&k===S.bb) marca.push('b');
+    }
+    const coroa=fa.tipo==='min'&&k===S.m?'<span class="coroa">👑</span>':'';
+    h+=`<div class="c">${coroa}<div class="${cls}" data-k="${k}"><div class="tampa"></div><div class="corpo"></div><div class="val">${S.v[k]}</div></div><div class="ind">${k}</div>${marca.length?`<div class="marcas">${marca.join(' ')}</div>`:''}</div>`;
+  }
+  $('fila').innerHTML=h; $('fila').classList.toggle('tipoBusca',fa.tipo==='busca');
+  $('fila').querySelectorAll('.bau').forEach(b=>b.onclick=()=>toque(+b.dataset.k));
+  // herói em cima do baú em foco
+  const alvo=$('fila').querySelector(`.bau[data-k="${S.foco||1}"]`);
+  if(alvo){ const r=alvo.getBoundingClientRect(), p=$('fila').parentElement.getBoundingClientRect(); $('heroi').style.left=(r.left-p.left+r.width/2)+'px'; }
+  // botões
+  let ac='';
+  if(!S.fim){
+    if(fa.tipo==='busca'){ const rot=F===0?'não':F===1?'a − 1':'NÃO';
+      ac=`<button class="btn pri" data-j="devolve">✔ Devolva ${S.k!==null?S.k:'b'}</button><button class="btn pes" data-j="base">∅ Trecho vazio: devolva ${rot}</button>`; }
+    else ac=`<button class="btn pes" data-j="novo">◀ v[b] &lt; v[m]: novo campeão</button><button class="btn pri" data-j="mantem">mantém o campeão ▶</button>`;
+  }
+  if(!S.fim) ac+=`<button class="btn maqBt soAprender" id="bMaq">🤖 a máquina mostra</button>`;
+  $('acoes').innerHTML=ac; if($('bMaq')) $('bMaq').onclick=maquina;
+  $('acoes').querySelectorAll('[data-j]').forEach(b=>b.onclick=()=>joga({t:b.dataset.j}));
+}
+window.addEventListener('resize',()=>S&&desenha());
+
+/* ================= barra ================= */
+function somaEst(f){return FASES[f].niveis.reduce((s,_,l)=>s+(melhor[f+'-'+l]||0),0);}
+function fasesBar(){
+  $('fases').innerHTML=FASES.map((fa,f)=>`<button class="chip${f===F?' on':''}" data-f="${f}">${f+1}. ${fa.nome}<small>${somaEst(f)}/${fa.niveis.length*3}⭐</small></button>`).join('');
+  $('fases').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{F=+b.dataset.f;L=0;trocaFase();});
+}
+function levBar(){
+  $('lev').innerHTML=FASES[F].niveis.map((nv,l)=>`<button class="${l===L?'on':''}" data-l="${l}">nível ${l+1} ${melhor[F+'-'+l]?'⭐'.repeat(melhor[F+'-'+l]):''}${nv.memoria?' 🧠':''}</button>`).join('');
+  $('lev').querySelectorAll('button').forEach(b=>b.onclick=()=>{L=+b.dataset.l;trocaFase();});
+}
+function trocaFase(){
+  fasesBar(); levBar(); $('titFase').textContent=FASES[F].tit; $('dica').innerHTML=FASES[F].dica;
+  novo();
+  diz(['Toque no baú que a chamada do topo da pilha examina.','Os baús estão em ordem. Toque no baú que a chamada examina.','Abra o meio do trecho.','A recursão está descendo até a base...'][F]);
+}
+document.addEventListener('keydown',e=>{
+  if(!S||S.fim||FASES[F].tipo!=='min') return;
+  if(e.key==='ArrowLeft'){e.preventDefault();joga({t:'novo'});} if(e.key==='ArrowRight'){e.preventDefault();joga({t:'mantem'});}
+});
+const q=new URLSearchParams(location.search); if(q.get('fase')) F=Math.min(3,Math.max(0,+q.get('fase')-1));
+window.addEventListener('modo',()=>{ trocaFase(); diz(ESP()?'🏆 Especialista: relógio, 3 vidas, sem dicas e sem mostrar o trecho [a, b].':'🌱 Aprender: sem relógio e sem perder vida. Use 🤖 quando travar.'); });
+trocaFase();
+</script>
+<script src="canto.js"></script>
+</body>
+</html>

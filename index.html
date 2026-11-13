@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · feito a partir do material da disciplina CI1056 (UFPR) · CC BY-NC-SA 4.0 · veja LICENSE.txt -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#fff4dc">
+<title>Algoritmos II com jogos e animações</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{overflow-x:clip}
+html,body{margin:0;min-height:100%;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+body{font-family:'Fredoka',system-ui,sans-serif;color:#2d2a26;
+  background:
+   
+   linear-gradient(180deg,#cfe7f5 0,#e4f2f9 38%,#f3f7ef 70%,#f6f3e8 100%) fixed}
+.topo{text-align:center;padding:28px 18px 8px}
+.logo{display:inline-block;font-family:'Press Start 2P',monospace;font-size:clamp(20px,4vw,34px);line-height:1.5;color:#fff;
+  background:linear-gradient(90deg,#ff6b6b,#ffa94d,#ffd43b,#51cf66,#339af0,#cc5de8);padding:16px 26px;border-radius:20px;
+  text-shadow:3px 3px 0 #0003;box-shadow:0 6px 0 #0002,0 10px 24px #0001;transform:rotate(-1.5deg)}
+.cena{height:min(400px,62vw);perspective:1100px;position:relative;overflow:visible;pointer-events:none}
+.mundo{position:absolute;left:50%;top:50%;width:560px;height:560px;margin:-300px 0 0 -280px;transform-style:preserve-3d;will-change:transform}
+.titulo3d{margin:22px 0 0;font-family:'Fredoka',sans-serif;line-height:1.05;position:relative}
+.titulo3d span{display:block;font-size:clamp(38px,8vw,76px);font-weight:700;color:#3b4a5e;letter-spacing:.01em;
+  text-shadow:0 1px 0 #2f3c4e,0 2px 0 #2f3c4e,0 3px 0 #263241,0 4px 0 #263241,0 5px 0 #1f2a37,0 6px 0 #1f2a37,0 12px 18px #1f2a3740}
+.titulo3d small{display:block;margin-top:10px;font-size:clamp(18px,3.4vw,30px);font-weight:600;color:#4d6b52;text-shadow:0 2px 0 #fff,0 3px 0 #d6e6d2}
+.slogan{color:#7a7266;font-size:1.15rem;margin:16px 0 0}
+.trilha{max-width:1100px;margin:16px auto 4px;padding:0 18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;font-weight:600;color:#6b5f4d}
+.trilha .p{background:#fff;border:2px solid #eadfca;border-radius:999px;padding:6px 14px}
+.trilha .seta{color:#c9b89a}
+.grade{max-width:1100px;margin:14px auto 40px;padding:0 18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px}
+.jogo{display:flex;flex-direction:column;text-decoration:none;color:inherit;background:#fff;border-radius:24px;overflow:hidden;
+  box-shadow:0 6px 0 #0000001a,0 12px 26px #0000000d;border:3px solid #fff;transition:transform .15s}
+.jogo:active{transform:scale(.97)}
+@media (hover:hover){.jogo:hover{transform:translateY(-6px) rotate(-.6deg)}}
+.capa{height:170px;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.capa svg{width:100%;height:100%}
+.nivel{position:absolute;top:10px;left:10px;font-family:'Press Start 2P',monospace;font-size:10px;background:#fff;border-radius:10px;padding:7px 9px;box-shadow:0 2px 0 #0002}
+.feito{position:absolute;top:10px;right:10px;background:#2f9e5a;color:#fff;border-radius:10px;padding:4px 10px;font-weight:600;font-size:.85rem}
+.info{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.info h2{margin:0;font-size:1.35rem}
+.info p{margin:0;color:#6b6358;font-size:.98rem;line-height:1.4;flex:1}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.tag{font-size:.78rem;font-weight:600;border-radius:8px;padding:3px 9px;background:#f3ecdf;color:#6b5f4d}
+.jogar{margin-top:8px;align-self:flex-start;font-weight:700;color:#fff;border-radius:12px;padding:9px 18px;font-size:1.05rem;box-shadow:0 4px 0 #0002}
+.travado{filter:grayscale(.6);opacity:.75;pointer-events:none}
+.travado .jogar{background:#b8ae9c!important}
+.secao{max-width:1100px;margin:22px auto 0;padding:0 18px;font-size:1.3rem;color:#5b4f3d}
+.aulas{max-width:1100px;margin:10px auto 0;padding:0 18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.aulaC{display:flex;flex-direction:column;gap:2px;text-decoration:none;color:#2f5d7c;background:#e7f2fb;border:2px solid #cfe3f3;border-radius:18px;padding:14px 16px;box-shadow:0 4px 0 #2f5d7c18}
+.aulaC b{font-size:1.15rem}
+.aulaC small{color:#6b7785}
+.aulaC.off{opacity:.55}
+a.aulaC:active{transform:scale(.97)}
+.como{max-width:1100px;margin:14px auto 0;padding:0 18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;color:#6b5f4d;font-weight:600}
+.como span{background:#fff;border:2px solid #eadfca;border-radius:999px;padding:6px 14px}
+.como span:nth-child(2){background:none;border:0;color:#c9b89a}
+.modulo{max-width:1100px;margin:26px auto 0;padding:18px;background:#ffffffb0;border:2px solid #f0e6d2;border-radius:26px}
+.modTopo{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+.modTopo h2{margin:0;font-size:1.5rem}
+.modTopo small{color:#8a7d68}
+.modN{width:44px;height:44px;border-radius:14px;background:#2f5d7c;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Press Start 2P',monospace;font-size:14px;flex:none}
+.modTag{font-size:.75rem;vertical-align:middle;border-radius:8px;padding:3px 9px;background:#f3ecdf;color:#6b5f4d;font-weight:600}
+.modTag.p2{background:#ffd6b0;color:#7a4b10}
+.modGrade{display:grid;grid-template-columns:minmax(220px,300px) 1fr;gap:16px;align-items:start}
+@media (max-width:820px){.modGrade{grid-template-columns:1fr}}
+.aulaBig{display:flex;flex-direction:column;gap:8px;text-decoration:none;color:#2f5d7c;background:#e7f2fb;border:2px solid #cfe3f3;border-radius:22px;padding:18px;box-shadow:0 5px 0 #2f5d7c1c;position:relative}
+.aulaBig b{font-size:1.35rem}
+.aulaBig span{color:#4f6475;line-height:1.4}
+.aulaBig .ir{margin-top:4px;align-self:flex-start;background:#2f5d7c;color:#fff;border-radius:12px;padding:8px 16px;font-weight:700}
+.aulaBig.off{opacity:.6}
+a.aulaBig:active{transform:scale(.97)}
+.feitoA{position:absolute;top:12px;right:12px;background:#2f9e5a;color:#fff!important;border-radius:10px;padding:3px 10px;font-weight:600;font-size:.85rem}
+.passo{font-family:'Press Start 2P',monospace;font-size:10px!important;color:#2f5d7c!important;letter-spacing:.05em}
+.passo.p2{display:block;margin:0 0 8px 4px;color:#b85c00!important}
+.jg{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.jg .capa{height:140px}
+.aulasCol{display:flex;flex-direction:column;gap:12px}
+.breves{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.breves div{background:#fbf7ef;border:2px dashed #e3d6bd;border-radius:18px;padding:14px;color:#6b5f4d}
+.desafio{display:flex;flex-direction:column;gap:4px;text-decoration:none;color:#2f5d7c;background:#e7f2fb;border:2px solid #cfe3f3;border-radius:18px;padding:16px;box-shadow:0 4px 0 #2f5d7c18}
+.desafio .ir{margin-top:8px;align-self:flex-start;background:#2f5d7c;color:#fff;border-radius:12px;padding:6px 14px;font-weight:700}
+a.desafio:active{transform:scale(.97)}
+.rodape{margin-top:26px!important}
+.rodape{text-align:center;color:#a39880;font-size:.9rem;padding:0 18px 30px}
+
+.mapa{position:relative;border-radius:22px;overflow:hidden;user-select:none;padding:6px 6px 0;
+  background:radial-gradient(circle,#c9dbe9 1.1px,transparent 1.3px) 0 0/22px 22px,linear-gradient(180deg,#fbfdff,#eef5fb);border:1.5px solid #d5e6f3}
+.mapa svg.grafo{display:block;width:100%;height:auto}
+.grafo .trilho{opacity:.13}
+.grafo .tnome{font:700 13px Fredoka,sans-serif;letter-spacing:.06em;text-transform:uppercase}
+.grafo .ar{fill:none;stroke:#c3d3e0;stroke-width:2.2;stroke-linecap:round;transition:opacity .25s,stroke .25s}
+.grafo .ar.feita{stroke:#8fd0a8}
+.grafo .fl{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-dasharray:.018 .05;opacity:0;transition:opacity .25s}
+.grafo .fl.vivo{opacity:.95;animation:flui 2.6s linear infinite}
+@keyframes flui{to{stroke-dashoffset:-.68}}
+.grafo.entra .ar{stroke-dasharray:1;stroke-dashoffset:1;animation:desenha .7s ease-out forwards;animation-delay:var(--d)}
+@keyframes desenha{to{stroke-dashoffset:0}}
+.grafo .gno{cursor:pointer;transition:opacity .25s}
+.grafo .gno .anel{fill:#fff;stroke-width:4;transition:r .2s}
+.grafo .gno .ic{font-size:22px;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.grafo .gno .rot{font:600 14px Fredoka,sans-serif;fill:#2b3440;text-anchor:middle;pointer-events:none}
+.grafo .gno .rotf{fill:#ffffffe6;stroke:#e1ebf3;stroke-width:1}
+.grafo .gno:hover .anel,.grafo .gno:focus .anel{r:31}
+.grafo .gno.vista .anel{fill:#e4f6ea}
+.grafo .gno .ok{display:none}
+.grafo .gno.vista .ok{display:block}
+.grafo .gno .halo{fill:none;stroke-width:3;opacity:0}
+.grafo .gno.prox .halo{animation:halo 1.8s ease-out infinite}
+@keyframes halo{0%{r:27;opacity:.7}100%{r:46;opacity:0}}
+.grafo.entra .gno .pop{transform-box:fill-box;transform-origin:center;animation:pop .45s cubic-bezier(.3,1.6,.5,1) both;animation-delay:var(--d)}
+@keyframes pop{from{transform:scale(0)}}
+.grafo .sat{cursor:pointer}
+.grafo .sat circle{fill:#fff7ee;stroke:#f3b884;stroke-width:1.6;transition:r .2s}
+.grafo .sat:hover circle{r:19}
+.grafo .sat text{font-size:15px;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.grafo .sat line{stroke:#f3b884;stroke-width:1.5;stroke-dasharray:3 3}
+.grafo.foco .gno:not(.liga),.grafo.foco .sat:not(.liga){opacity:.22}
+.grafo.foco .ar:not(.liga){opacity:.15}
+.grafo.foco .ar.liga{stroke:#2f5d7c}
+.grafo.foco .fl.liga{opacity:1;animation:flui 1.4s linear infinite}
+.mapa .prog{margin-left:auto;display:flex;align-items:center;gap:8px;background:#ffffffe6;border:1px solid #d5e6f3;border-radius:12px;padding:5px 12px;font:700 .9rem Fredoka,sans-serif;color:#2f5d7c}
+.mapa .prog i{display:block;width:90px;height:8px;border-radius:4px;background:#d9e6ef;overflow:hidden}.mapa .prog i em{display:block;height:100%;background:linear-gradient(90deg,#8fd0a8,#2f9e5a)}
+.mapa .mapinfo{margin:0 6px 8px;min-height:44px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-radius:12px;padding:6px 12px;background:#ffffffd9;border:1px solid #e1ebf3;font:500 .88rem Fredoka,sans-serif;color:#4b5866}
+.mapa .mapinfo b{color:#2f5d7c}
+.mapa .mapinfo .lg{display:inline-flex;align-items:center;gap:5px;margin-right:6px}
+.mapa .mapinfo .lg i{width:12px;height:12px;border-radius:50%;border:3px solid var(--c);background:#fff}
+.idiomaCard{display:grid;grid-template-columns:230px minmax(0,1fr);gap:22px;align-items:center;text-decoration:none;color:inherit;background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:16px 22px;box-shadow:0 1px 3px #0f172a0d;transition:border-color .2s,box-shadow .2s}
+.idiomaCard:hover{border-color:#1d4ed8;box-shadow:0 8px 24px #1d4ed81a}
+.idiomaCard svg{width:100%;height:auto;display:block}
+.idiomaCard h3{margin:0 0 6px;font:700 1.25rem Inter,system-ui,sans-serif;color:#0f172a}
+.idiomaCard p{margin:0 0 10px;color:#475569;font:500 .98rem/1.55 Inter,system-ui,sans-serif}
+.idiomaCard .ir{display:inline-block;font:600 .9rem Inter,sans-serif;color:#fff;background:#1d4ed8;border-radius:8px;padding:7px 14px}
+@media (max-width:640px){.idiomaCard{grid-template-columns:1fr}.idiomaCard svg{max-width:240px;margin:0 auto}}
+.trilha2{display:none}
+@media (max-width:700px){.mapa{display:none}.trilha2{display:block}}
+.trilha2 h4{margin:14px 0 6px;color:#2f5d7c;font:700 1rem Fredoka,sans-serif}
+.trilha2 a{display:flex;align-items:center;gap:10px;text-decoration:none;color:#2b3440;background:#fff;border-radius:14px;padding:9px 12px;margin:0 0 6px 14px;position:relative;box-shadow:0 1px 4px #0001}
+.trilha2 a:before{content:"";position:absolute;left:-9px;top:-8px;bottom:50%;border-left:2px solid #9fd3c3}
+.trilha2 a .bi{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#e7f2fb;flex:none}
+.trilha2 a.vista .bi{background:#d8f5e6}.trilha2 a.prox{outline:2px solid #e08a1e}
+.trilha2 a small{display:block;color:#6b7785;font-size:.78rem}
+.grupoP{margin-top:6px}.grupoP h3{margin:10px 0 8px;font-size:1.15rem;color:#2f5d7c}.grupoP h3 small{color:#8a7d68;font-weight:400;font-size:.85rem;margin-left:6px}
+.portas{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:14px 12px}
+.porta{display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;text-decoration:none;color:#2f5d7c;padding:6px 4px}
+.porta b{font-size:.95rem;line-height:1.15}
+.porta .pn{font-size:.78rem;color:#8a7d68}
+.porta .arco{position:relative;display:block;width:86px;height:118px;border-radius:44px 44px 4px 4px;background:radial-gradient(circle at 50% 40%,#fff,#ffe9c2);box-shadow:0 0 0 5px #c9a27a;transition:transform .2s}
+.porta .folha{position:absolute;inset:0;border-radius:44px 44px 4px 4px;background:linear-gradient(90deg,#e9b98a,#f6cfa4);border:2px solid #c9a27a;transform-origin:left center;transition:transform .45s}
+.porta .folha:after{content:"";position:absolute;right:10px;top:56%;width:8px;height:8px;border-radius:50%;background:#f0a81c}
+.porta .ico{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2rem;z-index:2;pointer-events:none;padding-top:14px}
+.porta:hover .folha,.porta:focus-visible .folha{transform:rotateY(-70deg)}
+.porta:active .arco{transform:scale(.96)}
+.porta .feitoA{font-size:.75rem;color:#2f9e5a;font-weight:700}
+.arco{perspective:500px}
+.freire{display:inline-block;margin-top:6px;color:#2f5d7c;font-size:.95em}
+</style>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icone-apple-180.png">
+<link rel="icon" type="image/png" href="icone-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Alg II">
+</head>
+<body>
+<div class="topo">
+  <div class="cena" id="cena"><div class="mundo" id="mundo"></div></div>
+  <button id="remontar" style="font:600 .9rem Fredoka,sans-serif;color:#4d6b52;background:#ffffffcc;border:2px solid #cfe3c8;border-radius:999px;padding:6px 14px;cursor:pointer;position:relative;z-index:2">↻ montar de novo</button>
+  <h1 class="titulo3d"><span>Algoritmos II</span><small>com jogos e animações</small></h1>
+  <p class="slogan">Primeiro você <b>vê</b> o algoritmo funcionando, depois <b>joga</b> com ele na mão.</p>
+</div>
+<div class="como"><span>🚪 Porta: a aula do professor, passo a passo</span><span>➜</span><span>🎮 Jogo: você vira o algoritmo</span></div>
+<p style="text-align:center;margin:10px 0 0"><a href="desmembrada/index.html" style="display:inline-block;text-decoration:none;font-weight:600;color:#fff;background:#1f4560;border-radius:12px;padding:10px 18px;box-shadow:0 4px 14px #1f456026">📋 Ver tópico por tópico, na ordem da disciplina ▸</a></p>
+
+<div id="modulos"></div>
+
+<p class="rodape">Feito a partir do material da disciplina CI1056 · Algoritmos e Estruturas de Dados II · UFPR<br>Este material não substitui o material do professor: é uma ferramenta visual de apoio ao entendimento.<br><span class="freire"><i>“Ninguém nasce feito, é experimentando-nos no mundo que nós nos fazemos.”</i> Paulo Freire, <i>Política e educação</i></span><br>Dica: no tablet, use "Adicionar à tela inicial" pra abrir como app, sem a barra do navegador.</p>
+
+<script>
+const JOGOS=[
+ {id:'torre',href:'torre.html',nivel:'NÍVEL 1',nome:'Torre da Recursão',cor:'#e0483a',fundo:'#dff1ff',
+  desc:'Cada chamada é um bloco no topo da torre: f(n), potencia, count_down_up, Fibonacci, Minimo\' e busca binária das aulas. Sem base? Caiu, perdeu: stack overflow.',
+  tags:['recursão','pilha de chamadas','LIFO','stack overflow'],
+  capa:`<svg viewBox="0 0 260 170"><rect width="260" height="170" fill="#dff1ff"/><ellipse cx="60" cy="34" rx="34" ry="11" fill="#fff"/><ellipse cx="205" cy="52" rx="26" ry="9" fill="#fff"/>
+   <rect x="20" y="152" width="220" height="18" rx="5" fill="#b97a43"/>
+   ${[0,1,2,3,4,5].map(i=>`<g transform="rotate(${(i-2.5)*1.2} 130 ${150-i*22})"><rect x="${80+(i%2)*4}" y="${130-i*22}" width="100" height="20" rx="4" fill="${i===5?'#f5d9a8':'#e8c48b'}" stroke="${i===5?'#f0a81c':'#a8723a'}" stroke-width="${i===5?3:2}"/>${i%2?`<line x1="98" y1="${130-i*22}" x2="98" y2="${150-i*22}" stroke="#a8723a" stroke-width="1.5"/><line x1="170" y1="${130-i*22}" x2="170" y2="${150-i*22}" stroke="#a8723a" stroke-width="1.5"/>`:''}<text x="${130+(i%2)*4}" y="${144-i*22}" font-family="monospace" font-size="10" font-weight="700" text-anchor="middle" fill="#5a3d1c">${i===0?'main()':'fat('+(i)+')'}</text></g>`).join('')}
+  </svg>`},
+ {id:'domino',href:'domino.html',nivel:'NÍVEL 2',nome:'Dominó do Backtracking',cor:'#2f8f5b',fundo:'#2f8f5b',
+  desc:'Monte a fileira usando todas as peças. Se travar, desfaz e tenta outra. Depois veja o algoritmo jogar e enfrente a máquina, que liga o backtracking no fim de jogo.',
+  tags:['backtracking','árvore de decisões','minimax'],
+  capa:`<svg viewBox="0 0 260 170"><defs><radialGradient id="f" cx="50%" cy="40%"><stop offset="0" stop-color="#3aa56b"/><stop offset="1" stop-color="#25734a"/></radialGradient></defs>
+   <rect width="260" height="170" fill="url(#f)"/><rect x="4" y="4" width="252" height="162" rx="10" fill="none" stroke="#b97a43" stroke-width="8"/>
+   ${[[30,72,1,2],[86,72,2,4],[142,72,4,6]].map(([x,y,a,b])=>`<g><rect x="${x}" y="${y}" width="54" height="27" rx="5" fill="#fffdf5" stroke="#d9cfb9" stroke-width="2"/><line x1="${x+27}" y1="${y+4}" x2="${x+27}" y2="${y+23}" stroke="#bfb39b" stroke-width="1.5"/>${pips(x,y,a)}${pips(x+27,y,b)}</g>`).join('')}
+   <g transform="rotate(-18 222 62)" opacity=".85"><rect x="198" y="48" width="54" height="27" rx="5" fill="#fff4f1" stroke="#e0483a" stroke-width="2.5" stroke-dasharray="5 3"/><line x1="225" y1="52" x2="225" y2="71" stroke="#bfb39b" stroke-width="1.5"/>${pips(198,48,6)}${pips(225,48,3)}</g>
+   <text x="222" y="110" font-family="Fredoka,sans-serif" font-size="22" font-weight="700" fill="#ffe08a" text-anchor="middle">↩</text></svg>`},
+ {id:'cavalo',href:'cavalo.html',nivel:'NÍVEL 3',nome:'Cavalo no Campo Minado',cor:'#4a5560',fundo:'#f0f1f3',
+  desc:'Campo minado + passeio do cavalo: passe por todas as casas seguras sem pisar nas minas. Depois assista o cavalo.c do professor (solveKTUtil) resolvendo, linha por linha.',
+  tags:['backtracking em C','passeio do cavalo','recursão'],
+  capa:`<svg viewBox="0 0 260 170"><rect width="260" height="170" fill="#f4f5f6"/>
+   ${Array.from({length:25},(_,k)=>{const l=k/5|0,c=k%5;const x=70+c*24,y=27+l*24;const m=[[1,3],[3,1],[4,4]].some(([a,b])=>a===l&&b===c);const v=[[0,0],[2,1],[4,2],[3,4],[1,3]].findIndex(([a,b])=>a===l&&b===c);
+     return `<rect x="${x}" y="${y}" width="21" height="21" rx="4" fill="${m?'#f3e7e8':v>=0?'#e4e8ec':'#ffffff'}" stroke="${m?'#d4a9ae':v>=0?'#a9b1ba':'#dde1e5'}" stroke-width="1.5"/>${m?`<text x="${x+10.5}" y="${y+15}" font-size="11" text-anchor="middle">💣</text>`:''}`}).join('')}
+   <polyline points="80.5,37.5 104.5,85.5 128.5,133.5" fill="none" stroke="#3d4852" stroke-width="3" stroke-linecap="round"/>
+   <text x="128.5" y="140" font-size="17" text-anchor="middle" fill="#3d4852">♞</text></svg>`},
+ {id:'labirinto',href:'labirinto.html',nivel:'NÍVEL 3',nome:'Ratinho no Labirinto',cor:'#5f8f4f',fundo:'#e6f4dc',
+  desc:'O labirinto.c do professor: guie o rato com ↓ e →, bata na parede, volte do beco. Tem a alteração com 4 direções e o C rodando passo a passo.',
+  tags:['backtracking','labirinto.c','alteração 4 direções'],
+  capa:`<svg viewBox="0 0 260 170"><rect width="260" height="170" fill="#e6f4dc"/><rect x="70" y="15" width="140" height="140" rx="12" fill="#8fbf7f"/>
+   ${[[1,0,0,0],[1,1,0,1],[0,1,0,0],[1,1,1,1]].map((r,x)=>r.map((v,y)=>`<rect x="${77+y*33}" y="${22+x*33}" width="30" height="30" rx="5" fill="${v?([[0,0],[1,0],[1,1],[2,1],[3,1],[3,2]].some(([a,b])=>a===x&&b===y)?'#ffd6b0':'#fff8ea'):'#6e9e5f'}"/>`).join('')).join('')}
+   <text x="190" y="149" font-size="22" text-anchor="middle">🧀</text><text x="158" y="149" font-size="22" text-anchor="middle">🐭</text></svg>`},
+ {id:'slide',href:'slide.html',nivel:'NÍVEL 3',nome:'Slide do Backtracking',cor:'#d98a2b',fundo:'#8fca6e',
+  desc:'Deslize os blocos até o bloco dourado sair pela porta. Depois veja o computador resolver com backtracking: empilha, bate no beco, desfaz. Liga e desliga a poda e compara com a solução mínima.',
+  tags:['backtracking','poda','estados repetidos','pilha'],
+  capa:`<svg viewBox="0 0 260 170"><rect width="260" height="170" fill="#8fca6e"/><rect y="150" width="260" height="20" fill="#7a5a3a"/>
+   <rect x="70" y="14" width="120" height="140" rx="14" fill="#d4a873"/><rect x="80" y="24" width="100" height="120" rx="8" fill="#f6ecdc"/>
+   <rect x="83" y="27" width="22" height="46" rx="5" fill="#d3e7f6" stroke="#8fb6d3" stroke-width="2"/><rect x="108" y="27" width="46" height="46" rx="6" fill="#ffc970" stroke="#d08a26" stroke-width="2.5"/>
+   <text x="131" y="58" font-size="20" text-anchor="middle">⭐</text><rect x="157" y="27" width="20" height="22" rx="5" fill="#f3e4cc" stroke="#c7a57a" stroke-width="2"/>
+   <rect x="83" y="76" width="46" height="21" rx="5" fill="#f9dfe5" stroke="#d9a3b0" stroke-width="2"/><rect x="132" y="76" width="22" height="46" rx="5" fill="#d3e7f6" stroke="#8fb6d3" stroke-width="2"/>
+   <rect x="83" y="100" width="22" height="21" rx="5" fill="#f3e4cc" stroke="#c7a57a" stroke-width="2"/><rect x="157" y="100" width="20" height="41" rx="5" fill="#d3e7f6" stroke="#8fb6d3" stroke-width="2"/>
+   <rect x="105" y="141" width="50" height="6" rx="3" fill="#ffe7b0"/><text x="210" y="70" font-family="Fredoka,sans-serif" font-size="26" font-weight="700" fill="#fff8e1" text-anchor="middle">↩</text></svg>`},
+ {id:'baus',href:'baus.html',nivel:'NÍVEL 2',nome:'Masmorra dos Baús',cor:'#a8723c',fundo:'#eef3f8',
+  desc:'Cada baú aberto é uma comparação. Siga a Busca de trás pra frente, a BuscaSequencial do Insere, a busca binária com energia ⌊lg n⌋ + 1 e o Minimo recursivo, vendo a pilha de chamadas subir e descer.',
+  tags:['Busca e BuscaSequencial','busca binária','Minimo recursivo'],
+  capa:`<svg viewBox="0 0 260 170"><rect width="260" height="170" fill="#eef3f8"/><rect y="112" width="260" height="58" fill="#e8dcc6"/>
+   ${[0,1,2,3,4,5].map(k=>{const x=28+k*36,ab=k===3;return `<rect x="${x}" y="${ab?84:90}" width="30" height="${ab?10:14}" rx="4" fill="#c88c52" stroke="#9a6533" stroke-width="1.5" ${ab?`transform="rotate(-18 ${x} 88)"`:''}/><rect x="${x}" y="102" width="30" height="20" rx="3" fill="${ab?'#ffd977':'#b47a40'}" stroke="#8f5d2e" stroke-width="1.5"/>${ab?`<text x="${x+15}" y="117" font-family="Inter,sans-serif" font-size="11" font-weight="800" fill="#5a3a12" text-anchor="middle">27</text>`:`<rect x="${x+12}" y="99" width="6" height="6" rx="1.5" fill="#ffd56b"/>`}`}).join('')}
+   <text x="${28+3*36+15}" y="70" font-size="26" text-anchor="middle">🧙</text><text x="22" y="40" font-size="20">🔥</text><text x="222" y="40" font-size="20">🔥</text></svg>`},
+ {id:'tetris',href:'tetris.html',nivel:'NÍVEL 3',nome:'Tetris das Recorrências',cor:'#3f9e5e',fundo:'#eef5fb',
+  desc:'As peças caem com uma recorrência, um algoritmo ou uma conta pra n = 8. Leve cada uma pra coluna da fórmula certa (n − 1, ⌊lg n⌋ + 1, n(n − 1)/2, n lg n, 2ⁿ − 1). Erro vira entulho; linha completa some.',
+  tags:['abrir recorrências','custo dos algoritmos','contas com n = 8'],
+  capa:`<svg viewBox="0 0 260 170"><rect width="260" height="170" fill="#eef5fb"/>
+   ${['#4f9cc9','#e08a2e','#3f9e5e','#d0607a','#c99a1e'].map((c,k)=>`<rect x="${30+k*41}" y="146" width="36" height="14" rx="4" fill="${c}"/>`).join('')}
+   ${[[0,1,'#9fd3f2'],[1,1,'#ffc98f'],[1,2,'#dfe3e8'],[2,1,'#a8e0b5'],[3,1,'#f7b2c1'],[3,2,'#f7b2c1'],[4,1,'#ffe08a']].map(([c,h,f])=>`<rect x="${30+c*41}" y="${142-h*22}" width="36" height="19" rx="5" fill="${f}"/>`).join('')}
+   <rect x="112" y="30" width="36" height="19" rx="5" fill="#fff7ee" stroke="#2f5d7c" stroke-width="2.5"/><text x="130" y="43" font-family="JetBrains Mono,monospace" font-size="8" font-weight="700" fill="#7a3f10" text-anchor="middle">2T+1</text>
+   <path d="M130 56 v26" stroke="#2f5d7c" stroke-width="2" stroke-dasharray="3 4"/></svg>`},
+ {id:'blocos',href:'blocos.html',nivel:'NÍVEL 3',nome:'Fábrica de Ordenação',cor:'#c2692b',fundo:'#fdf3e6',
+  desc:'Você é o algoritmo: Insere com o bloco solto, Mínimo com caixas fechadas e uma balança, Intercala contra o relógio, Particiona com o cercadinho e o quicksort inteiro na ordem da recursão.',
+  tags:['inserção e seleção','intercala','particiona e quicksort'],
+  capa:`<svg viewBox="0 0 260 170"><rect width="260" height="170" fill="#fdf3e6"/><rect y="138" width="260" height="32" fill="#ead9bd"/>
+   ${[[7,'#bfe6c8','#6fb985'],[12,'#bfe6c8','#6fb985'],[15,'#bfe6c8','#6fb985'],[9,'#ffd0a3','#e39a5a'],[16,'#cfe3f3','#8fb6d3'],[5,'#cfe3f3','#8fb6d3']].map(([v,f,s],k)=>`<rect x="${42+k*30}" y="${138-v*6-(k===3?12:0)}" width="24" height="${v*6}" rx="5" fill="${f}" stroke="${s}" stroke-width="2"/><text x="${54+k*30}" y="${155}" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#7a6a55" text-anchor="middle">${v}</text>`).join('')}
+   <path d="M136 60 q-16 -24 -40 -10" fill="none" stroke="#c2692b" stroke-width="2.5" stroke-dasharray="4 4"/><path d="M95 46 l-1 9 8 -3z" fill="#c2692b"/></svg>`},
+ {id:'bolhas',href:'bolhas.html',nivel:'NÍVEL 3',nome:'Bolhas da Pilha',cor:'#2f6d93',fundo:'#e7f2fb',
+  desc:'Atire bolhas pra remover a recursão: busca binária virando laço, com os valores escondidos, e quicksort com pilha explícita de intervalos, onde você acerta o pivô e a casa onde ele vai parar.',
+  tags:['recursão de cauda','pilha explícita','quicksort iterativo'],
+  capa:`<svg viewBox="0 0 260 170"><defs><radialGradient id="bg1" cx="35%" cy="30%"><stop offset="0" stop-color="#fff"/><stop offset=".3" stop-color="#7aa9d6"/><stop offset="1" stop-color="#2f5d7c"/></radialGradient>
+   <radialGradient id="bg2" cx="35%" cy="30%"><stop offset="0" stop-color="#fff"/><stop offset=".3" stop-color="#ffd27a"/><stop offset="1" stop-color="#e08a1e"/></radialGradient>
+   <radialGradient id="bg3" cx="35%" cy="30%"><stop offset="0" stop-color="#fff"/><stop offset=".3" stop-color="#69db7c"/><stop offset="1" stop-color="#2f8f5b"/></radialGradient>
+   <linearGradient id="bgf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfe6f7"/><stop offset="1" stop-color="#ffe8d6"/></linearGradient></defs>
+   <rect width="260" height="170" fill="url(#bgf)"/>
+   ${[0,1,2,3,4,5,6,7].map(i=>`<circle cx="${22+i*31}" cy="26" r="14" fill="url(#bg${i===3?2:i%2?3:1})"/><text x="${22+i*31}" y="31" font-family="Inter,sans-serif" font-size="12" font-weight="800" fill="#fff" text-anchor="middle">${[3,9,14,21,27,30,35,40][i]}</text>`).join('')}
+   <g fill="#2f5d7c" opacity=".5">${[0,1,2,3,4,5].map(i=>`<circle cx="${130-i*7}" cy="${132-i*16}" r="2.2"/>`).join('')}</g>
+   <circle cx="130" cy="148" r="18" fill="#fff"/><circle cx="130" cy="146" r="13" fill="url(#bg2)"/>
+   <rect x="214" y="70" width="34" height="80" rx="10" fill="#ffffffaa" stroke="#9fc3dc" stroke-width="2"/><rect x="219" y="128" width="24" height="10" rx="5" fill="#fff"/><rect x="219" y="114" width="24" height="10" rx="5" fill="#ffb98a"/></svg>`},
+ {id:'suika',href:'suika.html',nivel:'NÍVEL 4',nome:'Suika da Heap',cor:'#e8590c',fundo:'#fff0e0',
+  desc:'Frutas numa árvore quase completa: insere do heap.c, max-heapify, build-max-heap e heapsort das aulas 11 a 13. Dá pra ver em índice 1 (notas) ou 0 (heap.c).',
+  tags:['heap','sift-up','sift-down'],
+  capa:`<svg viewBox="0 0 260 170"><rect width="260" height="170" fill="#fff0e0"/>
+   <g stroke="#e3c9a8" stroke-width="3"><line x1="130" y1="40" x2="80" y2="90"/><line x1="130" y1="40" x2="180" y2="90"/><line x1="80" y1="90" x2="55" y2="135"/><line x1="80" y1="90" x2="105" y2="135"/><line x1="180" y1="90" x2="155" y2="135"/></g>
+   <circle cx="130" cy="40" r="26" fill="#51cf66" stroke="#2b8a3e" stroke-width="3"/><circle cx="80" cy="90" r="19" fill="#ffa94d"/><circle cx="180" cy="90" r="17" fill="#ff8787"/>
+   <circle cx="55" cy="135" r="12" fill="#cc5de8"/><circle cx="105" cy="135" r="13" fill="#ffd43b"/><circle cx="155" cy="135" r="10" fill="#e64980"/>
+   <text x="200" y="152" font-size="30">🧺</text></svg>`},
+];
+function pips(x,y,n){
+  const P={0:[],1:[[2,2]],2:[[1,1],[3,3]],3:[[1,1],[2,2],[3,3]],4:[[1,1],[3,1],[1,3],[3,3]],5:[[1,1],[3,1],[2,2],[1,3],[3,3]],6:[[1,1],[3,1],[1,2],[3,2],[1,3],[3,3]]};
+  return P[n].map(([c,l])=>`<circle cx="${x+c*6.75}" cy="${y+l*6.75}" r="2.3" fill="#2a2620"/>`).join('');
+}
+let feitos={}; try{feitos=JSON.parse(localStorage.getItem('fliperama-alg2')||'{}');}catch(e){}
+const J=Object.fromEntries(JOGOS.map(j=>[j.id,j]));
+const MODULOS=[
+ {t:'Recursão e Ordenação',tag:'P1',sub:'aulas 2 a 10 · a base de tudo que vem depois',aulas:[
+   {href:'aula-recursao.html',id:'aulaRec',t:'Recursão e Busca',d:'Base e recursão, a pilha de chamadas, count_down_up, Fibonacci, Mínimo, Busca, busca binária e como abrir uma recorrência.'},
+   {href:'aula-ordenacao.html',id:'aulaOrd',t:'Ordenação',d:'Inserção, seleção, intercala, mergesort, particiona e quicksort, com contagem de comparações e trocas.'}],jogos:['torre','baus','blocos','tetris','bolhas']},
+ {t:'Árvores e Heap',tag:'P2',sub:'aulas 11, 12, 13 e implementação (heap.c)',aulas:[{href:'aula-heap.html',id:'aulaHeap',t:'Árvores e Heap',d:'Árvore quase completa, árvore no vetor (índice 1 e 0), propriedade de heap, max-heapify, build-max-heap, heapsort, insere e heap de mínimo.'}],jogos:['suika']},
+ {t:'Backtracking',tag:'P2',sub:'todos vetores binários, todos subconjuntos, passeio do cavalo, labirinto',aulas:[{href:'aula-backtracking.html',id:'aulaBack',t:'Backtracking',d:'Árvore de decisões, vetores binários e subconjuntos, poda, cavalo.c e labirinto.c, com as alterações no estilo da prova.'}],jogos:['domino','cavalo','labirinto','slide']},
+];
+const card=j=>`<a class="jogo${j.travado?' travado':''}" href="${j.href}" data-id="${j.id}">
+    <div class="capa" style="background:${j.fundo}">${j.capa}${feitos[j.id]?'<span class="feito">✔ jogado</span>':''}</div>
+    <div class="info"><h2>${j.nome}</h2><p>${j.desc}</p>
+      <div class="tags">${j.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+      <span class="jogar" style="background:${j.cor}">▶ Jogar</span></div></a>`;
+const PORTAS=[
+ {t:'Recursão e Ordenação',tag:'P1',sub:'aulas 2 a 10 · a base de tudo que vem depois',portas:[
+  ['a02.html','2','Recursão','🪞'],['a03.html','3','Mínimo','📏'],['a04-05.html','4 e 5','Busca','🔎'],['a06.html','6','Busca binária','✂️'],['rev-recursao.html','2 a 6','Recorrências e revisão','🧮'],
+  ['a07.html','7','Inserção','🂡'],['a08.html','8','Seleção','⛏️'],['a09.html','9','Mergesort','🧩'],['a10.html','10','Quicksort','🏁'],['rev-ordenacao.html','7 a 10','Revisão de ordenação','📊']]},
+ {t:'Heap e Backtracking',tag:'P2',sub:'aulas 11 a 13 e os códigos de backtracking',portas:[
+  ['a11.html','11','Árvores e heap','🌳'],['a12.html','12','max-heapify e build','⬇️'],['a13.html','13','Heapsort e heap.c','🔺'],['rev-heap.html','11 a 13','Revisão de heap','🍉'],
+  ['bt-vetores.html','bt','Vetores binários e subconjuntos','🧠'],['bt-cavalo.html','bt','Passeio do cavalo','♞'],['bt-labirinto.html','bt','Labirinto do rato','🐭'],['rev-backtracking.html','bt','Revisão de backtracking','🎮']]}
+];
+
+/* ===== mapa da disciplina: grafo de pré-requisitos ===== */
+const TRILHAS=[['Recursão e busca','#4f9cc9',80,120,1020],['Ordenação','#2fa39a',250,420,1020],['Heap','#e08a3a',400,270,720],['Backtracking','#d0607a',530,270,720]];
+const NOS=[ // id(página), rótulo, ícone, x, y, trilha
+ ['a02.html','Recursão','🪞',120,80,0],['a03.html','Mínimo','📏',270,80,0],['a04-05.html','Busca','🔎',420,80,0],['a06.html','Busca binária','✂️',570,80,0],['rev-recursao.html','Recorrências','🧮',720,80,0],
+ ['a07.html','Inserção','🂡',420,250,1],['a08.html','Seleção','⛏️',570,250,1],['a09.html','Mergesort','🧩',720,250,1],['a10.html','Quicksort','🏁',870,250,1],['rev-ordenacao.html','Revisão: ordenação','📊',1020,250,1],
+ ['a11.html','Árvores e heap','🌳',270,400,2],['a12.html','max-heapify','⬇️',420,400,2],['a13.html','Heapsort','🔺',570,400,2],['rev-heap.html','Revisão: heap','🍉',720,400,2],
+ ['bt-vetores.html','Vetores binários','🧠',270,530,3],['bt-cavalo.html','Cavalo','♞',420,530,3],['bt-labirinto.html','Labirinto','🐭',570,530,3],['rev-backtracking.html','Revisão: backtracking','🎮',720,530,3],
+ ['desmembrada/18-removendo-recursividade/index.html','Removendo recursão','🫧',1020,80,4]
+];
+const SETAS=[['a02.html','a03.html'],['a03.html','a04-05.html'],['a04-05.html','a06.html'],['a06.html','rev-recursao.html'],
+ ['a04-05.html','a07.html'],['a03.html','a08.html'],['a07.html','a08.html'],['a08.html','a09.html'],['a09.html','a10.html'],['a10.html','rev-ordenacao.html'],
+ ['a02.html','a11.html'],['a11.html','a12.html'],['a12.html','a13.html'],['a13.html','rev-heap.html'],
+ ['a02.html','bt-vetores.html'],['bt-vetores.html','bt-cavalo.html'],['bt-cavalo.html','bt-labirinto.html'],['bt-labirinto.html','rev-backtracking.html'],
+ ['rev-recursao.html','desmembrada/18-removendo-recursividade/index.html'],['a10.html','desmembrada/18-removendo-recursividade/index.html']];
+const OBJS=[['torre.html','Torre da Recursão','🗼','a02.html'],['baus.html','Masmorra dos Baús','🗝️','a06.html'],['tetris.html','Tetris das Recorrências','🧱','rev-recursao.html'],
+ ['blocos.html','Fábrica de Ordenação','🏭','a08.html'],['bolhas.html','Bolhas da Pilha','🫧','desmembrada/18-removendo-recursividade/index.html'],['suika.html','Suika da Heap','🍉','rev-heap.html'],
+ ['domino.html','Dominó do Backtracking','🁫','bt-vetores.html'],['cavalo.html','Cavalo no Campo Minado','♞','bt-cavalo.html'],['labirinto.html','Ratinho no Labirinto','🐭','bt-labirinto.html'],['slide.html','Slide do Backtracking','🧩','rev-backtracking.html']];
+const COR_T=k=>k<4?TRILHAS[k][1]:'#c99a1e';
+function mapaHTML(){
+  const P={}; NOS.forEach(n=>P[n[0]]=n);
+  const vista=id=>!!feitos[id];
+  const prox=(NOS.find(n=>!vista(n[0]))||[])[0];
+  const total=NOS.length, vistas=NOS.filter(n=>vista(n[0])).length;
+  // profundidade de cada nó (pra animação de entrada)
+  const prof={}; NOS.forEach(n=>prof[n[0]]=0);
+  for(let it=0;it<20;it++) SETAS.forEach(([a,b])=>{prof[b]=Math.max(prof[b],prof[a]+1);});
+  const R=27;
+  const curva=([a,b])=>{const A=P[a],B=P[b]; let [x1,y1,x2,y2]=[A[3],A[4],B[3],B[4]];
+    if(y1===y2) return `M${x1+R+4} ${y1} L${x2-R-8} ${y2}`;
+    if(x1<x2-100&&y2-y1>200) return `M${x1} ${y1+R+28} L${x1} ${y2-24} Q${x1} ${y2} ${x1+24} ${y2} L${x2-R-8} ${y2}`; // tronco que desce da recursão
+    if(x1===x2) return `M${x1} ${y1+R+28} L${x2} ${y2-R-8}`;
+    if(y2<y1){ // sobe (quicksort → removendo)
+      const sy=y1-R-4, ey=y2+R+30; return `M${x1} ${sy} C${x1} ${sy-60} ${x2} ${ey+60} ${x2} ${ey}`; }
+    const sx=x1+(x2>x1?10:0), sy=y1+R+28, ey=y2-R-8; return `M${sx} ${sy} C${sx} ${sy+70} ${x2} ${ey-80} ${x2} ${ey}`;};
+  const viva=a=>vista(a)||a===prox;
+  const ars=SETAS.map((s,k)=>{const d=curva(s), c=COR_T(P[s[1]][5]);
+    return `<path class="ar${vista(s[0])&&vista(s[1])?' feita':''}" data-a="${s[0]}" data-b="${s[1]}" d="${d}" pathLength="1" marker-end="url(#pt)" style="--d:${(prof[s[0]]*.12+.15).toFixed(2)}s"/>
+      <path class="fl${viva(s[0])?' vivo':''}" data-a="${s[0]}" data-b="${s[1]}" d="${d}" pathLength="1" stroke="${c}"/>`;}).join('');
+  const trilhos=TRILHAS.map(([t,c,y,x0,x1])=>`<rect class="trilho" x="${x0-50}" y="${y-44}" width="${x1-x0+100}" height="${110}" rx="40" fill="${c}"/>
+     <text class="tnome" x="${x0-38}" y="${y-50}" fill="${c}">${t}</text>`).join('');
+  const sats=OBJS.map(([h,t,ic,no])=>{const N=P[no], sx=N[3]+40, sy=N[4]-36;
+    return `<a class="sat" href="${h}" data-no="${no}" data-id="${h.replace('.html','')}"><title>🎮 ${t}</title><line x1="${N[3]+18}" y1="${N[4]-18}" x2="${sx}" y2="${sy}"/><circle cx="${sx}" cy="${sy}" r="15"/><text x="${sx}" y="${sy+1}">${ic}</text></a>`;}).join('');
+  const nos=NOS.map(([h,t,ic,x,y,k])=>{const c=COR_T(k), lw=t.length*7.6+16;
+    return `<a class="gno${vista(h)?' vista':''}${h===prox?' prox':''}" href="${h}" data-id="${h}" style="--d:${(prof[h]*.12).toFixed(2)}s"><title>${t}</title>
+      <circle class="halo" cx="${x}" cy="${y}" r="27" stroke="${c}"/>
+      <g class="pop"><circle class="anel" cx="${x}" cy="${y}" r="27" stroke="${c}"/><text class="ic" x="${x}" y="${y+1}">${ic}</text>
+      <g class="ok"><circle cx="${x+20}" cy="${y-20}" r="9" fill="#2f9e5a"/><text x="${x+20}" y="${y-19.5}" fill="#fff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="central">✔</text></g>
+      <rect class="rotf" x="${x-lw/2}" y="${y+R+5}" width="${lw}" height="21" rx="10"/><text class="rot" x="${x}" y="${y+R+20}">${h===prox?'▸ ':''}${t}</text></g></a>`;}).join('');
+  const mapa=`<div class="mapa">
+    <svg class="grafo entra" id="grafo" viewBox="20 10 1090 600" role="img" aria-label="Grafo das aulas com setas de pré-requisito">
+      <defs><marker id="pt" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 1 L9 5 L0 9 z" fill="#9db4c6"/></marker></defs>
+      ${trilhos}${ars}${sats}${nos}
+    </svg>
+    <div class="mapinfo"><span id="mapaInfo">${legMapa()}</span><span class="prog">${vistas}/${total} vistas<i><em style="width:${vistas/total*100}%"></em></i></span></div>
+  </div>`;
+  const grupos=[['Recursão e busca',0,5],['Ordenação',5,10],['Árvores e heap',10,14],['Backtracking',14,18],['Removendo recursão',18,19]];
+  const lista=`<div class="trilha2"><div style="font:700 .95rem Fredoka,sans-serif;color:#1f4560">${vistas}/${total} aulas vistas</div>${grupos.map(([t,i,j])=>`<h4>${t}</h4>${NOS.slice(i,j).map(([h,tt,ic])=>`<a class="${vista(h)?'vista':''}${h===prox?' prox':''}" href="${h}" data-id="${h}"><span class="bi">${vista(h)?'✔':ic}</span><span>${tt}${h===prox?'<small>próximo sugerido</small>':''}</span></a>`).join('')}`).join('')}</div>`;
+  return mapa+lista;
+}
+function legMapa(){return `${TRILHAS.map(([t,c])=>`<span class="lg"><i style="--c:${c}"></i>${t}</span>`).join('')}<span class="lg"><i style="--c:#c99a1e"></i>extra</span><span class="lg">🎮 jogo da aula</span> · passe o mouse numa aula pra ver o caminho`;}
+function ligaGrafo(){
+  const g=document.getElementById('grafo'); if(!g) return;
+  setTimeout(()=>g.classList.remove('entra'),2600);
+  const ant=id=>{const r=new Set([id]);let m=true;while(m){m=false;SETAS.forEach(([a,b])=>{if(r.has(b)&&!r.has(a)){r.add(a);m=true;}});}return r;};
+  const des=id=>{const r=new Set([id]);let m=true;while(m){m=false;SETAS.forEach(([a,b])=>{if(r.has(a)&&!r.has(b)){r.add(b);m=true;}});}return r;};
+  const nome=id=>(NOS.find(n=>n[0]===id)||[])[1];
+  const info=document.getElementById('mapaInfo');
+  const foca=id=>{ g.classList.remove('entra');
+    const A=ant(id),D=des(id),T=new Set([...A,...D]);
+    g.classList.add('foco');
+    g.querySelectorAll('.gno').forEach(n=>n.classList.toggle('liga',T.has(n.dataset.id)));
+    g.querySelectorAll('.sat').forEach(n=>n.classList.toggle('liga',T.has(n.dataset.no)));
+    g.querySelectorAll('.ar,.fl').forEach(e=>{const a=e.dataset.a,b=e.dataset.b; e.classList.toggle('liga',(A.has(a)&&A.has(b))||(D.has(a)&&D.has(b)));});
+    const pre=SETAS.filter(s=>s[1]===id).map(s=>nome(s[0])), lib=SETAS.filter(s=>s[0]===id).map(s=>nome(s[1]));
+    const jg=OBJS.filter(o=>o[3]===id).map(o=>o[1]);
+    info.innerHTML=`<b>${nome(id)}</b> · ${pre.length?'vem depois de: '+pre.join(', '):'é o ponto de partida'}${lib.length?' · abre: '+lib.join(', '):''}${jg.length?' · 🎮 '+jg.join(', '):''}`; };
+  const solta=()=>{ g.classList.remove('foco'); g.querySelectorAll('.liga').forEach(e=>e.classList.remove('liga')); info.innerHTML=legMapa(); };
+  g.querySelectorAll('.gno').forEach(n=>{ n.addEventListener('mouseenter',()=>foca(n.dataset.id)); n.addEventListener('focus',()=>foca(n.dataset.id)); n.addEventListener('mouseleave',solta); n.addEventListener('blur',solta); });
+  g.querySelectorAll('.sat').forEach(n=>{ n.addEventListener('mouseenter',()=>{foca(n.dataset.no); info.innerHTML='🎮 <b>'+n.querySelector('title').textContent.replace('🎮 ','')+'</b> · jogo da aula '+nome(n.dataset.no);}); n.addEventListener('mouseleave',solta); });
+}
+const porta=(p)=>`<a class="porta" href="${p[0]}" data-id="${p[0]}"><span class="arco"><span class="folha"></span><span class="ico">${p[3]}</span></span><span class="pn">${p[1]==='bt'?'backtracking':'aula '+p[1]}</span><b>${p[2]}</b>${feitos[p[0]]?'<span class="feitoA">✔ vista</span>':''}</a>`;
+document.getElementById('modulos').innerHTML=`
+  <section class="modulo"><a class="idiomaCard" href="idioma.html" data-id="idioma">
+    <svg viewBox="0 0 240 150" aria-hidden="true">
+      <rect x="4" y="4" width="150" height="62" rx="14" fill="#eff6ff" stroke="#93c5fd"/>
+      <path d="M112 66 L128 84 L130 66 Z" fill="#eff6ff" stroke="#93c5fd"/><rect x="111" y="62" width="21" height="6" fill="#eff6ff"/>
+      <text x="16" y="28" font-family="Inter,sans-serif" font-size="12.5" font-weight="700" fill="#1e3a8a">Viu a lista do prof</text>
+      <text x="16" y="47" font-family="Inter,sans-serif" font-size="12.5" font-weight="700" fill="#1e3a8a">e não entendeu nada?</text>
+      <g transform="translate(118,58) scale(1.55)">
+        <ellipse cx="30" cy="57" rx="16" ry="2.5" fill="#0f172a" opacity=".12"/>
+        <line x1="30" y1="10" x2="30" y2="5" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/><circle cx="30" cy="4.5" r="3.2" fill="#fbbf24"/>
+        <rect x="20" y="36" width="20" height="17" rx="7" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.3"/><circle cx="30" cy="44" r="3.2" fill="#3b82f6"/>
+        <path d="M21 41 Q14 45 13 49" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round" fill="none"/>
+        <path d="M39 41 Q46 37 47 30" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round" fill="none"/><circle cx="47" cy="28.5" r="3" fill="#fbbf24"/>
+        <rect x="3" y="40" width="22" height="16" rx="2" fill="#fff" stroke="#94a3b8" stroke-width="1" transform="rotate(-8 14 48)"/>
+        <line x1="7" y1="45" x2="20" y2="43" stroke="#cbd5e1" stroke-width="1.2"/><line x1="7" y1="49" x2="21" y2="47" stroke="#cbd5e1" stroke-width="1.2"/>
+        <rect x="13" y="10" width="34" height="25" rx="11" fill="#fff" stroke="#94a3b8" stroke-width="1.3"/>
+        <rect x="17" y="15" width="26" height="15" rx="7" fill="#0f172a"/>
+        <circle cx="24.5" cy="22.5" r="3.1" fill="#60a5fa"/><circle cx="35.5" cy="22.5" r="3.1" fill="#60a5fa"/>
+        <circle cx="23.6" cy="21.6" r="1" fill="#fff"/><circle cx="34.6" cy="21.6" r="1" fill="#fff"/>
+        <path d="M26.5 27 Q30 29.5 33.5 27" stroke="#60a5fa" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+      </g>
+    </svg>
+    <div><h3>📖 Idioma das listas</h3><p>Tá com dificuldade em entender os conceitos? Essa seção é pra você. Traduz os símbolos (⌊n/2⌋, Σ, v[a..b], c⁺(n)...) e os pedidos dos enunciados ("expresse como recorrência", "resolva", "justifique") e mostra o que cada exercício das listas 1, 2 e 3 quer de verdade.</p><span class="ir">Abrir o tradutor ▸</span></div>
+  </a></section>
+  <section class="modulo" id="portas"><div class="modTopo"><span class="modN">🗺️</span><div><h2>Mapa da disciplina</h2><small>cada círculo é uma aula e as setas mostram o que vem antes do quê · os círculos pequenos laranja são os jogos</small></div></div>
+   ${mapaHTML()}
+  </section>
+  <section class="modulo"><div class="modTopo"><span class="modN">🎮</span><div><h2>Pratique jogando</h2><small>você vira o algoritmo</small></div></div>
+    <div class="jg">${JOGOS.map(card).join('')}</div></section>
+  <section class="modulo"><div class="modTopo"><span class="modN">★</span><div><h2>Desafios <span class="modTag p2">treino pra prova</span></h2><small>ler, interpretar e alterar o código, do jeito que a prova cobra</small></div></div>
+    <div class="breves">
+      <a class="desafio" href="quebra-cabeca.html" data-id="qc">🧩 <b>Quebra-cabeça de código</b><br>monte os códigos do professor (e as alterações) desviando das peças-armadilha<span class="ir">Montar ▸</span></a>
+      <a class="desafio" href="detetive.html" data-id="det">🔎 <b>Detetive</b><br>alguém mudou uma linha do código: use as pistas pra descobrir qual e como<span class="ir">Investigar ▸</span></a>
+      <a class="desafio" href="simulado.html" data-id="sim">📝 <b>Simulado</b><br>questões de todas as aulas misturadas, e no fim os assuntos em que você foi pior, com link pra revisar<span class="ir">Fazer ▸</span></a>
+    </div></section>`;
+ligaGrafo();
+document.querySelectorAll('[data-id]').forEach(a=>a.addEventListener('click',()=>{
+  try{feitos[a.dataset.id]=1;localStorage.setItem('fliperama-alg2',JSON.stringify(feitos));}catch(e){}
+}));
+
+/* ===== abertura 3D (CSS 3D, sem biblioteca) ===== */
+(function(){
+  const W=document.getElementById('mundo'), cena=document.getElementById('cena');
+  function el(par,css,html){const d=document.createElement('div');d.style.cssText='position:absolute;left:0;top:0;transform-style:preserve-3d;'+css;if(html)d.innerHTML=html;par.appendChild(d);return d;}
+  function cubo(par,x,y,z,w,d,h,ct,cf,cl){const g=el(par,`transform:translate3d(${x}px,${y}px,${z}px)`);
+    const b='box-sizing:border-box;border:1px solid #0000001a;border-radius:2px;transform-origin:0 0;';
+    el(g,b+`width:${w}px;height:${h}px;background:${cf};transform:rotateX(90deg)`);
+    el(g,b+`width:${h}px;height:${d}px;background:${cl};transform:rotateY(-90deg)`);
+    el(g,b+`width:${h}px;height:${d}px;background:${cl};transform:translateX(${w}px) rotateY(-90deg)`);
+    el(g,b+`width:${w}px;height:${h}px;background:${cf};transform:translateY(${d}px) rotateX(90deg)`);
+    el(g,b+`width:${w}px;height:${d}px;background:${ct};transform:translateZ(${h}px)`);
+    return g;}
+  function bb(par,s,html){const d=el(par,`width:${s}px;height:${s}px;font-size:${s*.8}px;line-height:${s}px;text-align:center;transform-origin:50% 100%`,html);d._s=s;return d;}
+  let ang=0;
+  const poe=(b,x,y,z)=>b.style.transform=`translate3d(${x-b._s/2}px,${y-b._s}px,${z}px) rotateZ(${-ang}deg) rotateX(-90deg)`;
+  const MARC={}; const marca=k=>MARC[k]=W.children.length;
+  marca('chao');
+  // chão
+  el(W,'width:560px;height:560px;border-radius:44px;background:#7a5a3a;transform:translateZ(-16px);box-shadow:0 40px 60px #2d4a2a40');
+  el(W,'width:560px;height:560px;border-radius:44px;background:#6f512f;transform:translateZ(-8px)');
+  el(W,'width:560px;height:560px;border-radius:44px;background:repeating-linear-gradient(90deg,#8fca6e 0 40px,#84c064 40px 80px);box-shadow:inset 0 0 0 5px #79b45a,inset 0 0 40px #5e9a4430');
+  marca('portal');
+  // portal da recursão (círculos dentro de círculos)
+  const PX=205,PY=365,ANEIS=[];
+  for(let i=0;i<6;i++){const r=62-i*10;ANEIS.push(el(W,`width:${r*2}px;height:${r*2}px;margin:${-r}px 0 0 ${-r}px;border-radius:50%;border:4px dashed ${['#3b6fb0','#5a8fd0','#7aa9e0','#9cc2ec','#bdd8f4','#ffffff'][i]};background:${i===5?'#eaf4ff':'transparent'};left:${PX}px;top:${PY}px`));}
+
+  marca('dom');
+  // dominós
+  const DOM=[];for(let i=0;i<9;i++){const x=70+i*36;const g=cubo(W,x,455,0,8,30,52,'#f3ead6','#e2d6bb','#fffaf0');g.style.transformOrigin='8px 0 0';DOM.push({g,x});
+    g.children[1].style.background=g.children[2].style.background='radial-gradient(circle at 30% 30%,#2a2620 0 3px,transparent 4px),radial-gradient(circle at 70% 70%,#2a2620 0 3px,transparent 4px),linear-gradient(90deg,transparent 48%,#cfc4ab 48% 52%,transparent 52%),#fffaf0';}
+  marca('torre');
+  // torre
+  const TOR=[];for(let i=0;i<5;i++){const par=i%2===0;TOR.push({g:cubo(W,par?60:83,par?143:120,0,par?72:26,par?26:72,17,i%2?'#f3d7a6':'#efcf9c','#ddb06f','#cf9f5c'),x:par?60:83,y:par?143:120,i});}
+  marca('cav');
+  // tabuleiro do cavalo
+  const BX=330,BY=70,T=42,tiles=[];
+  for(let r=0;r<4;r++)for(let c=0;c<4;c++)tiles.push(el(W,`width:${T-2}px;height:${T-2}px;border-radius:6px;background:${(r+c)%2?'#d9dfe5':'#f8fafb'};transform:translate3d(${BX+c*T}px,${BY+r*T}px,2px);transition:background .4s`));
+  cubo(W,BX-6,BY-6,-10,T*4+10,T*4+10,10,'#b8c2cc','#9aa5b1','#a9b4bf');
+  const cav=bb(W,46,'<span style="color:#3d4852">♞</span>'); const CP=[[0,0],[1,2],[3,3],[2,1]];
+  marca('lab');
+  // labirinto
+  const LX=350,LY=300,C=40,MZ=[[1,0,0,0],[1,1,0,1],[0,1,0,0],[1,1,1,1]];
+  cubo(W,LX-5,LY-5,-8,C*4+10,C*4+10,8,'#f3e6c8','#d9c79f','#e4d3ad');
+  MZ.forEach((row,r)=>row.forEach((v,c)=>{if(!v)cubo(W,LX+c*C+2,LY+r*C+2,0,C-4,C-4,20,'#4f8a3f','#3c6e30','#457c37');}));
+  const rato=bb(W,32,'🐭'), queijo=bb(W,30,'🧀'); const RP=[[0,0],[1,0],[1,1],[2,1],[3,1],[3,2],[3,3]];
+  marca('heap');
+  // heap
+  const heap=el(W,'width:170px;height:130px;transform-origin:50% 100%',`<svg viewBox="0 0 170 130" width="170" height="130"><g stroke="#e3c9a8" stroke-width="4"><line x1="85" y1="22" x2="45" y2="66"/><line x1="85" y1="22" x2="125" y2="66"/><line x1="45" y1="66" x2="22" y2="110"/><line x1="45" y1="66" x2="68" y2="110"/><line x1="125" y1="66" x2="104" y2="110"/></g><g font-size="30" text-anchor="middle"><text x="85" y="34" font-size="38">🍉</text><text x="45" y="76">🍊</text><text x="125" y="76">🍑</text><text x="22" y="120" font-size="24">🍒</text><text x="68" y="120" font-size="24">🫐</text><text x="104" y="120" font-size="24">🍋</text></g></svg>`);
+  marca('alunos');
+  // dois alunos: menina e menino, deslumbrados com o mundo da recursão
+  function aluno(menina){
+    const pele=menina?'#f6d2ad':'#e9bf94', cab=menina?'#5a3a24':'#2e2219', blusa=menina?'#f2a541':'#4f86c6', calca=menina?'#3d5a80':'#3b3f4a';
+    const cabelo=menina
+      ?`<path d="M23 23 Q22 6 37 6 Q52 6 51 23 L52 36 Q47 30 46 22 Q37 16 28 22 Q27 30 22 36 Z" fill="${cab}"/><circle cx="21" cy="26" r="4.5" fill="${cab}"/><circle cx="53" cy="26" r="4.5" fill="${cab}"/><circle cx="21" cy="21.5" r="1.8" fill="#e8615a"/><circle cx="53" cy="21.5" r="1.8" fill="#e8615a"/>`
+      :`<path d="M25 20 Q24 7 37 7 Q50 7 49 20 Q46 13 43 15 Q41 11 37 13 Q33 10 31 14 Q28 12 25 20 Z" fill="${cab}"/>`;
+    const roupa=menina
+      ?`<path d="M25 56 Q24 34 37 34 Q50 34 49 56 Z" fill="${blusa}"/>`
+      :`<path d="M26 52 Q25 34 37 34 Q49 34 48 52 Z" fill="${blusa}"/><rect x="27" y="49" width="20" height="6" rx="2" fill="${calca}"/>`;
+    const d=bb(W,74,`<svg viewBox="0 0 74 74" width="74" height="74" style="overflow:visible;display:block">
+      <g stroke="${calca}" stroke-width="5" stroke-linecap="round"><line class="pe1" x1="33" y1="52" x2="32" y2="72"/><line class="pe2" x1="41" y1="52" x2="42" y2="72"/></g>
+      ${roupa}
+      <g stroke="${pele}" stroke-width="4.5" stroke-linecap="round"><line class="b1" x1="28" y1="39" x2="21" y2="51"/><line class="b2" x1="46" y1="39" x2="53" y2="51"/></g>
+      <g class="cabeca">
+        <circle cx="37" cy="21" r="12" fill="${pele}"/>${cabelo}
+        <ellipse cx="32.5" cy="21.5" rx="3" ry="3.4" fill="#fff"/><ellipse cx="41.5" cy="21.5" rx="3" ry="3.4" fill="#fff"/>
+        <circle class="o1" cx="32.5" cy="21.5" r="1.8" fill="#2a2620"/><circle class="o2" cx="41.5" cy="21.5" r="1.8" fill="#2a2620"/>
+        <circle cx="29.5" cy="26" r="2" fill="#f4a3a0" opacity=".55"/><circle cx="44.5" cy="26" r="2" fill="#f4a3a0" opacity=".55"/>
+        <path class="sorri" d="M34 27.5 Q37 30 40 27.5" stroke="#b5634a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <ellipse class="uau" cx="37" cy="28.5" rx="2" ry="2.6" fill="#8a3b30" opacity="0"/>
+      </g></svg>`);
+    const bal=bb(W,30,'');
+    bal.style.cssText+=';font-family:Fredoka,sans-serif;font-weight:700;color:#2f3b55;background:#fff;border-radius:50%;box-shadow:0 2px 0 #0002;font-size:17px';
+    return {d,bal,q:k=>d.querySelector(k)};
+  }
+  const MENINA=aluno(true), MENINO=aluno(false);
+  // entrada estilo "construção": cada parte do mundo cai do céu e quica no lugar
+  const ORDEM=['chao','portal','dom','torre','cav','lab','heap','alunos'], GR={};
+  { const filhos=[...W.children];
+    ORDEM.slice(0,-1).forEach((k,i)=>{const g=el(W,'');GR[k]=g;filhos.slice(MARC[k],MARC[ORDEM[i+1]]).forEach(c=>g.appendChild(c));});
+    filhos.slice(MARC.alunos).forEach(c=>W.appendChild(c)); }
+  // cada peça ganha um invólucro próprio pra cair sozinha
+  const PECAS=[]; const T_QUEDA=9.2, PASSO=.075;
+  { const ordem=k=>{const c=[...GR[k].children]; if(k==='cav'){const base=c[16];return [base,...c.slice(0,16),c[17]];} return c;};
+    ['cav','lab','torre','heap','dom'].forEach(k=>ordem(k).forEach(c=>{const w=el(GR[k],'');w.appendChild(c);PECAS.push(w);})); }
+  const T_FIM=T_QUEDA+PECAS.length*PASSO+1;
+  function queda(t,ini){const f=(t-ini)/.42;if(f<0)return [460,0];if(f<1)return [460*(1-f*f),Math.min(1,f*4)];const b=(t-ini-.42)/.55;return [b<1?30*Math.abs(Math.sin(Math.PI*2*b))*(1-b)*(1-b):0,1];}
+  // redemoinho: bonecas russas, Torre de Hanói, Fibonacci e símbolos de recursão
+  const matr=(c1,c2)=>`<svg viewBox="0 0 40 52" width="100%" height="100%" style="overflow:visible;display:block"><ellipse cx="20" cy="49" rx="13" ry="2.5" fill="#0002"/><path d="M20 14 C5 17 3 40 8 48 Q20 52 32 48 C37 40 35 17 20 14 Z" fill="${c1}"/><path d="M12 38 Q20 33 28 38 Q28 46 20 47 Q12 46 12 38 Z" fill="#fff6e4"/><circle cx="20" cy="42" r="3.2" fill="${c2}"/><circle cx="20" cy="13" r="9.5" fill="#fbe3c4"/><path d="M10 13 Q10 2 20 2 Q30 2 30 13 Q27 8 20 8 Q13 8 10 13 Z" fill="${c2}"/><path d="M10.5 12 Q9 22 14 24 Q12 17 14 12 Z M29.5 12 Q31 22 26 24 Q28 17 26 12 Z" fill="${c2}"/><circle cx="16.5" cy="14" r="1.1" fill="#3a2a22"/><circle cx="23.5" cy="14" r="1.1" fill="#3a2a22"/><circle cx="14.5" cy="17" r="1.8" fill="#f4a3a0" opacity=".7"/><circle cx="25.5" cy="17" r="1.8" fill="#f4a3a0" opacity=".7"/><path d="M18 18.5 Q20 20 22 18.5" stroke="#b5634a" stroke-width="1" fill="none"/></svg>`;
+  const hanoi=`<svg viewBox="0 0 60 50" width="100%" height="100%" style="overflow:visible;display:block"><rect x="4" y="43" width="52" height="5" rx="2" fill="#b58b5a"/><rect x="28" y="6" width="4" height="38" rx="2" fill="#d2a977"/><rect x="10" y="35" width="40" height="8" rx="3" fill="#e8615a"/><rect x="16" y="26" width="28" height="8" rx="3" fill="#f2a541"/><rect x="22" y="17" width="16" height="8" rx="3" fill="#4f86c6"/></svg>`;
+  const espiral=(()=>{const f=1.618;let p='';for(let th=0;th<=3*Math.PI;th+=.12){const r=1.6*Math.pow(f,th/(Math.PI/2));p+=(p?'L':'M')+(36+r*Math.cos(th+3.3)).toFixed(1)+' '+(36+r*Math.sin(th+3.3)).toFixed(1);}
+    return `<svg viewBox="0 0 72 72" width="100%" height="100%" style="overflow:visible;display:block"><rect x="3" y="3" width="66" height="66" rx="6" fill="#fff8e8" opacity=".85"/><path d="${p}" stroke="#e08a2b" stroke-width="3.2" fill="none" stroke-linecap="round"/><circle cx="36" cy="36" r="2.2" fill="#c0531b"/></svg>`;})();
+  const txt=(t,c,px)=>`<span style="font:700 ${px}px 'JetBrains Mono',monospace;color:${c};text-shadow:0 2px 0 #fff,0 0 8px #fff;white-space:nowrap">${t}</span>`;
+  const itens=[];
+  [['#e8615a','#3b6fb0',58],['#f2a541','#2f9e5a',46],['#4f86c6','#e8615a',36],['#2f9e5a','#f2a541',28],['#e8615a','#7a5af5',50],['#f2a541','#3b6fb0',40]].forEach(m=>itens.push([m[2],matr(m[0],m[1])]));
+  for(let k=0;k<3;k++) itens.push([46+k*4,hanoi]);
+  for(let k=0;k<3;k++) itens.push([54,espiral]);
+  [['1','#3b6fb0'],['1','#e8615a'],['2','#2f9e5a'],['3','#b5762b'],['5','#7a5af5'],['8','#e8615a'],['13','#3b6fb0'],['21','#2f9e5a']].forEach(n=>itens.push([34,txt(n[0],n[1],26)]));
+  [['↻','#3b6fb0'],['f(n)','#e8615a'],['n!','#2f9e5a'],['∞','#7a5af5'],['f(n−1)','#b5762b'],['{ }','#3b6fb0']].forEach(n=>itens.push([34,txt(n[0],n[1],n[0].length>2?17:26)]));
+  const SIMB=itens.map(([sz,h])=>{const d=bb(W,sz,h);d.style.fontSize=sz*.8+'px';d.style.display='flex';d.style.justifyContent='center';d.style.alignItems='flex-end';return d;});
+  const TS0=1.6, TS_DUR=T_QUEDA-.3-TS0;
+  // roteiro: [x, y, balão da menina, balão do menino]
+  const ROT=[[PX,PY,'!','✨'],[150,250,'!','😮'],[245,300,'✨','!'],[300,170,'?','✨'],[330,300,'!','😮'],[300,410,'✨','!'],[PX,PY,'↻','↻']];
+  const ez=x=>x<0?0:x>1?1:x*x*(3-2*x);
+  function anda(t,quem){ // ciclo de 26s; quem 0 = menina, 1 = menino
+    const tt=((t-quem*.5)%26+26)%26; let x=PX,y=PY,z=0,olha=0,cima=0,passo=0,txt='',esc=1;
+    if(tt<2.5){const f=ez(tt/2.5);z=-60*(1-f);esc=.25+.75*f;}
+    else if(tt<5){const r=tt-2.5;olha=r<1.3?Math.sin(r*4.8+quem*2):0;cima=ez((r-1.1)/.5);txt=r<1.2?'?':ROT[0][2+quem];}
+    else{let r=tt-5,i=0,ok=false;
+      for(;i<ROT.length-1;i++){
+        if(r<2){const f=ez(r/2),a=ROT[i],b=ROT[i+1];x=a[0]+(b[0]-a[0])*f;y=a[1]+(b[1]-a[1])*f;passo=Math.sin(r*9+quem);olha=Math.sign(b[0]-a[0])*.7;ok=true;break;}
+        r-=2;
+        if(r<1.6){x=ROT[i+1][0];y=ROT[i+1][1];
+          if(r<.7)olha=Math.sin(r*7+quem*2); else cima=ez((r-.7)/.3);
+          txt=r<.7?'':ROT[i+1][2+quem];ok=true;break;}
+        r-=1.6;}
+      if(!ok){const f=ez(Math.min(r/1.4,1));z=-60*f;esc=1-.75*f;}
+    }
+    // o menino anda ao lado da menina
+    if(quem){x+=24;y+=14;}
+    return {x,y,z,olha,cima,passo,txt,esc};
+  }
+
+  function quadro(ms){
+    const t=ms/1000; ang=-28+16*Math.sin(t*.3);
+    W.style.transform=`scale(${Math.min(1,cena.clientWidth/640)}) rotateX(60deg) rotateZ(${ang}deg)`;
+    PECAS.forEach((w,i)=>{const [z,op]=queda(t,T_QUEDA+i*PASSO);w.style.transform=`translateZ(${z}px)`;w.style.opacity=op;});
+    { const ts=t-TS0, N=SIMB.length, ent=ez(ts/1.2), fim=ez((ts-(TS_DUR-1.4))/1.4);
+      SIMB.forEach((d,i)=>{const hz=((i*.6180339+ts*.13)%1+1)%1, r=30+hz*80+fim*70+8*Math.sin(ts*2+i),
+          a=i*2.39996+ts*(3.6-2.3*hz), z=6+hz*100+fim*90;
+        d.style.opacity=ts<0?0:Math.min(ent,Math.pow(Math.sin(Math.PI*Math.min(hz*1.15,1)),.5),1-fim);
+        poe(d,PX+r*Math.cos(a),PY+r*Math.sin(a),z);}); }
+    const ab=ez((t-.2)/.6); GR.portal.style.transform=`translate(${PX}px,${PY}px) scale(${ab}) translate(${-PX}px,${-PY}px)`; GR.portal.style.opacity=ab>0?1:0;
+    const u=t-.9, UL=T_QUEDA-.9-1.2, olhando=u>=3.2&&u<UL;
+    const ta=u<3.2?u:u<UL?3.2:u<UL+1.2?3.2+1.4*(u-UL)/1.2:u<T_FIM-.9?4.6:u-(T_FIM-.9)+4.6;
+    // dominós: ciclo de 6s
+    const td=t%6; DOM.forEach((d,i)=>{const cai=ez((td-.6-i*.16)/.4), levanta=ez((td-4.6)/.8); const alvo=i===DOM.length-1?90:62;
+      d.g.style.transform=`translate3d(${d.x}px,455px,0) rotateY(${alvo*cai*(1-levanta)}deg)`;});
+    // torre: ciclo de 8s (empilha e desempilha)
+    const tt=(Math.max(0,t-T_FIM)+3.2)%8; TOR.forEach(b=>{const sobe=ez((tt-.3-b.i*.6)/.45), sai=ez((tt-4.6-(4-b.i)*.45)/.4);
+      b.g.style.transform=`translate3d(${b.x}px,${b.y}px,${b.i*18+(1-sobe)*170+sai*170}px)`; b.g.style.opacity=Math.min(sobe*3,1)*(1-sai);});
+    // cavalo
+    const tc=t/1.15, k=Math.floor(tc)%4, f=ez((tc%1)/.6), a=CP[k], b=CP[(k+1)%4];
+    poe(cav,BX+(a[1]+(b[1]-a[1])*f+.5)*T,BY+(a[0]+(b[0]-a[0])*f+.5)*T+10,4+Math.sin(f*Math.PI)*46);
+    tiles.forEach((el,i)=>{const r=i>>2,c=i&3;const on=CP.some((p,j)=>p[0]===r&&p[1]===c&&j===k);el.style.background=on?'#dcae5f':((r+c)%2?'#d9dfe5':'#f8fafb');});
+    // rato
+    const tr=(t%5.5)/.55, kr=Math.min(Math.floor(tr),RP.length-2), fr=tr>=RP.length-1?1:ez(tr%1), p=RP[kr], q=RP[kr+1];
+    poe(rato,LX+(p[1]+(q[1]-p[1])*fr+.5)*C,LY+(p[0]+(q[0]-p[0])*fr+.5)*C+8,2+Math.abs(Math.sin(tr*Math.PI))*5);
+    poe(queijo,LX+3.5*C,LY+3.5*C-6,tr>=RP.length-1?400:2);
+    // heap flutuando
+    heap.style.transform=`translate3d(165px,${270-130}px,${22+7*Math.sin(t*1.6)}px) rotateZ(${-ang}deg) rotateX(-90deg)`;
+    // portal girando, alternando o sentido a cada nível
+    ANEIS.forEach((n,i)=>n.style.transform=`translateZ(${1+i*.5}px) rotate(${(i%2?-1:1)*t*(20+i*12)}deg)`);
+    // alunos
+    [MENINA,MENINO].forEach((A,quem)=>{
+      const B=anda(ta,quem); const antes=ta-quem*.5<0;
+      if(olhando){B.olha=Math.sin(u*1.6+quem*2.2); B.cima=.2+.2*Math.sin(u*1.1+quem); B.txt=((Math.floor(u/1.3)+quem)%2)?'?':'🤔';}
+      A.d.style.transform=`translate3d(${B.x-37}px,${B.y-74}px,${B.z}px) rotateZ(${-ang}deg) rotateX(-90deg) scale(${B.esc})`;
+      A.d.style.opacity=antes?0:Math.min(1,B.esc*1.6);
+      const dx=B.olha*1.5, dy=-B.cima*1.8;
+      A.q('.o1').setAttribute('cx',32.5+dx);A.q('.o2').setAttribute('cx',41.5+dx);
+      A.q('.o1').setAttribute('cy',21.5+dy);A.q('.o2').setAttribute('cy',21.5+dy);
+      A.q('.cabeca').setAttribute('transform',`rotate(${B.olha*8} 37 32) translate(0 ${-B.cima*1.5})`);
+      A.q('.sorri').setAttribute('opacity',1-B.cima); A.q('.uau').setAttribute('opacity',B.cima);
+      const sw=B.passo*16, br=B.cima*125;
+      A.q('.pe1').setAttribute('transform',`rotate(${sw} 33 52)`); A.q('.pe2').setAttribute('transform',`rotate(${-sw} 41 52)`);
+      A.q('.b1').setAttribute('transform',`rotate(${-sw+br} 28 39)`); A.q('.b2').setAttribute('transform',`rotate(${sw-br} 46 39)`);
+      if(A.bal.textContent!==B.txt) A.bal.textContent=B.txt;
+      A.bal.style.opacity=B.txt&&!antes?Math.min(1,B.esc):0;
+      // balão em cima da cabeça, um pouco à frente: não some atrás do corpo
+      poe(A.bal,B.x+(quem?16:-16),B.y+4,B.z+70*B.esc);
+    });
+  }
+  let T0=0; const bR=document.getElementById('remontar'); if(bR) bR.onclick=()=>{T0=performance.now();};
+  const parado=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let visivel=true; new IntersectionObserver(e=>visivel=e[0].isIntersecting).observe(cena);
+  (function loop(ms){ if(visivel&&!window.__pausa) quadro(parado?20000:ms-T0); if(!parado) requestAnimationFrame(loop); })(0);
+  window.__quadro=quadro;
+})();
+</script>
+<script src="canto.js"></script>
+<script src="appdica.js"></script>
+</body>
+</html>

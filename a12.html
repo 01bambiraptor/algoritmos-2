@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · feito a partir do material da disciplina CI1056 (UFPR) · CC BY-NC-SA 4.0 · veja LICENSE.txt -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f2f7fb">
+<title>Aula 12: max-heapify e build-max-heap</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--titulo:#2f5d7c;--ceu:#e7f2fb;--gelo:#f2f7fb;--pessego:#ffd6b0;--rosa:#fdecef;--ink:#2b3440;--muted:#6b7785;--ok:#2f9e5a;--red:#d9485f;--gold:#f0a81c;--borda:#d5e6f3}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:'Fredoka',system-ui,sans-serif;color:var(--ink);background:var(--gelo);font-size:17px;line-height:1.55;touch-action:manipulation}
+header{position:sticky;top:0;z-index:20;background:#fffffff0;backdrop-filter:blur(6px);border-bottom:2px solid var(--borda)}
+.top{display:flex;align-items:center;gap:12px;padding:10px 18px;flex-wrap:wrap}
+.top h1{margin:0;font-size:1.45rem;color:var(--titulo)}
+.top .aula{color:var(--muted);font-size:.95rem}
+.voltar{font:inherit;font-weight:600;text-decoration:none;color:var(--titulo);background:var(--ceu);border-radius:12px;padding:8px 14px}
+nav.caps{display:flex;gap:6px;overflow-x:auto;padding:0 18px 10px;scrollbar-width:none}
+nav.caps a{white-space:nowrap;text-decoration:none;color:var(--titulo);background:var(--gelo);border:2px solid var(--borda);border-radius:999px;padding:5px 12px;font-size:.92rem;font-weight:500}
+nav.caps a.on{background:var(--titulo);color:#fff;border-color:var(--titulo)}
+main{max-width:1080px;margin:0 auto;padding:10px 18px 60px}
+section{background:#fff;border-radius:22px;padding:22px 24px;margin:18px 0;box-shadow:0 2px 10px #2f5d7c10;border:1px solid var(--borda);scroll-margin-top:110px}
+section h2{margin:0 0 6px;color:var(--titulo);font-size:1.5rem}
+section h2 .n{display:inline-flex;width:34px;height:34px;border-radius:50%;background:var(--pessego);color:var(--titulo);align-items:center;justify-content:center;margin-right:8px;font-size:1.1rem}
+.lead{color:var(--muted);margin-top:0}
+.caixa{background:var(--ceu);border-radius:16px;padding:14px 18px;margin:12px 0}
+.caixa.pessego{background:#fff1e3;border:2px solid var(--pessego)}
+.caixa.rosa{background:var(--rosa)}
+.prof{display:flex;gap:12px;align-items:flex-start;background:#fff8ef;border:2px dashed var(--pessego);border-radius:16px;padding:12px 16px;margin:12px 0}
+.prof .av{font-size:1.8rem;line-height:1}
+code,.mono{font-family:'JetBrains Mono',monospace;font-size:.88em;background:var(--ceu);border-radius:6px;padding:1px 6px}
+.dois{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:860px){.dois{grid-template-columns:1fr}}
+/* código clicável */
+.codigo{font-family:'JetBrains Mono',monospace;font-size:.86rem;background:#f8fbfe;border:2px solid var(--borda);border-radius:14px;padding:8px 0;overflow-x:auto}
+.codigo div{white-space:pre;padding:2px 14px;border-left:5px solid transparent;min-height:1.4em}
+.codigo div.cl{cursor:pointer}
+.codigo div.cl:hover{background:#eef6fd}
+.codigo div.sel{background:#fff1e3;border-left-color:var(--gold)}
+.codigo div.on{background:#ffe7a8;border-left-color:var(--gold)}
+.codigo div.on.r{background:#e2f5ea;border-left-color:var(--ok)}
+.codigo .cm{color:#8a9aa8}
+.codigo .kw{color:#2f5d7c;font-weight:600}
+.explica{background:#fff8ef;border:2px solid var(--pessego);border-radius:14px;padding:12px 16px;min-height:120px}
+.explica h4{margin:0 0 4px;color:var(--titulo)}
+/* animação */
+.anim{border:2px solid var(--borda);border-radius:18px;padding:14px;background:var(--gelo);margin-top:12px}
+.anim .palco{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(250px,1fr);gap:14px}
+@media (max-width:860px){.anim .palco{grid-template-columns:1fr}}
+.arvore{background:#fff;border-radius:14px;border:1px solid var(--borda);overflow:auto;min-height:300px}
+.arvore svg{display:block;margin:0 auto}
+.narra{font-size:1.05rem;background:#fff;border-radius:14px;border:2px solid var(--borda);padding:12px 14px;min-height:72px;margin-bottom:10px}
+.narra.bom{border-color:#a9dcbc;background:#effaf3}
+.narra.ruim{border-color:#f3b8c3;background:var(--rosa)}
+.ctrl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.btn{font:inherit;font-weight:600;border-radius:12px;border:2px solid var(--borda);background:#fff;color:var(--titulo);min-height:48px;min-width:48px;padding:8px 14px;cursor:pointer}
+.btn:active{transform:scale(.95)}
+.btn.pri{background:var(--titulo);border-color:var(--titulo);color:#fff}
+.btn:disabled{opacity:.4}
+.ctrl input[type=range]{flex:1;min-width:140px;height:34px;accent-color:var(--titulo)}
+.ctrl .cont{color:var(--muted);font-size:.85rem;min-width:70px;text-align:right}
+.painel{display:flex;flex-direction:column;gap:10px}
+.mini{background:#fff;border-radius:14px;border:1px solid var(--borda);padding:10px 12px}
+.mini h5{margin:0 0 6px;color:var(--titulo);font-size:.92rem}
+.vet{display:flex;gap:4px;flex-wrap:wrap}
+.vet div{width:42px;text-align:center;border:2px solid var(--borda);border-radius:9px;background:#fff;padding:2px 0}
+.vet div small{display:block;font-size:.7rem;color:var(--muted)}
+.vet div b{font-family:'JetBrains Mono',monospace;font-size:1.1rem}
+.vet div.cur{border-color:var(--gold);background:#fff4d6}
+.vet div.lixo b{color:#b9c4ce}
+.pilha{display:flex;flex-direction:column-reverse;gap:3px;font-family:'JetBrains Mono',monospace;font-size:.8rem}
+.pilha div{background:var(--gelo);border-radius:8px;padding:3px 8px;border:1px solid var(--borda)}
+.pilha div:last-child{background:#fff1e3;border-color:var(--gold);font-weight:600}
+.saida{font-family:'JetBrains Mono',monospace;font-size:.85rem;background:#f8fbfe;border-radius:8px;padding:6px 8px;min-height:30px;max-height:150px;overflow:auto;white-space:pre}
+.legenda{display:flex;gap:12px;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin-top:8px}
+.legenda i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:4px;vertical-align:-1px}
+.toggle{font-size:.88rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+.toggle input{width:20px;height:20px;accent-color:var(--titulo)}
+/* quiz */
+.q{border:2px solid var(--borda);border-radius:16px;padding:14px 16px;margin:12px 0;background:#fff}
+.q .enun{font-weight:500;margin-bottom:8px}
+.q .ops{display:flex;flex-wrap:wrap;gap:8px}
+.q .ops button{font:inherit;border-radius:12px;border:2px solid var(--borda);background:var(--gelo);padding:8px 14px;cursor:pointer;min-height:46px;font-family:'JetBrains Mono',monospace;font-size:.92rem}
+.q .ops button.certa{background:#e2f5ea;border-color:var(--ok)}
+.q .ops button.errada{background:var(--rosa);border-color:var(--red)}
+.q .fb{margin-top:8px;display:none}
+.q .fb.on{display:block}
+.placar{font-weight:600;color:var(--titulo)}
+/* praticar */
+.jogos{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.jogo{display:block;text-decoration:none;color:inherit;border-radius:18px;padding:16px;border:2px solid var(--borda);background:var(--gelo)}
+.jogo h3{margin:0 0 4px;color:var(--titulo)}
+.jogo .ir{display:inline-block;margin-top:8px;background:var(--titulo);color:#fff;border-radius:10px;padding:6px 14px;font-weight:600}
+table.map{border-collapse:collapse;width:100%;font-size:.95rem}
+table.map td,table.map th{border:1px solid var(--borda);padding:7px 10px;text-align:left;vertical-align:top}
+table.map th{background:var(--ceu);color:var(--titulo)}
+
+.arvoreBox{position:relative;background:#fff;border:1px solid var(--borda);border-radius:14px;overflow:hidden}
+.noQC,.noTV{position:absolute;transform:translate(-50%,-50%);width:40px;height:40px;border-radius:50%;border:2px dashed #c9d9e6;background:#f8fbfe;color:#a9bccb;font:600 .9rem 'Fredoka';cursor:pointer;padding:0}
+.noQC.on{border:2.5px solid var(--titulo);background:var(--ceu);color:var(--titulo)}
+.noTV{width:48px;height:48px;border:2.5px solid #9fb6c9;background:#fff;color:var(--ink);font-size:1rem;line-height:1.05}
+.noTV small{display:block;font-size:.65rem;color:var(--muted)}
+.noTV.sel,.cel.sel{border-color:var(--gold)!important;background:#fff4d6!important}
+.noTV.pai,.cel.pai{border-color:#7a5af5;background:#f0ecff}
+.noTV.filho,.cel.filho{border-color:#2c7be5!important;background:#e8f1ff!important}
+.vetLinha{display:flex;gap:4px;flex-wrap:wrap;margin-top:10px}
+.vetLinha .cel{font:inherit;width:46px;border:2px solid var(--borda);border-radius:10px;background:#fff;padding:2px 0;text-align:center;cursor:pointer}
+.vetLinha .cel small{display:block;font-size:.7rem;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.vetLinha .cel b{font-family:'JetBrains Mono',monospace;font-size:1rem}
+.vetLinha .cel.ordC{background:#e2f5ea;border-color:#a9dcbc}
+.vetLinha .cel.vaz{opacity:.35}
+.noH{position:absolute;transform:translate(-50%,-50%);width:46px;height:46px;border-radius:50%;border:2.5px solid #9fb6c9;background:#fff;display:flex;align-items:center;justify-content:center;font:600 1rem 'JetBrains Mono',monospace;transition:left .45s cubic-bezier(.4,1.3,.6,1),top .45s cubic-bezier(.4,1.3,.6,1);z-index:2}
+.noH.cur{border-color:var(--gold);background:#fff4d6;box-shadow:0 0 0 4px #f0a81c55;z-index:3}
+.noH.cmp{border-color:#2c7be5;background:#e8f1ff}
+.noH.ord{border-color:#a9dcbc;background:#e2f5ea;color:#2f9e5a}
+.seg{display:inline-flex;background:var(--ceu);border-radius:12px;padding:3px;gap:3px}
+.seg button{border:0;background:transparent;font:inherit;font-size:.9rem;padding:7px 12px;border-radius:9px;cursor:pointer;color:var(--muted);font-weight:600}
+.seg button.on{background:#fff;color:var(--titulo);box-shadow:0 1px 4px #0001}
+</style>
+</head>
+<body data-arquivo="a12.html" data-secoes="c5,c6" data-titulo="max-heapify e build-max-heap" data-num="12" data-resumo="Descer o valor até o lugar certo, e fazer isso de baixo para cima no vetor." data-selo="⬇️" data-ordem='[["a02.html", "Recursão"], ["a03.html", "Mínimo de um vetor"], ["a04-05.html", "Busca em vetor"], ["a06.html", "Busca binária"], ["rev-recursao.html", "Recorrências e revisão"], ["a07.html", "Ordenação por inserção"], ["a08.html", "Ordenação por seleção"], ["a09.html", "Mergesort"], ["a10.html", "Quicksort"], ["rev-ordenacao.html", "Revisão de ordenação"], ["a11.html", "Árvores quase completas e heap"], ["a12.html", "max-heapify e build-max-heap"], ["a13.html", "Heapsort e heap.c"], ["rev-heap.html", "Revisão de heap"], ["bt-vetores.html", "Vetores binários e subconjuntos"], ["bt-cavalo.html", "Passeio do cavalo"], ["bt-labirinto.html", "Labirinto do rato"], ["rev-backtracking.html", "Revisão de backtracking"]]'>
+<header>
+  <div class="top">
+    <a class="voltar" href="index.html#portas">← Portas</a>
+    <h1>📖 max-heapify e build-max-heap</h1>
+    <span class="aula">aula 12 · arrumar um nó e montar o heap · conteúdo da P2</span>
+  </div>
+  <nav class="caps" id="caps">
+    <a href="#c1">1 · Árvores</a><a href="#c2">2 · Quase completa</a><a href="#c3">3 · Árvore no vetor</a><a href="#c4">4 · Propriedade de heap</a><a href="#c5">5 · max-heapify</a><a href="#c6">6 · build-max-heap</a><a href="#c7">7 · heapsort</a><a href="#c8">8 · heap.c</a><a href="#c9">9 · Ler o código</a><a href="#c10">10 · Alterar</a><a href="#c11">🎮 Praticar</a>
+  </nav>
+</header>
+<main>
+<section id="c1">
+  <h2><span class="n">1</span>O que é uma árvore</h2>
+  <p class="lead">Aula 11. Uma árvore é o desenho de uma <b>hierarquia</b>, tipo um organograma ou uma árvore genealógica de cabeça pra baixo.</p>
+  <div class="dois">
+    <div>
+      <div class="caixa">
+        <b>nó</b>: cada elemento · <b>raiz</b>: o topo da hierarquia<br>
+        <b>pai</b>: o ancestral imediato · <b>filho</b>: o descendente imediato<br>
+        <b>folha</b>: nó sem filhos<br>
+        <b>nível k</b>: nós que têm k ancestrais até a raiz (a raiz é o nível 0)<br>
+        <b>altura</b>: a quantidade de níveis abaixo da raiz
+      </div>
+      <p><b>Árvore binária</b>: todo nó tem <b>no máximo dois</b> filhos.<br><b>Árvore binária completa</b>: todos os níveis estão <b>cheios</b>.</p>
+      <div class="prof"><div class="av">🧑‍🏫</div><div>Numa árvore binária completa, cada nível tem o <b>dobro</b> do anterior: 1, 2, 4, 8... O nível k tem <b>2<sup>k</sup></b> nós. Somando todos até a altura h dá <b>n = 2<sup>h+1</sup> − 1</b>.</div></div>
+    </div>
+    <div style="text-align:center"><svg id="arvTermos" viewBox="0 0 420 260" style="width:100%;max-width:440px"></svg></div>
+  </div>
+</section>
+
+<section id="c2">
+  <h2><span class="n">2</span>Árvore binária quase completa</h2>
+  <p class="lead">É a árvore que o heap usa. Toque nas casinhas pra ligar e desligar nós e descubra a regra.</p>
+  <div class="caixa pessego">Uma árvore de altura h é <b>quase completa</b> se: <b>1.</b> é completa até o nível h − 1, e <b>2.</b> no último nível, se um nó está presente, <b>todos à esquerda dele</b> também estão.</div>
+  <div class="dois">
+    <div class="arvoreBox" id="qcBox" style="height:290px"></div>
+    <div>
+      <div class="narra" id="qcVeredito"></div>
+      <div class="mini"><h5>Os números da aula</h5><div id="qcNums"></div></div>
+      <div class="ctrl"><button class="btn" id="qcCheia">Encher até n = 10</button><button class="btn" id="qcBug">Exemplo com buraco</button></div>
+    </div>
+  </div>
+  <div class="prof"><div class="av">🧑‍🏫</div><div>Teorema da aula: na quase completa, <b>2<sup>h</sup> ≤ n ≤ 2<sup>h+1</sup> − 1</b>, e por isso a altura é <b>h = ⌊lg n⌋</b>. Guarde isso: é o motivo de tudo no heap custar "log n". Uma árvore com 1000 nós tem altura 9 só.</div></div>
+</section>
+
+<section id="c3">
+  <h2><span class="n">3</span>A árvore mora num vetor</h2>
+  <p class="lead">Como a quase completa não tem buracos, dá pra numerar os nós por nível, da esquerda pra direita, e guardar tudo num vetor. Sem ponteiro nenhum! <b>Toque num nó.</b></p>
+  <div class="seg" id="segBase3"><button data-b="1" class="on">índice 1 (notas de aula)</button><button data-b="0">índice 0 (heap.c)</button></div>
+  <div class="dois" style="margin-top:10px">
+    <div class="arvoreBox" id="tvBox" style="height:290px"></div>
+    <div>
+      <div class="narra" id="tvInfo">Toque num nó da árvore ou numa casa do vetor.</div>
+      <div class="caixa" id="tvForm"></div>
+    </div>
+  </div>
+  <div class="vetLinha" id="tvVet"></div>
+  <div class="prof"><div class="av">🧑‍🏫</div><div>As notas usam a raiz no índice 1, que deixa as contas bonitas (i / 2, 2i, 2i + 1). O <code>heap.c</code> usa índice 0, como é natural em C, e aí as contas mudam: (i − 1) / 2, 2i + 1, 2i + 2. <b>A árvore é a mesma</b>, só a numeração anda uma casa. Na prova, olhe sempre qual dos dois está sendo usado!</div></div>
+</section>
+
+<section id="c4">
+  <h2><span class="n">4</span>A propriedade de heap</h2>
+  <p class="lead">Aula 12. O heap é uma estrutura especializada em achar o <b>maior</b> elemento rápido.</p>
+  <div class="caixa pessego" style="font-size:1.15rem;text-align:center"><b>v[pai(i)] ≥ v[i]</b>, para todo nó i, exceto a raiz.</div>
+  <p>Ou seja: todo pai é maior ou igual aos filhos. Consequência: o maior de todos está na raiz. Repara no que a regra <b>não</b> diz: nada sobre irmãos, nada sobre esquerda e direita. Um heap <b>não é um vetor ordenado</b>.</p>
+  <div class="q" id="ehHeap"></div>
+</section>
+
+<section id="c5">
+  <h2><span class="n">5</span>max-heapify: arrumando um nó</h2>
+  <p class="lead">O problema: as sub-árvores de i já são heaps, mas o nó i pode estar "pequeno demais" pra ficar ali. O max-heapify desce com ele até o lugar certo.</p>
+  <div class="dois">
+    <div class="codigo" id="codMH"></div>
+    <div class="explica" id="expMH"><h4>👆 Toque numa linha do código</h4>É o pseudocódigo da aula 12.</div>
+  </div>
+  <div id="animMH"></div>
+  <div class="prof"><div class="av">🧑‍🏫</div><div><b>Análise da aula:</b> cada chamada faz no máximo <b>2 comparações</b> (com esq e com dir) e desce um nível. Num nó de altura k: <b>C(k) = 2 + C(k − 1)</b>, com C(0) = 0, que dá <b>C(k) = 2k</b>. Como a altura é ⌊lg n⌋, o max-heapify na raiz custa no máximo <b>2⌊lg n⌋</b> comparações.</div></div>
+</section>
+
+<section id="c6">
+  <h2><span class="n">6</span>build-max-heap: de um vetor qualquer pra um heap</h2>
+  <p class="lead">Exemplo da aula 13: <code>15 35 40 10 20 5 45 70 25 90</code>.</p>
+  <div class="dois">
+    <div>
+      <p>A ideia: as <b>folhas já são heaps</b> sozinhas (não têm filhos!). Então começa do <b>último nó que tem filho</b>, que é o ⌊n/2⌋, e vai voltando até a raiz, chamando max-heapify em cada um. Quando chega no nó i, as sub-árvores dele já foram arrumadas, que é exatamente o que o max-heapify precisa.</p>
+    </div>
+    <div class="codigo" id="codBMH"></div>
+  </div>
+  <div id="animBMH"></div>
+  <div class="prof"><div class="av">🧑‍🏫</div><div>Parece que custaria n · lg n, mas a aula mostra que é no máximo <b>4n</b>: a maioria dos nós está lá embaixo, onde o max-heapify é barato. Metade dos nós são folhas e custam zero!</div></div>
+</section>
+
+<section id="c7">
+  <h2><span class="n">7</span>heapsort</h2>
+  <p class="lead">Aula 13. Ordenar usando o heap, <b>dentro do próprio vetor</b>.</p>
+  <div class="dois">
+    <div>
+      <p>Depois do build-max-heap, o maior está em v[1]. Troca ele com o último: agora o maior está na posição certa, no fim! Diminui o heap em 1 e conserta a raiz com max-heapify. Repete.</p>
+      <p>O fim do vetor vai virando uma parte <b>ordenada</b> (em verde), e o começo continua sendo um heap.</p>
+      <div class="caixa rosa">📝 <b>Detalhe pra conferir em aula:</b> nas notas aparece <code>max-heapify(v, 1, i)</code>. Mas depois da troca, a posição i já é parte ordenada, e o heap vai só até <b>i − 1</b>. Aqui a gente usa i − 1.</div>
+    </div>
+    <div class="codigo" id="codHS"></div>
+  </div>
+  <div id="animHS"></div>
+  <div class="prof"><div class="av">🧑‍🏫</div><div><b>Análise:</b> são n − 1 max-heapify na raiz, cada um com no máximo 2⌊lg i⌋ comparações, mais o build. Total: <b>C(n) ≤ 2n lg n + 4n</b>. É n log n, como o merge sort, mas sem vetor extra.</div></div>
+</section>
+
+<section id="c8">
+  <h2><span class="n">8</span>A implementação: <code>heap.c</code></h2>
+  <p class="lead">O código em C do professor. Atenção: <b>índice 0</b>! Toque nas linhas.</p>
+  <div class="dois">
+    <div class="codigo" id="codHC"></div>
+    <div class="explica" id="expHC"><h4>👆 Toque numa linha do código</h4>Repara nas três funções do começo: são as contas da seção 3, versão índice 0.</div>
+  </div>
+  <p>O <code>insere</code> faz o caminho contrário do max-heapify: coloca o novo valor no <b>fim</b> (pra árvore continuar quase completa) e vai <b>subindo</b> enquanto ele for maior que o pai.</p>
+  <div id="animIns"></div>
+</section>
+
+<section id="c9">
+  <h2><span class="n">9</span>Ler o código <span class="placar" id="placarQ"></span></h2>
+  <p class="lead">No estilo da P2: ler, interpretar, saber o que o algoritmo faz. Faça no papel antes de clicar!</p>
+  <div id="quiz"></div>
+</section>
+
+<section id="c10">
+  <h2><span class="n">10</span>Alterar: heap de mínimo</h2>
+  <div class="caixa rosa"><b>Alteração no estilo da prova</b> (exemplo nosso): "Altere o <code>maxheapify</code> do <code>heap.c</code> para que ele construa um heap de <b>mínimo</b>, onde todo pai é menor ou igual aos filhos."</div>
+  <div class="dois">
+    <div>
+      <p>A estrutura do algoritmo não muda nada: desce trocando com um filho. O que muda é <b>qual</b> filho e <b>quando</b> trocar. Em vez de procurar o maior, procura o <b>menor</b>: as duas comparações viram <code>&lt;</code>.</p>
+      <p>As linhas em rosa são as únicas que mudam (e o nome da variável, pra ficar honesto).</p>
+    </div>
+    <div class="codigo" id="codMin"></div>
+  </div>
+  <div id="animMin"></div>
+  <div class="prof"><div class="av">🧑‍🏫</div><div>Pra pensar: e o <code>insere</code>, o que muda nele pra heap de mínimo? (Resposta: só a comparação do <code>while</code>: <code>v[pai(i)] &gt; v[i]</code>.)</div></div>
+</section>
+
+<section id="c11">
+  <h2><span class="n">🎮</span>Agora pratique jogando</h2>
+  <div class="jogos">
+    <a class="jogo" href="suika.html"><h3>🍉 Suika da Heap</h3>Você é o heap: solte frutas (insere) e decida quando sobem, colha a maior e decida pra que lado o max-heapify desce. Tem os dois índices e o exemplo da aula 13.<br><span class="ir">Jogar ▸</span></a>
+  </div>
+</section>
+</main>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function realce(t){
+  let cm=''; let k=t.indexOf('//'); if(k<0)k=t.indexOf('/*'); if(k>=0){cm=t.slice(k);t=t.slice(0,k);}
+  t=esc(t).replace(/\b(void|int|if|return|for|else|while|se|então|senão|para|até|faça)\b/g,'<span class="kw">$1</span>');
+  return t+(cm?`<span class="cm">${esc(cm)}</span>`:'');
+}
+const nivel=i=>Math.floor(Math.log2(i));
+function posArv(box,i,top=34,dy=72){const W=box.clientWidth,lv=nivel(i),k=i-2**lv;return {x:(k+.5)/2**lv*W,y:top+lv*dy};}
+
+/* ---------- quiz genérico ---------- */
+let acertos=0,resp=0;
+function quiz(alvo,lista,conta){
+  alvo.innerHTML=lista.map((q,k)=>`<div class="q" data-k="${k}"><div class="enun">${q.e}</div><div class="ops">${q.o.map((o,j)=>`<button data-j="${j}">${o}</button>`).join('')}</div><div class="fb"></div></div>`).join('');
+  alvo.querySelectorAll('.q').forEach(div=>{
+    const q=lista[+div.dataset.k]; let feito=false;
+    div.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+      if(feito) return; feito=true; const j=+b.dataset.j;
+      div.querySelectorAll('button')[q.c].classList.add('certa'); if(j!==q.c) b.classList.add('errada');
+      const fb=div.querySelector('.fb'); fb.classList.add('on'); fb.innerHTML=(j===q.c?'✅ <b>Isso!</b> ':'❌ <b>Não foi dessa vez.</b> ')+q.x;
+      if(conta){resp++; if(j===q.c) acertos++; $('placarQ').textContent=`· ${acertos}/${resp}`;}
+    });
+  });
+}
+/* ---------- código clicável ---------- */
+function montaCodigo(id,linhas,expId){
+  const el=$(id);
+  el.innerHTML=linhas.map(([t,,e],k)=>`<div data-k="${k}" class="${e?'cl':''}">${realce(t)||' '}</div>`).join('');
+  if(expId) el.querySelectorAll('div.cl').forEach(d=>d.onclick=()=>{
+    el.querySelectorAll('div').forEach(x=>x.classList.remove('sel')); d.classList.add('sel');
+    const [tit,txt]=linhas[+d.dataset.k][2]; $(expId).innerHTML=`<h4>${tit}</h4>${txt}`;
+  });
+}
+
+/* ================= 1: termos ================= */
+(function(){
+  const s=$('arvTermos'); let h='';
+  const P=i=>{const lv=nivel(i),k=i-2**lv;return {x:(k+.5)/2**lv*400+10,y:40+lv*70};};
+  for(let i=2;i<=7;i++){const a=P(i>>1),b=P(i);h+=`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="#bcd3e6" stroke-width="3"/>`;}
+  for(let i=1;i<=7;i++){const p=P(i);const f=i>=4;h+=`<circle cx="${p.x}" cy="${p.y}" r="19" fill="${i===1?'#2f5d7c':f?'#e2f5ea':'#e7f2fb'}" stroke="${i===1?'#2f5d7c':f?'#2f9e5a':'#2f5d7c'}" stroke-width="2"/>`;}
+  const t=(x,y,s,c='#2f5d7c')=>h+=`<text x="${x}" y="${y}" font-size="13" font-family="Fredoka" fill="${c}" text-anchor="middle">${s}</text>`;
+  t(P(1).x,P(1).y-26,'raiz (nível 0)'); t(P(2).x-58,P(2).y+4,'pai de 4 e 5'); t(P(3).x+60,P(3).y+4,'nível 1');
+  t(P(4).x,P(4).y+36,'folha','#2f9e5a'); t(P(5).x,P(5).y+36,'folha','#2f9e5a'); t(P(6).x,P(6).y+36,'folha','#2f9e5a'); t(P(7).x,P(7).y+36,'folha','#2f9e5a');
+  t(210,252,'altura 2 · completa: 2^(2+1) − 1 = 7 nós','#6b7785');
+  s.innerHTML=h;
+})();
+
+/* ================= 2: quase completa ================= */
+(function(){
+  const box=$('qcBox'); let pres=new Set([1,2,3,4,5,6]);
+  function veredito(){
+    const S=[...pres].sort((a,b)=>a-b);
+    if(!S.length) return ['Árvore vazia. Ligue alguns nós!',''];
+    for(const i of S) if(i>1&&!pres.has(i>>1)) return [`O nó ${i} está ligado mas o pai dele (${i>>1}) não: isso nem é uma árvore conectada.`,'ruim'];
+    const mx=S[S.length-1], h=nivel(mx);
+    for(let L=0;L<h;L++) for(let i=2**L;i<2**(L+1);i++) if(!pres.has(i)) return [`❌ Não é quase completa: o nível ${L} não está cheio (falta o nó ${i}), mas já tem nó no nível ${h}. Falha a regra 1.`,'ruim'];
+    for(let i=2**h;i<mx;i++) if(!pres.has(i)) return [`❌ Não é quase completa: no último nível o nó ${mx} está presente, mas o nó ${i}, à esquerda dele, não. Falha a regra 2.`,'ruim'];
+    if(mx===2**(h+1)-1) return [`✅ É <b>completa</b> (todos os níveis cheios), e portanto também quase completa.`,'bom'];
+    return [`✅ É <b>quase completa</b>: cheia até o nível ${h-1}, e o último nível está preenchido da esquerda pra direita.`,'bom'];
+  }
+  function desenha(){
+    let h='<svg style="position:absolute;inset:0;width:100%;height:100%">';
+    for(let i=2;i<=15;i++){const a=posArv(box,i>>1,30,78),b=posArv(box,i,30,78);h+=`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${pres.has(i)&&pres.has(i>>1)?'#9fb6c9':'#e6eef5'}" stroke-width="${pres.has(i)&&pres.has(i>>1)?3:2}"/>`;}
+    h+='</svg>';
+    for(let i=1;i<=15;i++){const p=posArv(box,i,30,78);h+=`<button class="noQC ${pres.has(i)?'on':''}" data-i="${i}" style="left:${p.x}px;top:${p.y}px">${i}</button>`;}
+    box.innerHTML=h;
+    box.querySelectorAll('.noQC').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;pres.has(i)?pres.delete(i):pres.add(i);desenha();});
+    const [t,c]=veredito(); $('qcVeredito').innerHTML=t; $('qcVeredito').className='narra '+c;
+    const n=pres.size; if(c==='bom'){const hh=nivel(Math.max(...pres));$('qcNums').innerHTML=`n = <b>${n}</b> nós · altura h = <b>${hh}</b> · ⌊lg ${n}⌋ = <b>${Math.floor(Math.log2(n))}</b> ✔<br>2<sup>${hh}</sup> = ${2**hh} ≤ ${n} ≤ ${2**(hh+1)-1} = 2<sup>${hh+1}</sup> − 1 ✔`;}
+    else $('qcNums').innerHTML=n?`n = ${n} nós. Os teoremas só valem pra quase completa.`:'';
+  }
+  $('qcCheia').onclick=()=>{pres=new Set([...Array(10)].map((_,k)=>k+1));desenha();};
+  $('qcBug').onclick=()=>{pres=new Set([1,2,3,4,5,7]);desenha();};
+  desenha(); window.addEventListener('resize',desenha);
+})();
+
+/* ================= 3: árvore no vetor ================= */
+(function(){
+  const V=[90,70,45,25,35,5,40,10,15,20], n=V.length; let B=1, sel=0;
+  const d=i=>i-1+B;
+  function forms(){return B?['i / 2','2i','2i + 1']:['(i − 1) / 2','2i + 1','2i + 2'];}
+  function desenha(){
+    const box=$('tvBox'); let h='<svg style="position:absolute;inset:0;width:100%;height:100%">';
+    for(let i=2;i<=n;i++){const a=posArv(box,i>>1,30,78),b=posArv(box,i,30,78);h+=`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="#bcd3e6" stroke-width="3"/>`;}
+    h+='</svg>';
+    const rel=i=>!sel?'':i===sel?'sel':i===(sel>>1)&&sel>1?'pai':(i===2*sel||i===2*sel+1)?'filho':'';
+    for(let i=1;i<=n;i++){const p=posArv(box,i,30,78);h+=`<button class="noTV ${rel(i)}" data-i="${i}" style="left:${p.x}px;top:${p.y}px">${V[i-1]}<small>${d(i)}</small></button>`;}
+    box.innerHTML=h;
+    box.querySelectorAll('.noTV').forEach(b=>b.onclick=()=>{sel=+b.dataset.i;desenha();});
+    $('tvVet').innerHTML=V.map((v,k)=>`<button class="cel ${rel(k+1)}" data-i="${k+1}"><small>${d(k+1)}</small><b>${v}</b></button>`).join('');
+    $('tvVet').querySelectorAll('.cel').forEach(b=>b.onclick=()=>{sel=+b.dataset.i;desenha();});
+    const [fp,fe,fd]=forms();
+    $('tvForm').innerHTML=`<b>${B?'Notas de aula (índice 1)':'heap.c (índice 0)'}</b><br>pai(i) = <code>${fp}</code><br>esquerda(i) = <code>${fe}</code><br>direita(i) = <code>${fd}</code>`;
+    if(sel){
+      const i=d(sel), sub=t=>t.replace(/(\d)i/g,'$1·i').replace(/i/g,i), pai=sel>1?`pai(${i}) = ${sub(fp)} = <b>${d(sel>>1)}</b> → valor ${V[(sel>>1)-1]}`:'é a raiz, não tem pai';
+      const e=2*sel<=n?`esquerda(${i}) = ${sub(fe)} = <b>${d(2*sel)}</b> → valor ${V[2*sel-1]}`:`esquerda(${i}) = ${d(2*sel)} passa do fim do vetor: não tem filho`;
+      const r=2*sel+1<=n?`direita(${i}) = ${sub(fd)} = <b>${d(2*sel+1)}</b> → valor ${V[2*sel]}`:`direita(${i}) = ${d(2*sel+1)}: não tem`;
+      $('tvInfo').innerHTML=`Nó <b>${i}</b> (valor ${V[sel-1]})<br>${pai}<br>${e}<br>${r}`;
+    }
+  }
+  document.querySelectorAll('#segBase3 button').forEach(b=>b.onclick=()=>{B=+b.dataset.b;document.querySelectorAll('#segBase3 button').forEach(x=>x.classList.toggle('on',x===b));desenha();});
+  desenha(); window.addEventListener('resize',desenha);
+})();
+
+/* ================= 4: é heap? ================= */
+quiz($('ehHeap'),[
+ {e:'Índice 1. <code>v = 50 30 40 35 10</code> é heap de máximo?',o:['Sim','Não: 35 é maior que o pai 30','Não: 40 é maior que 30','Não: 10 é menor que todo mundo'],c:1,x:'O 35 está no índice 4, e pai(4) = 2, onde está o 30. 35 &gt; 30 quebra a regra. O 40 maior que o 30 não importa: eles são irmãos!'},
+ {e:'Índice 1. <code>v = 9 5 8 1 2 7 3</code> é heap de máximo?',o:['Sim','Não: 8 é maior que 5','Não: o vetor não está ordenado','Não: 7 é maior que 5'],c:0,x:'Confere pai a pai: 9 ≥ 5 e 8; 5 ≥ 1 e 2; 8 ≥ 7 e 3. É heap, mesmo não estando ordenado.'},
+ {e:'Num heap de máximo com 7 elementos distintos, onde <b>pode</b> estar o menor de todos?',o:['Só na posição 7','Na raiz','Em qualquer folha (posições 4 a 7)','Em qualquer posição'],c:2,x:'O menor não pode ser pai de ninguém (ele seria menor que o filho). Então tem que ser folha, e qualquer folha serve.'},
+],false);
+
+/* ================= códigos ================= */
+const CMH=[
+ ['max-heapify(v, i, n)','sig',['A assinatura','Arruma o nó <b>i</b>, supondo que as sub-árvores esquerda(i) e direita(i) <b>já são heaps</b>. <code>n</code> é o tamanho do heap (onde ele termina).']],
+ ['  esq ← esquerda(i)','esq',['Os filhos','Calcula onde estão os filhos: 2i e 2i + 1 no índice 1. Podem estar além de n, aí o filho não existe.']],
+ ['  dir ← direita(i)','esq',null],
+ ['  se esq ≤ n e v[esq] > v[i] então','cmpE',['Primeira comparação','Se o filho esquerdo <b>existe</b> (esq ≤ n) e é maior que o pai, ele é candidato a subir.<br><br>🤔 <i>Por que testar esq ≤ n primeiro?</i> Pra não ler fora do heap: o <code>e</code> só olha v[esq] se o filho existir.']],
+ ['    maior ← esq','cmpE',null],
+ ['  senão','cmpE',null],
+ ['    maior ← i','cmpE',['Ninguém maior por enquanto','Se o esquerdo não ganhou, o maior até aqui é o próprio i.']],
+ ['  se dir ≤ n e v[dir] > v[maior] então','cmpD',['Segunda comparação','Agora compara o direito com o <b>maior até agora</b> (que pode ser o i ou o esquerdo). Assim <code>maior</code> termina apontando pro maior dos três.<br><br>🤔 <i>E se der empate entre os filhos?</i> Como é <code>&gt;</code> estrito, fica o esquerdo.']],
+ ['    maior ← dir','cmpD',null],
+ ['  se maior ≠ i então','se',['Precisa trocar?','Se o maior dos três é o próprio i, a regra já vale ali e acabou (e as sub-árvores já eram heaps). Senão, i está pequeno demais.']],
+ ['    troca(v[i], v[maior])','troca',['Sobe o maior','O filho maior sobe pro lugar de i, e o valor de i desce.']],
+ ['    max-heapify(v, maior, n)','rec',['Continua descendo','O valor que desceu pode ainda ser pequeno pra posição nova, então arruma de novo lá embaixo. Cada chamada desce um nível: no máximo a altura da árvore.']],
+];
+montaCodigo('codMH',CMH,'expMH');
+const CBMH=[['build-max-heap(v, n)','bsig'],['  para i ← ⌊n/2⌋ até 1 faça','bfor'],['    max-heapify(v, i, n)','bfor']];
+montaCodigo('codBMH',CBMH,null);
+const CHS=[['heapsort(v, n)','hsig'],['  build-max-heap(v, n)','hbuild'],['  para i ← n até 2 faça','hfor'],['    troca(v[1], v[i])','htroca'],['    max-heapify(v, 1, i − 1)   // o heap vai até i − 1','hmh']];
+montaCodigo('codHS',CHS,null);
+const CHC=[
+ ['int pai(int i) {','',['pai, índice 0','(i − 1) / 2 com divisão inteira. Ex: pai(4) = 1, pai(3) = 1, pai(2) = 0.']],
+ ['    return (i-1)/2;','',null],
+ ['}','',null],
+ ['int esquerda(int i) {','',['filho esquerdo, índice 0','2i + 1. A raiz (0) tem filhos 1 e 2.']],
+ ['    return 2*i + 1;','',null],
+ ['}','',null],
+ ['int direita(int i) {','',null],
+ ['    return 2*i + 2;','',null],
+ ['}','',null],
+ ['void maxheapify(int v[], int i, int n) {','sig',['O mesmo max-heapify','Igual ao da aula, só que em C e índice 0. Repara no teste <code>esq &lt; n</code> (e não ≤): com índice 0, as posições válidas vão de 0 a n − 1.']],
+ ['    int maior, esq, dir;','',null],
+ ['    esq = esquerda(i);','esq',null],
+ ['    dir = direita(i);','esq',null],
+ ['    if (esq < n && v[esq] > v[i])','cmpE',null],
+ ['       maior = esq;','cmpE',null],
+ ['    else','cmpE',null],
+ ['       maior = i;','cmpE',null],
+ ['    if (dir < n && v[dir] > v[maior])','cmpD',null],
+ ['       maior = dir;','cmpD',null],
+ ['    if (maior != i) {','se',null],
+ ['       troca(&v[i], &v[maior]);','troca',['troca com ponteiros','<code>troca</code> recebe os endereços (&) pra conseguir mudar os valores de verdade. Lembra de Prog 1!']],
+ ['       maxheapify(v, maior, n);','rec',null],
+ ['    }','',null],
+ ['}','',null],
+ ['void insere(int v[], int x, int *n) {','',['insere','<code>n</code> vem por ponteiro porque a função <b>muda o tamanho</b> do heap.']],
+ ['    v[*n] = x;','ipoe',['Coloca no fim','A posição livre depois do último é <code>v[*n]</code> (índice 0!). Colocar no fim mantém a árvore quase completa.']],
+ ['    *n = *n+1;','ipoe',null],
+ ['    int i = *n-1;','ipoe',null],
+ ['    while (i != 0 && v[pai(i)] < v[i]) {','iwhile',['Sobe enquanto for maior','Enquanto não chegou na raiz (i != 0) e o pai é menor, troca com o pai. É o caminho contrário do max-heapify: aqui o valor <b>sobe</b>.']],
+ ['        troca(&v[pai(i)], &v[i]);','itroca',null],
+ ['        i = pai(i);','itroca',null],
+ ['    }','',null],
+ ['}','',null],
+];
+montaCodigo('codHC',CHC,'expHC');
+const CMIN=[
+ ['void minheapify(int v[], int i, int n) {','sig'],
+ ['    int menor, esq, dir;','sig'],
+ ['    esq = esquerda(i);','esq'],
+ ['    dir = direita(i);','esq'],
+ ['    if (esq < n && v[esq] < v[i])   // > virou <','cmpE'],
+ ['       menor = esq;','cmpE'],
+ ['    else','cmpE'],
+ ['       menor = i;','cmpE'],
+ ['    if (dir < n && v[dir] < v[menor])   // > virou <','cmpD'],
+ ['       menor = dir;','cmpD'],
+ ['    if (menor != i) {','se'],
+ ['       troca(&v[i], &v[menor]);','troca'],
+ ['       minheapify(v, menor, n);','rec'],
+ ['    }',''],
+ ['}',''],
+ ['void buildminheap(int v[], int n) {','bsig'],
+ ['    for (int i = n/2 - 1; i >= 0; i--)','bfor'],
+ ['       minheapify(v, i, n);','bfor'],
+ ['}',''],
+];
+montaCodigo('codMin',CMIN,null);
+$('codMin').querySelectorAll('div').forEach((dv,k)=>{if(k===4||k===8)dv.style.background='#fdecef';});
+
+/* ================= motor de animação do heap ================= */
+let uid=1;
+function heapAnim(alvo,cfg){
+  const base=cfg.base, d=i=>i-1+base, min=!!cfg.min, W=min?'menor':'maior', op=min?'<':'>';
+  const better=(a,b)=>min?a<b:a>b;
+  const h=[null,...cfg.vetor.map(v=>({id:uid++,v}))]; let n=cfg.vetor.length; const F=[], pilha=[]; let comps=0,trocas=0;
+  const N=cfg.script==='insere'?cfg.vetor.length+cfg.novos.length:h.length-1;
+  const snap=(linha,msg,o={})=>F.push({h:h.slice(),n,linha,msg,pilha:pilha.slice(),comps,trocas,cur:0,cmp:[],ton:'',...o});
+  const nm=cfg.nomeMH||'max-heapify';
+  function mh(i,nn){
+    pilha.push(`${nm}(v, ${d(i)}, ${nn})`);
+    const e=2*i, r=2*i+1;
+    snap('sig',`Chamou <code>${nm}(v, ${d(i)}, ${nn})</code>: vamos arrumar o nó ${d(i)}, que vale ${h[i].v}.`,{cur:i});
+    snap('esq',`esq = ${d(e)}, dir = ${d(r)}. ${e<=nn?'':'Nenhum dos dois existe: o nó é folha.'}`,{cur:i,cmp:[e,r].filter(x=>x<=nn)});
+    let m=i;
+    if(e<=nn){comps++;const t=better(h[e].v,h[i].v);if(t)m=e;snap('cmpE',`v[esq] = ${h[e].v} ${op} v[i] = ${h[i].v}? ${t?`Sim: ${W} ← esq (${d(e)}).`:`Não: ${W} ← i.`}`,{cur:i,cmp:[e]});}
+    else snap('cmpE',`esq = ${d(e)} passa de n: não tem filho esquerdo. ${W} ← i.`,{cur:i});
+    if(r<=nn){comps++;const old=m,t=better(h[r].v,h[m].v);if(t)m=r;snap('cmpD',`v[dir] = ${h[r].v} ${op} v[${W}] = ${h[old].v}? ${t?`Sim: ${W} ← dir (${d(r)}).`:`Não.`}`,{cur:i,cmp:[r]});}
+    if(m===i){snap('se',`${W} == i: o ${h[i].v} já é ${min?'menor':'maior'} ou igual aos filhos. Termina sem chamar ninguém.`,{cur:i,ton:'bom'});pilha.pop();return;}
+    snap('se',`${W} = ${d(m)} ≠ i: precisa trocar.`,{cur:i,cmp:[m]});
+    [h[i],h[m]]=[h[m],h[i]];trocas++;
+    snap('troca',`troca(v[${d(i)}], v[${d(m)}]): o ${h[i].v} sobe e o ${h[m].v} desce.`,{cur:m,cmp:[i]});
+    snap('rec',`Chamada recursiva: <code>${nm}(v, ${d(m)}, ${nn})</code>, porque o ${h[m].v} pode continuar ${min?'grande':'pequeno'} demais ali.`,{cur:m});
+    mh(m,nn); pilha.pop();
+  }
+  if(cfg.script==='mh'){
+    snap('',`Vetor de partida: as sub-árvores do nó ${d(cfg.i)} já são heaps, mas o ${h[cfg.i].v} está fora do lugar.`,{cur:cfg.i});
+    mh(cfg.i,n);
+    snap('',`Fim. ${comps} comparações e ${trocas} trocas.`,{ton:'bom'});
+  } else if(cfg.script==='build'){
+    snap('bsig',`<code>${cfg.nomeBuild||'build-max-heap'}(v, ${n})</code> num vetor que ainda não é heap. O último nó com filho é o ${d(n>>1)}.`);
+    for(let i=n>>1;i>=1;i--){snap('bfor',`Laço do build: i = ${d(i)}. As sub-árvores de ${d(i)} já estão arrumadas.`,{cur:i});mh(i,n);}
+    snap('',`Pronto, é heap${min?' de mínimo':''}: <code>${h.slice(1).map(x=>x.v).join(' ')}</code>. ${comps} comparações (o limite da aula é 4n = ${4*n}).`,{ton:'bom'});
+  } else if(cfg.script==='heapsort'){
+    snap('hbuild',`O vetor já passou pelo build-max-heap (seção 6): <code>${h.slice(1).map(x=>x.v).join(' ')}</code>. O maior está na raiz.`,{cur:1});
+    for(let i=n;i>=2;i--){
+      snap('hfor',`Laço: i = ${i}. O maior do heap (${h[1].v}) vai pra posição ${i}.`,{cur:1,cmp:[i]});
+      [h[1],h[i]]=[h[i],h[1]];trocas++;n=i-1;
+      snap('htroca',`troca(v[1], v[${i}]): o ${h[i].v} está no lugar final e sai do heap (fica verde). O heap agora vai de 1 até ${n}.`,{cur:1,cmp:[i]});
+      snap('hmh',`O ${h[1].v} subiu pro topo e quebrou a regra. <code>max-heapify(v, 1, ${n})</code> conserta.`,{cur:1});
+      mh(1,n);
+    }
+    n=0; snap('',`Ordenado: <code>${h.slice(1).map(x=>x.v).join(' ')}</code>. ${comps} comparações e ${trocas} trocas, tudo no mesmo vetor.`,{ton:'bom'});
+  } else if(cfg.script==='insere'){
+    snap('',`Heap de partida (índice 0): <code>${h.slice(1).map(x=>x.v).join(' ')}</code>. Vamos inserir ${cfg.novos.join(', ')}.`);
+    for(const x of cfg.novos){
+      n++; h[n]={id:uid++,v:x};
+      snap('ipoe',`<code>insere(v, ${x}, &n)</code>: <code>v[${d(n)}] = ${x}</code>, a primeira posição livre. n agora vale ${n}.`,{cur:n});
+      let i=n;
+      while(i!==1&&h[i>>1].v<h[i].v){
+        comps++; snap('iwhile',`i = ${d(i)}, pai(i) = ${d(i>>1)}. v[pai] = ${h[i>>1].v} &lt; ${h[i].v}? Sim.`,{cur:i,cmp:[i>>1]});
+        [h[i>>1],h[i]]=[h[i],h[i>>1]];trocas++;i>>=1;
+        snap('itroca',`Troca e <code>i = pai(i) = ${d(i)}</code>.`,{cur:i});
+      }
+      if(i!==1){comps++;snap('iwhile',`i = ${d(i)}: v[pai] = ${h[i>>1].v} &lt; ${h[i].v}? Não. O while para.`,{cur:i,cmp:[i>>1],ton:'bom'});}
+      else snap('iwhile',`i == 0: chegou na raiz, o while para.`,{cur:i,ton:'bom'});
+    }
+    snap('',`Heap final: <code>${h.slice(1).map(x=>x.v).join(' ')}</code>.`,{ton:'bom'});
+  }
+  /* DOM */
+  alvo.innerHTML=`<div class="anim"><div class="palco"><div><div class="narra"></div><div class="arvoreBox hb" style="height:300px"></div>
+    <div class="ctrl"><button class="btn b0">⏮</button><button class="btn bv">◀</button><button class="btn pri bp">▶ Rodar</button><button class="btn ba">▶|</button><input type="range" min="0" value="0"><span class="cont"></span></div>
+    <div class="vetLinha vl"></div></div>
+    <div class="painel"><div class="codigo cod"></div>
+      <div class="mini"><h5>Pilha de chamadas</h5><div class="pilha"></div></div>
+      <div class="mini"><h5>Contadores</h5><div class="cnt"></div></div></div></div></div>`;
+  const q=s=>alvo.querySelector(s), box=q('.hb'), rng=q('input[type=range]');
+  q('.cod').innerHTML=cfg.codigo.map(([t])=>`<div>${realce(t)||' '}</div>`).join('');
+  rng.max=F.length-1;
+  const els=new Map(); let f=0, timer=null;
+  function desenha(){
+    const Q=F[f]; const ids=new Set();
+    let lin='<svg class="ed" style="position:absolute;inset:0;width:100%;height:100%">';
+    for(let i=2;i<=N;i++){if(!Q.h[i]||!Q.h[i>>1])continue;const a=posArv(box,i>>1,30,80),b=posArv(box,i,30,80);const fora=i>Q.n;lin+=`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${fora?'#cfe9d8':'#bcd3e6'}" stroke-width="3" ${fora?'stroke-dasharray="6 5"':''}/>`;}
+    lin+='</svg>';
+    let ed=box.querySelector('svg.ed'); if(ed) ed.outerHTML=lin; else box.insertAdjacentHTML('afterbegin',lin);
+    for(let i=1;i<=N;i++){const x=Q.h[i]; if(!x) continue; ids.add(x.id);
+      let el=els.get(x.id); const p=posArv(box,i,30,80);
+      if(!el){el=document.createElement('div');el.className='noH';el.textContent=x.v;box.appendChild(el);els.set(x.id,el);el.style.left=p.x+'px';el.style.top=(cfg.script==='insere'&&f>0?p.y-60:p.y)+'px';el.getBoundingClientRect();}
+      el.style.left=p.x+'px'; el.style.top=p.y+'px';
+      el.className='noH'+(i===Q.cur?' cur':'')+(Q.cmp.includes(i)?' cmp':'')+(i>Q.n?' ord':'');
+    }
+    for(const [id,el] of els) if(!ids.has(id)){el.remove();els.delete(id);}
+    q('.vl').innerHTML=Array.from({length:N},(_,k)=>{const i=k+1,x=Q.h[i];return `<div class="cel ${i===Q.cur?'sel':''} ${Q.cmp.includes(i)?'filho':''} ${x&&i>Q.n?'ordC':''} ${x?'':'vaz'}"><small>${d(i)}</small><b>${x?x.v:''}</b></div>`;}).join('');
+    const nar=q('.narra'); nar.innerHTML=Q.msg; nar.className='narra '+Q.ton;
+    const linhas=cfg.codigo; q('.cod').querySelectorAll('div').forEach((dv,k)=>dv.className=Q.linha&&linhas[k][1]===Q.linha?'on':'');
+    q('.pilha').innerHTML=Q.pilha.map(t=>`<div>${t}</div>`).join('')||'<span style="color:#6b7785">vazia</span>';
+    q('.cnt').innerHTML=`comparações: <b>${Q.comps}</b> · trocas: <b>${Q.trocas}</b> · tamanho do heap: <b>${Q.n}</b>`;
+    rng.value=f; q('.cont').textContent=`${f+1} / ${F.length}`;
+  }
+  const vai=k=>{f=Math.max(0,Math.min(F.length-1,k));desenha();};
+  const pausa=()=>{clearInterval(timer);timer=null;q('.bp').textContent='▶ Rodar';};
+  q('.b0').onclick=()=>{pausa();vai(0);}; q('.bv').onclick=()=>{pausa();vai(f-1);}; q('.ba').onclick=()=>{pausa();vai(f+1);};
+  q('.bp').onclick=()=>{if(timer)return pausa(); if(f>=F.length-1)vai(0); q('.bp').textContent='⏸ Pausar'; timer=setInterval(()=>{if(f>=F.length-1)return pausa();vai(f+1);},cfg.vel||1000);};
+  rng.oninput=()=>{pausa();vai(+rng.value);};
+  window.addEventListener('resize',desenha);
+  desenha();
+  return F;
+}
+heapAnim($('animMH'),{script:'mh',base:1,i:2,vetor:[16,4,10,14,7,9,3,2,8,1],codigo:CMH});
+heapAnim($('animBMH'),{script:'build',base:1,vetor:[15,35,40,10,20,5,45,70,25,90],codigo:[...CBMH,['',''],...CMH],vel:800});
+heapAnim($('animHS'),{script:'heapsort',base:1,vetor:[90,70,45,25,35,5,40,10,15,20],codigo:[...CHS,['',''],...CMH],vel:700});
+heapAnim($('animIns'),{script:'insere',base:0,vetor:[90,70,45,25,35],novos:[80,50,95],codigo:CHC.slice(24).map(([t,id])=>[t,id])});
+heapAnim($('animMin'),{script:'build',base:0,min:true,nomeMH:'minheapify',nomeBuild:'buildminheap',vetor:[9,4,7,1,8,2,6],codigo:CMIN,vel:850});
+
+/* ================= 9: quiz ================= */
+quiz($('quiz'),[
+ {e:'1. Uma árvore binária quase completa tem <b>12</b> nós. Qual a altura?',o:['2','3','4','12'],c:1,x:'h = ⌊lg 12⌋ = 3, porque 2<sup>3</sup> = 8 ≤ 12 ≤ 15 = 2<sup>4</sup> − 1.'},
+ {e:'2. Índice 1 (notas). Quem é o pai do nó 11? E os filhos do nó 6?',o:['pai 5; filhos 12 e 13','pai 5; filhos 13 e 14','pai 6; filhos 12 e 13','pai 4; filhos 11 e 12'],c:0,x:'pai(11) = 11 / 2 = 5 (divisão inteira). Filhos de 6: 2·6 = 12 e 2·6 + 1 = 13.'},
+ {e:'3. No <code>heap.c</code> (índice 0): quanto vale <code>pai(7)</code> e <code>esquerda(3)</code>?',o:['3 e 6','3 e 7','2 e 7','4 e 6'],c:1,x:'pai(7) = (7 − 1)/2 = 3. esquerda(3) = 2·3 + 1 = 7. Repara que fecha: o pai do 7 é o 3, e o filho esquerdo do 3 é o 7.'},
+ {e:'4. Índice 1. Como fica <code>v = 3 9 2 1 4 5</code> depois do <code>build-max-heap</code>?',o:['9 3 5 1 4 2','9 4 5 1 3 2','9 5 4 3 1 2','9 4 5 3 1 2'],c:1,x:'n = 6, começa em i = 3: o 2 troca com o filho 5 → 3 9 5 1 4 2. i = 2: 9 já é maior que 1 e 4. i = 1: o 3 troca com o 9 → 9 3 5 1 4 2, e a chamada recursiva desce: o 3 troca com o 4 → <b>9 4 5 1 3 2</b>. A alternativa 1 esqueceu a chamada recursiva!'},
+ {e:'5. Por que o <code>build-max-heap</code> começa em ⌊n/2⌋ e não em n?',o:['Pra gastar menos memória','Porque depois de ⌊n/2⌋ só tem folha, e folha já é heap','Porque a raiz fica no meio','Tanto faz, é só otimização de tempo'],c:1,x:'Os nós de ⌊n/2⌋ + 1 até n não têm filhos. Um nó sozinho já satisfaz a propriedade de heap, então não tem o que arrumar.'},
+ {e:'6. No pior caso, quantas comparações o <code>max-heapify</code> faz num nó de altura 3?',o:['3','6','8','2'],c:1,x:'C(k) = 2 + C(k − 1), C(0) = 0, então C(k) = 2k. Com k = 3: 6 comparações (2 por nível que desce).'},
+ {e:'7. Pra virar heap de <b>mínimo</b>, o que muda no <code>maxheapify</code>?',o:['Trocar a ordem das chamadas','As duas comparações v[filho] &gt; v[...] viram &lt;','Começar o build em n em vez de n/2','Trocar esquerda por direita'],c:1,x:'A estrutura é a mesma; só muda o critério. Procura o menor dos três em vez do maior. Veja a seção 10.'},
+ {e:'8. No heapsort, depois do primeiro passo (troca v[1] com v[n]), o que garante que v[n] está no lugar certo?',o:['Nada, ainda pode mudar','Ele era o maior de todos, então é o último na ordem crescente','O max-heapify vai arrumar ele','Ele é uma folha'],c:1,x:'v[1] era o máximo do heap inteiro. Na ordem crescente, o máximo vai no fim. Depois disso o heap encolhe e ninguém mais mexe em v[n].'},
+],true);
+
+/* ================= nav ================= */
+const links=[...document.querySelectorAll('#caps a')];
+const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id));}),{rootMargin:'-40% 0px -55% 0px'});
+document.querySelectorAll('main section').forEach(s=>obs.observe(s));
+
+</script>
+<script src="aula-fatia.js"></script>
+</body>
+</html>
