@@ -221,6 +221,31 @@ const JOGOS=[
   capa:`<svg viewBox="0 0 260 170"><rect width="260" height="170" fill="#e7f2fb"/>
    ${Array.from({length:16},(_,k)=>{const l=k/4|0,c=k%4;const x=78+c*26,y=24+l*26;const d1=(l-c)===(0-1),q=[1,3,0,2][c]===l;return `<rect x="${x}" y="${y}" width="24" height="24" rx="5" fill="${q?'#ffffff':d1?'#dbeaf6':(l+c)%2?'#d9e6f0':'#f7fbfe'}"/>${q?`<text x="${x+12}" y="${y+18}" font-size="17" text-anchor="middle" fill="#2f5d7c">♛</text>`:''}`}).join('')}
    <g font-family="monospace" font-size="10" font-weight="700">${[1,0,1,0].map((v,i)=>`<rect x="${88+i*22}" y="137" width="19" height="19" rx="4" fill="${v?'#e8f2ea':'#f6e3e6'}"/><text x="${97.5+i*22}" y="150" text-anchor="middle" fill="${v?'#2f6b45':'#9a3c48'}">${v}</text>`).join('')}</g></svg>`},
+ {id:'tesouro',href:'tesouro.html',nivel:'NÍVEL 2',nome:'Tesouro Dividido',cor:'#b07a2a',fundo:'#fff4e2',
+  desc:'Divida os baús em duas partes iguais: pega ou não pega, baú por baú, vendo a árvore de decisões crescer. Às vezes não dá, e descobrir isso também vale. É o "todos os subconjuntos" com um objetivo.',
+  tags:['backtracking','pega ou não pega','árvore de decisões','poda'],
+  capa:`<svg viewBox="0 0 260 170"><rect width="260" height="170" fill="#fff4e2"/>
+   ${[3,1,4,2].map((v,i)=>`<g transform="translate(${46+i*44} 22)"><rect width="36" height="30" rx="6" fill="#d9a35a" stroke="#a8742c" stroke-width="2"/><rect y="9" width="36" height="5" fill="#a8742c"/><text x="18" y="27" font-family="monospace" font-size="12" font-weight="700" text-anchor="middle" fill="#fff">${v}</text></g>`).join('')}
+   <g stroke="#b9a07a" stroke-width="2"><line x1="130" y1="72" x2="90" y2="104"/><line x1="130" y1="72" x2="170" y2="104"/><line x1="90" y1="104" x2="70" y2="136"/><line x1="90" y1="104" x2="110" y2="136"/><line x1="170" y1="104" x2="150" y2="136"/><line x1="170" y1="104" x2="190" y2="136"/></g>
+   ${[[130,72],[90,104],[170,104],[70,136],[110,136],[150,136],[190,136]].map(([x,y],k)=>`<circle cx="${x}" cy="${y}" r="9" fill="${k===2||k===5?'#e3f1e7':'#fff'}" stroke="${k===2||k===5?'#5b8a6a':'#c9b48f'}" stroke-width="2"/>`).join('')}</svg>`},
+ {id:'satelite',href:'satelite.html',nivel:'NÍVEL 2',nome:'Mapa de Satélite',cor:'#5f8f4f',fundo:'#e3efd9',
+  desc:'Conte as construções de uma imagem de satélite e veja a tinta se espalhar: é o flood fill, uma recursão que nunca desfaz. Tem a alteração de 4 vizinhos, que muda a conta.',
+  tags:['flood fill','recursão em matriz','8 vizinhos','sem desfazer'],
+  capa:`<svg viewBox="0 0 260 170"><rect width="260" height="170" fill="#e3efd9"/>
+   ${"##....#.|#...#.#.|...#....|.##....#|.##...##".split('|').map((r,i)=>r.split('').map((c,j)=>`<rect x="${42+j*22}" y="${24+i*22}" width="19" height="19" rx="4" fill="${c==='#'?(i<2&&j<2?'#ffd6b0':(j>=6&&i<2?'#cfe6f5':'#5f6b76')):'#cfe0c4'}"/>`).join('')).join('')}
+   <text x="220" y="40" font-size="22">🛰</text></svg>`},
+ {id:'nim',href:'nim.html',nivel:'NÍVEL 3',nome:'Nim das 13 Moedas',cor:'#c98f22',fundo:'#e9f3e4',
+  desc:'Tire 1, 2 ou 3 moedas; quem pegar a última perde. O computador joga com duas funções que chamam uma à outra (recursão mútua). Dá pra ganhar dele, mas só começando na posição certa.',
+  tags:['recursão mútua','jogo de 2 jogadores','posição boa e ruim','minimax'],
+  capa:`<svg viewBox="0 0 260 170"><rect width="260" height="170" fill="#e9f3e4"/>
+   ${Array.from({length:13},(_,k)=>{const l=k<7?0:1, c=k<7?k:k-7;return `<circle cx="${62+c*23+l*11}" cy="${60+l*30}" r="10" fill="#e8b84a" stroke="#a87618" stroke-width="2"/>`}).join('')}
+   <g font-family="monospace" font-size="11" font-weight="700">${[1,2,3,4,5].map((m,i)=>`<rect x="${70+i*25}" y="122" width="22" height="22" rx="5" fill="${m===1||m===5?'#f6d3d8':'#cfe6d4'}"/><text x="${81+i*25}" y="137" text-anchor="middle" fill="${m===1||m===5?'#9a3c48':'#2f6b45'}">${m}</text>`).join('')}</g></svg>`},
+ {id:'quadrado',href:'quadrado.html',nivel:'NÍVEL 3',nome:'Quadrado Mágico',cor:'#2f5d7c',fundo:'#eef4f8',
+  desc:'Números de 1 a 9, toda linha, coluna e diagonal somando 15. Preencha casa por casa e desfaça quando uma linha fechar errada, como o confere faz. O C acha os 8 quadrados.',
+  tags:['backtracking','vetor usado[]','poda','enumerar soluções'],
+  capa:`<svg viewBox="0 0 260 170"><rect width="260" height="170" fill="#eef4f8"/>
+   ${[2,7,6,9,5,1,4,3,8].map((v,k)=>`<rect x="${88+(k%3)*30}" y="${30+(k/3|0)*30}" width="27" height="27" rx="6" fill="#fff" stroke="#cfe0ec" stroke-width="2"/><text x="${101.5+(k%3)*30}" y="${49+(k/3|0)*30}" font-family="monospace" font-size="15" font-weight="700" text-anchor="middle" fill="#2f5d7c">${v}</text>`).join('')}
+   ${[0,1,2].map(r=>`<text x="190" y="${49+r*30}" font-family="monospace" font-size="11" font-weight="700" fill="#2f6b45">15</text>`).join('')}</svg>`},
  {id:'slide',href:'slide.html',nivel:'NÍVEL 3',nome:'Slide do Backtracking',cor:'#d98a2b',fundo:'#8fca6e',
   desc:'Deslize os blocos até o bloco dourado sair pela porta. Depois veja o computador resolver com backtracking: empilha, bate no beco, desfaz. Liga e desliga a poda e compara com a solução mínima.',
   tags:['backtracking','poda','estados repetidos','pilha'],
@@ -283,7 +308,7 @@ const MODULOS=[
    {href:'aula-recursao.html',id:'aulaRec',t:'Recursão e Busca',d:'Base e recursão, a pilha de chamadas, count_down_up, Fibonacci, Mínimo, Busca, busca binária e como abrir uma recorrência.'},
    {href:'aula-ordenacao.html',id:'aulaOrd',t:'Ordenação',d:'Inserção, seleção, intercala, mergesort, particiona e quicksort, com contagem de comparações e trocas.'}],jogos:['torre','baus','blocos','tetris','bolhas']},
  {t:'Árvores e Heap',tag:'P2',sub:'aulas 11, 12, 13 e implementação (heap.c)',aulas:[{href:'aula-heap.html',id:'aulaHeap',t:'Árvores e Heap',d:'Árvore quase completa, árvore no vetor (índice 1 e 0), propriedade de heap, max-heapify, build-max-heap, heapsort, insere e heap de mínimo.'}],jogos:['suika']},
- {t:'Backtracking',tag:'P2',sub:'todos vetores binários, todos subconjuntos, passeio do cavalo, labirinto',aulas:[{href:'aula-backtracking.html',id:'aulaBack',t:'Backtracking',d:'Árvore de decisões, vetores binários e subconjuntos, poda, cavalo.c e labirinto.c, com as alterações no estilo da prova.'}],jogos:['domino','resta-um','cavalo','labirinto','rainhas','slide']},
+ {t:'Backtracking',tag:'P2',sub:'todos vetores binários, todos subconjuntos, passeio do cavalo, labirinto',aulas:[{href:'aula-backtracking.html',id:'aulaBack',t:'Backtracking',d:'Árvore de decisões, vetores binários e subconjuntos, poda, cavalo.c e labirinto.c, com as alterações no estilo da prova.'}],jogos:['domino','resta-um','tesouro','cavalo','labirinto','rainhas','satelite','slide','nim','quadrado']},
 ];
 const card=j=>`<a class="jogo${j.travado?' travado':''}" href="${j.href}" data-id="${j.id}">
     <div class="capa" style="background:${j.fundo}">${j.capa}${feitos[j.id]?'<span class="feito">✔ jogado</span>':''}</div>
@@ -315,7 +340,7 @@ const SETAS=[['a02.html','a03.html'],['a03.html','a04-05.html'],['a04-05.html','
  ['rev-recursao.html','versao-prof/18-removendo-recursividade/index.html'],['a10.html','versao-prof/18-removendo-recursividade/index.html']];
 const OBJS=[['torre.html','Torre da Recursão','🗼','a02.html'],['baus.html','Masmorra dos Baús','🗝️','a06.html'],['tetris.html','Tetris das Recorrências','🧱','rev-recursao.html'],
  ['blocos.html','Fábrica de Ordenação','🏭','a08.html'],['bolhas.html','Bolhas da Pilha','🫧','versao-prof/18-removendo-recursividade/index.html'],['suika.html','Suika da Heap','🍉','rev-heap.html'],
- ['domino.html','Dominó do Backtracking','🁫','bt-vetores.html'],['cavalo.html','Cavalo no Campo Minado','♞','bt-cavalo.html'],['labirinto.html','Ratinho no Labirinto','🐭','bt-labirinto.html'],['slide.html','Slide do Backtracking','🧩','rev-backtracking.html'],['resta-um.html','Resta Um em linha','⚪','bt-vetores.html',-40],['rainhas.html','Oito Rainhas','♛','bt-labirinto.html',-40]];
+ ['domino.html','Dominó do Backtracking','🁫','bt-vetores.html'],['cavalo.html','Cavalo no Campo Minado','♞','bt-cavalo.html'],['labirinto.html','Ratinho no Labirinto','🐭','bt-labirinto.html'],['slide.html','Slide do Backtracking','🧩','rev-backtracking.html'],['resta-um.html','Resta Um em linha','⚪','bt-vetores.html',-40],['rainhas.html','Oito Rainhas','♛','bt-labirinto.html',-40],['tesouro.html','Tesouro Dividido','💰','bt-cavalo.html',-40],['satelite.html','Mapa de Satélite','🛰','rev-backtracking.html',-40],['nim.html','Nim das 13 Moedas','🪙','bt-labirinto.html',0,-56],['quadrado.html','Quadrado Mágico','🔢','rev-backtracking.html',0,-56]];
 const COR_T=k=>k<4?TRILHAS[k][1]:'#c99a1e';
 function mapaHTML(){
   const P={}; NOS.forEach(n=>P[n[0]]=n);
@@ -339,8 +364,8 @@ function mapaHTML(){
       <path class="fl${viva(s[0])?' vivo':''}" data-a="${s[0]}" data-b="${s[1]}" d="${d}" pathLength="1" stroke="${c}"/>`;}).join('');
   const trilhos=TRILHAS.map(([t,c,y,x0,x1])=>`<rect class="trilho" x="${x0-50}" y="${y-44}" width="${x1-x0+100}" height="${110}" rx="40" fill="${c}"/>
      <text class="tnome" x="${x0-38}" y="${y-50}" fill="${c}">${t}</text>`).join('');
-  const sats=OBJS.map(([h,t,ic,no,dx])=>{const N=P[no], sx=N[3]+(dx||40), sy=N[4]-36;
-    return `<a class="sat" href="${h}" data-no="${no}" data-id="${h.replace('.html','')}"><title>🎮 ${t}</title><line x1="${N[3]+((dx||40)>0?18:-18)}" y1="${N[4]-18}" x2="${sx}" y2="${sy}"/><circle cx="${sx}" cy="${sy}" r="15"/><text x="${sx}" y="${sy+1}">${ic}</text></a>`;}).join('');
+  const sats=OBJS.map(([h,t,ic,no,dx,dy])=>{const N=P[no]; if(dx===undefined) dx=40; const sx=N[3]+dx, sy=N[4]+(dy||-36);
+    return `<a class="sat" href="${h}" data-no="${no}" data-id="${h.replace('.html','')}"><title>🎮 ${t}</title><line x1="${N[3]+(dx>0?18:dx<0?-18:0)}" y1="${N[4]-(dx?18:26)}" x2="${sx}" y2="${sy}"/><circle cx="${sx}" cy="${sy}" r="15"/><text x="${sx}" y="${sy+1}">${ic}</text></a>`;}).join('');
   const nos=NOS.map(([h,t,ic,x,y,k])=>{const c=COR_T(k), lw=t.length*7.6+16;
     return `<a class="gno${vista(h)?' vista':''}${h===prox?' prox':''}" href="${h}" data-id="${h}" style="--d:${(prof[h]*.12).toFixed(2)}s"><title>${t}</title>
       <circle class="halo" cx="${x}" cy="${y}" r="27" stroke="${c}"/>

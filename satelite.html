@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · CC BY-NC-SA 4.0 · veja LICENSE.txt
+     Problema e pseudocódigo: slides "Backtracking" de Wladimir Araújo Tavares (UFC, Campus de Quixadá, 2017). O código em C foi escrito a partir do pseudocódigo. -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f4f5f6">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<title>Mapa de Satélite: flood fill em C</title>
+<style>
+:root{
+  --ciano:#5f6b76; --cianoF:#3d4852; --magenta:#5f6b76; --magentaF:#3d4852; --limao:#5b8a6a; --limaoF:#5b8a6a;
+  --laranja:#8a8f96; --amarelo:#b8a37a; --vermelho:#b5545f; --texto:#2f343a; --suave:#7a8088;
+  --vidro:#ffffff; --borda:#dde1e5;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{color:var(--texto);font:16px/1.45 'Fredoka',system-ui,sans-serif;
+  -webkit-user-select:none;user-select:none;touch-action:manipulation;
+  background:#f4f5f6}
+body.treme{animation:treme .35s}
+@keyframes treme{20%{transform:translate(-6px,2px)}40%{transform:translate(6px,-2px)}60%{transform:translate(-4px,1px)}80%{transform:translate(3px,0)}}
+header{padding:14px 20px 4px;max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+h1{margin:0;font-size:clamp(22px,3.2vw,32px);font-weight:700;color:#2b3440}
+.sub{color:var(--suave);margin:0;max-width:1280px;padding:0 20px;margin:0 auto;font-size:15px}
+.topoBtns{margin-left:auto;display:flex;gap:8px}
+.wrap{max-width:1280px;margin:0 auto;padding:8px 20px 40px}
+.abas{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0;background:#e6e8eb;padding:5px;border-radius:16px;width:max-content;max-width:100%}
+.abas button{border:0;background:transparent;color:var(--suave);padding:10px 18px;min-height:46px;border-radius:12px;font-weight:600;cursor:pointer;font-size:15px;font-family:inherit}
+.abas button.on{background:#fff;color:var(--texto);box-shadow:0 2px 6px #0001}
+.barra{display:flex;gap:14px;flex-wrap:wrap;align-items:center;background:#fff;border:1px solid var(--borda);border-radius:16px;padding:10px 14px;margin-bottom:14px;box-shadow:0 2px 10px #2f5d7c0d}
+.barra label{display:flex;gap:8px;align-items:center;font-size:15px;font-weight:600}
+input[type=range]{accent-color:var(--magentaF);width:130px;height:28px}
+input[type=checkbox]{accent-color:var(--magentaF);width:22px;height:22px}
+select{border:2px solid var(--borda);border-radius:10px;padding:8px 10px;background:#fff;color:var(--texto);font:inherit;font-weight:600;min-height:44px}
+.btn{border:2px solid var(--borda);background:#fff;color:var(--cianoF);padding:10px 14px;min-height:48px;border-radius:13px;cursor:pointer;font-weight:600;font-size:15px;font-family:inherit;transition:transform .08s}
+.btn:active{transform:scale(.96)}
+.btn.pri{background:#3d4852;border-color:#2f3740;color:#fff}
+.btn.alerta{background:#6b7480;border-color:#555d68;color:#fff}
+.btn.on{background:#eceef1;border-color:#8a9099;color:#2f343a}
+.btn.icone{min-width:48px;padding:8px 10px;font-size:20px}
+.btn:disabled{opacity:.4;cursor:default}
+.grade{display:grid;grid-template-columns:min(46vw,72vh) 1fr;gap:18px;align-items:start}
+@media (max-width:900px){.grade{grid-template-columns:1fr}}
+.card{background:#fff;border:1px solid var(--borda);border-radius:18px;padding:14px;box-shadow:0 2px 10px #2f5d7c0d}
+.card h3{margin:0 0 8px;font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--magentaF)}
+#tabWrap{position:relative;width:100%;aspect-ratio:1/1;margin:0 auto}
+@media (max-width:900px){#tabWrap{max-width:min(92vw,50vh)}}
+#tab{position:absolute;inset:0;display:grid;gap:5px}
+#tab .casa{border:2px solid #e3e6e9;border-radius:12px;background:#fdfdfd;position:relative;font-weight:700;color:var(--cianoF);font-size:clamp(16px,3.4vh,30px);cursor:default;padding:0;display:flex;align-items:center;justify-content:center;transition:background .15s,box-shadow .15s;font-family:inherit}
+#tab .casa.esc{background:#f0f1f3}
+#tab .casa.vis{background:#d9dfe5;border-color:#8a949f;color:#2f343a}
+#tab .casa.topo{background:#d5dbe1;border-color:#3d4852;color:#2f343a;box-shadow:0 0 0 3px #3d485233;z-index:2}
+#tab .casa.alvo{cursor:pointer;background:#eef3ef;border:2px dashed var(--limao);animation:pulsa 1.3s ease-in-out infinite}
+@keyframes pulsa{50%{box-shadow:0 0 0 4px #5b8a6a33}}
+#tab .casa.alvo:active{background:#d3f0de}
+#tab .casa.mina{background:#f3e7e8;border-color:#d4a9ae}
+#tab .casa.minaFraca{opacity:.6}
+#tab .casa.probe-ok{border:3px solid var(--limao);background:#e8f0ea}
+#tab .casa.probe-no{border:3px solid var(--vermelho);background:#f3e7e8}
+#tab .casa.desfeito{animation:desf .6s}
+@keyframes desf{0%{background:#e4c7cb}100%{background:#fdfdfd}}
+#tab .casa.boom{animation:boom .5s}
+@keyframes boom{0%{transform:scale(1)}30%{transform:scale(1.2);background:#e4c7cb}100%{transform:scale(1)}}
+.casa .badge{position:absolute;top:3px;right:6px;font-size:clamp(11px,1.6vh,15px);font-weight:700;line-height:1}
+.casa .rot{position:absolute;bottom:3px;left:6px;font-size:clamp(10px,1.4vh,13px);font-weight:700;line-height:1}
+.casa .coord{position:absolute;bottom:3px;right:6px;font-size:10px;color:#a9b8c6;font-weight:500}
+#linhas{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:visible}
+#tab{z-index:2}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}
+.stat{background:#f2f3f5;border:1px solid var(--borda);border-radius:12px;padding:6px 12px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--suave)}
+.stat b{color:var(--magentaF);font-size:20px;font-family:'JetBrains Mono',ui-monospace,monospace;letter-spacing:0}
+.stat.xp{border-color:#cfd3d8;background:#eceef1}
+.stat.xp b{color:#3d4852}
+.msg{border-radius:14px;padding:12px 14px;margin-top:12px;background:#f2f3f5;border:2px solid #dde1e5;min-height:50px;font-size:15.5px}
+.msg.ruim{background:#f6ecee;border-color:#e0bcc2}
+.msg.bom{background:#ebf2ed;border-color:#bcd3c3}
+.msg.atencao{background:#f3f1ec;border-color:#d8d0bf}
+code{background:#eceef1;border-radius:6px;padding:0 5px;font-size:.9em;font-family:'JetBrains Mono',ui-monospace,monospace;color:#3d4852}
+pre.codigo{margin:0;background:#f8f9fa;border:1px solid var(--borda);border-radius:14px;padding:8px 0;font:14px/1.6 'JetBrains Mono',ui-monospace,monospace;overflow:auto;max-height:62vh;-webkit-overflow-scrolling:touch;color:#2b3440}
+pre.codigo .ln{display:block;padding:0 12px;white-space:pre;border-left:5px solid transparent}
+pre.codigo .ln.hl{background:#e4e8ec;border-left-color:#3d4852}
+pre.codigo .ln.hl2{background:#e8f0ea;border-left-color:var(--limao)}
+pre.codigo .kw{color:#3d4852;font-weight:700}
+pre.codigo .cm{color:#8a9aa8;font-style:italic}
+pre.codigo .nu{color:#6b7480;font-weight:600}
+.pilha{display:flex;flex-direction:column;gap:4px;max-height:240px;overflow:auto;font:13.5px 'JetBrains Mono',ui-monospace,monospace;-webkit-overflow-scrolling:touch}
+.pilha div{background:#f6f7f8;border:1px solid var(--borda);border-radius:9px;padding:4px 10px}
+.pilha div.topo{background:#e4e8ec;border-color:#3d4852;font-weight:700;color:#2f343a}
+.log{max-height:200px;overflow:auto;font-size:14px;display:flex;flex-direction:column;-webkit-overflow-scrolling:touch}
+.log div{padding:4px 0;border-bottom:1px dashed #e1e9f0}
+.dois{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:1100px){.dois{grid-template-columns:1fr}}
+.legenda{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--suave);margin-top:10px;font-weight:600}
+.legenda span i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:5px;box-shadow:none!important}
+.oculto{display:none!important}
+.texto{-webkit-user-select:text;user-select:text}
+.texto h2{font-size:19px;margin:20px 0 6px;color:var(--magentaF)}
+.texto h2:first-child{margin-top:0}
+.texto table{border-collapse:collapse;width:100%;font-size:15px}
+.texto td,.texto th{border:1px solid var(--borda);padding:8px 10px;text-align:left;vertical-align:top}
+.texto th{background:#f0f1f3;color:var(--cianoF);font-size:13px}
+.caixa{background:#f0f1f3;border-radius:14px;padding:12px 16px;margin:10px 0}
+.caixa.pessego{background:#f5f4f0;border:2px solid #dcd8cc}
+.caixa.rosa{background:#f3eef0}
+.pequeno{font-size:13px;color:var(--suave)}
+#vitoria{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#ffffffb0;backdrop-filter:blur(4px);z-index:50;padding:20px}
+#vitoria .box{background:#fff;border:3px solid var(--magentaF);border-radius:24px;padding:26px 30px;max-width:520px;text-align:center;box-shadow:0 10px 30px #0003;animation:entra .4s}
+@keyframes entra{from{transform:scale(.7);opacity:0}}
+#vitoria h2{margin:0 0 6px;font-size:34px;font-weight:700;color:var(--magentaF)}
+#vitoria .grandes{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.confete{position:fixed;top:-20px;width:10px;height:16px;border-radius:3px;z-index:60;pointer-events:none;animation:cai linear forwards}
+@keyframes cai{to{transform:translateY(110vh) rotate(720deg)}}
+
+/* ---- comum aos jogos novos (resta um e rainhas) ---- */
+.espBarra{display:inline-flex;gap:8px;align-items:center;background:#fff3e6;border:2px solid #f0d2b0;color:#7a4a1c;border-radius:999px;padding:6px 14px;font-weight:600;margin-left:10px}
+.espBarra b{font-family:'JetBrains Mono',ui-monospace,monospace}
+#perdeu{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#ffffffb0;backdrop-filter:blur(4px);z-index:50;padding:20px}
+#perdeu .box{background:#fff;border:3px solid var(--vermelho);border-radius:24px;padding:24px 28px;max-width:480px;text-align:center;box-shadow:0 10px 30px #0003;animation:entra .4s}
+#perdeu h2{margin:0 0 6px;color:var(--vermelho)}
+.quizGrade{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:1000px){.quizGrade{grid-template-columns:1fr}}
+.quiz .qNum{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--suave)}
+.quiz .qP{margin:4px 0 8px;font-size:15.5px}
+.quiz .qOps{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.quiz .qOp{text-align:left;min-height:42px;font-weight:500}
+.quiz .qOp.certo{background:#ebf2ed;border-color:#5b8a6a;color:#24563a}
+.quiz .qOp.errado{background:#f6ecee;border-color:#b5545f;color:#7a2d36}
+pre.codigo.mini{max-height:none;font-size:13px}
+.achaErro .ln{cursor:pointer}
+.achaErro .ln:hover{background:#f2f4f6}
+.achaErro .ln.certo{background:#e8f0ea;border-left-color:#5b8a6a}
+.achaErro .ln.errado{background:#f6ecee;border-left-color:#b5545f}
+.fonte{font-size:13px;color:var(--suave);background:#f6f7f8;border:1px dashed #d5d9de;border-radius:12px;padding:10px 14px;margin-top:16px}
+.escondido{background:#f5f4f0;border:2px solid #dcd8cc;border-radius:14px;padding:10px 14px;margin:10px 0}
+.escondido b:first-child{color:#8a5a2b}
+details.resp{margin-top:6px}
+details.resp summary{cursor:pointer;color:var(--cianoF);font-weight:600}
+
+.grade2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media (max-width:900px){.grade2{grid-template-columns:1fr}}
+/* ---- satélite ---- */
+.mapa{display:grid;gap:3px;background:#cfe0c4;border:3px solid #a9c49a;border-radius:16px;padding:8px;max-width:640px;margin:0 auto}
+.px{aspect-ratio:1/1;border-radius:6px;border:0;padding:0;position:relative;background:#e3efd9;font:700 12px 'JetBrains Mono',monospace;color:#fff;cursor:default;transition:background .25s,transform .2s}
+.px.casa{background:#5f6b76;cursor:pointer;box-shadow:inset 0 -3px 0 #3d4852}
+.px.casa:hover{transform:scale(1.06)}
+.px.pint{color:#2f343a;box-shadow:none}
+.px.atual{outline:3px solid #2f3740;z-index:2}
+.px.viz{outline:3px dashed #8fb3cf;z-index:1}
+.px.vizOk{outline:3px solid #5b8a6a;z-index:1}
+.px.fora{outline:none}
+.px .n{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.palpite{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.palpite input{width:80px;font:700 18px 'JetBrains Mono',monospace;border:2px solid var(--borda);border-radius:10px;padding:6px 8px;text-align:center}
+.cores{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.cores span{border-radius:999px;padding:3px 10px;font:600 13px 'Fredoka',sans-serif;color:#2f343a}
+</style>
+<script src="modo.js"></script>
+</head>
+<body>
+<header>
+  <a class="btn" href="index.html" style="text-decoration:none;display:inline-flex;align-items:center">🕹 Início</a>
+  <h1>🛰 Mapa de Satélite</h1>
+  <div class="topoBtns">
+    <button class="btn icone" id="btnSom" title="som">🔊</button>
+    <button class="btn icone" id="btnTela" title="tela cheia">⛶</button>
+  </div>
+</header>
+<p class="sub">Quantas construções tem nesta imagem de satélite? Células escuras <b>encostadas</b> (dos lados ou na diagonal) são a mesma construção. Clique numa construção e veja a tinta se espalhar: é a função <code>apaga</code> chamando ela mesma.</p>
+<div class="wrap">
+  <div class="abas">
+    <button data-aba="jogar" class="on">🎮 Jogar</button>
+    <button data-aba="auto">🔍 Ver o C rodar</button>
+    <button data-aba="prova">📝 Treino de prova</button>
+    <button data-aba="como">📖 Como funciona</button>
+  </div>
+  <div style="margin:4px 0 12px;display:flex;align-items:center;flex-wrap:wrap;gap:6px"><span id="modoSlot" data-ap="sem relógio, sem palpite obrigatório" data-esp="relógio, 3 vidas, palpite antes de pintar"></span><span class="espBarra oculto" id="espBarra"></span></div>
+  <div class="barra">
+    <label>Imagem <select id="selMapa"><option value="0">1</option><option value="1">2 (cuidado com as diagonais)</option><option value="2">3</option><option value="3">4</option></select></label>
+    <label><input type="checkbox" id="viz4"> alteração: só 4 vizinhos (sem diagonais)</label>
+  </div>
+
+  <!-- ===================== JOGAR ===================== -->
+  <section id="aba-jogar">
+    <div class="grade grade2">
+      <div class="card">
+        <div class="mapa" id="mapaJ"></div>
+        <div class="cores" id="coresJ"></div>
+      </div>
+      <div>
+        <div class="card">
+          <h3>Conte as construções</h3>
+          <p style="margin:0 0 8px">Cada clique é o <code>for</code> de <code>construcoes</code> achando uma célula escura: ele chama <code>apaga(i, j)</code> e soma 1 em <code>cont</code>. <span class="soEsp"><b>Modo especialista:</b> dê o seu palpite antes de começar a pintar.</span></p>
+          <div class="palpite soEsp"><label>Meu palpite: <input type="number" id="palp" min="0" max="40"></label><button class="btn pri" id="btnPalp">Travar palpite</button></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+            <button class="btn" id="btnRecomecar">Recomeçar imagem</button>
+            <label style="font-size:14px;display:flex;gap:6px;align-items:center">velocidade da tinta <input type="range" id="velJ" min="1" max="10" value="6"></label>
+          </div>
+          <div class="stats">
+            <div class="stat xp">cont: <b id="jCont">0</b></div>
+            <div class="stat">chamadas de apaga: <b id="jCham">0</b></div>
+            <div class="stat">células escuras que faltam: <b id="jFalta">0</b></div>
+          </div>
+          <div class="msg" id="jMsg"></div>
+        </div>
+        <div class="card" style="margin-top:12px"><h3>Pilha de chamadas da tinta</h3><p class="pequeno" style="margin:0 0 6px">Repara que nunca tem "desfaz": célula pintada fica pintada.</p><div class="pilha" id="jPilha"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== AUTO ===================== -->
+  <section id="aba-auto" class="oculto">
+    <div class="grade grade2">
+      <div>
+        <div class="card">
+          <div class="mapa" id="mapaA"></div>
+          <div class="stats">
+            <div class="stat xp">cont: <b id="aCont">0</b></div>
+            <div class="stat">chamadas de apaga: <b id="aCham">0</b></div>
+            <div class="stat">profundidade: <b id="aProf">0</b></div>
+            <div class="stat">passos: <b id="aEv">0</b></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:12px"><h3>Pilha de chamadas</h3><div class="pilha" id="aPilha"></div></div>
+      </div>
+      <div>
+        <div class="card">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button class="btn pri" id="btnPasso">Próximo passo ▸</button>
+            <button class="btn" id="btnPlay">▶ Rodar</button>
+            <button class="btn" id="btnFim">⏭ Até o fim</button>
+            <button class="btn" id="btnReset">↺ Reiniciar</button>
+            <label style="font-size:14px;display:flex;gap:6px;align-items:center">velocidade <input type="range" id="vel" min="1" max="10" value="5"></label>
+            <label style="font-size:14px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="resumo" checked> só pintar e voltar</label>
+          </div>
+          <div class="msg" id="aMsg"></div>
+        </div>
+        <div class="card" style="margin-top:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="margin:0">O código em C</h3><button class="btn" id="btnCopiar">Copiar programa completo</button></div>
+          <pre class="codigo" id="codigo"></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PROVA ===================== -->
+  <section id="aba-prova" class="oculto">
+    <div class="card" style="margin-bottom:12px"><h3>Treino no estilo da prova</h3><p style="margin:0">Responda antes de olhar a aba do C rodando. <span class="pequeno" id="placar"></span></p></div>
+    <div class="quizGrade" id="quiz"></div>
+  </section>
+
+  <!-- ===================== COMO FUNCIONA ===================== -->
+  <section id="aba-como" class="oculto">
+    <div class="card texto">
+      <h2>A ideia antes do código</h2>
+      <p>Pensa num balde de tinta derramado num piso de azulejos: a tinta escorre pra todo azulejo vizinho que está "sujo", e desses pros vizinhos deles, até não ter mais pra onde ir. É a ferramenta "balde" de qualquer programa de desenho. Em inglês o nome é <b>flood fill</b>, "preencher inundando".</p>
+      <p>Pra contar construções, o programa varre a imagem linha por linha. Cada vez que acha uma célula escura, sabe que achou uma construção nova: soma 1 e joga tinta nela inteira (<code>apaga</code>), pra não contar a mesma construção de novo mais pra frente.</p>
+
+      <h2>O que não está escrito mas existe</h2>
+      <div class="escondido">
+        <b>1. A base da recursão.</b> Não tem um <code>if</code> de parada no começo do <code>apaga</code>. Ela para porque só chama a si mesma em vizinhos que ainda são escuros (<code>img[u][v] != 0</code>). Como cada chamada pinta a sua célula antes de olhar os vizinhos, uma hora acabam as células escuras.<br><br>
+        <b>2. Por que pinta ANTES do <code>for</code>?</b> Se pintasse depois, a célula vizinha olharia de volta, veria a célula de origem ainda escura e chamaria <code>apaga</code> nela de novo, e assim pra sempre (estouro de pilha).<br><br>
+        <b>3. Os 8 vizinhos vêm de dois vetores.</b> <code>dl</code> e <code>dc</code> dizem quanto andar em linha e coluna em cada direção <code>k</code>, igual ao <code>xMove</code>/<code>yMove</code> do cavalo.<br><br>
+        <b>4. Não tem "desfaz".</b> Diferente do cavalo e do labirinto, aqui célula pintada nunca volta a ser escura. A gente não está procurando um caminho: está visitando cada célula uma vez só. Por isso <code>apaga</code> é chamada exatamente uma vez por célula escura.
+      </div>
+
+      <h2>Isso é backtracking mesmo?</h2>
+      <p>Os slides de onde veio o problema colocam ele na aula de backtracking, e ele tem a mesma cara: recursão que tenta cada direção e "volta" quando não tem mais pra onde ir. Mas falta a parte de <b>desfazer a escolha</b>. Muita gente chama isso de <b>busca em profundidade</b> (DFS). Vale comparar com o labirinto: lá precisa desmarcar a casa porque outro caminho pode passar por ela; aqui não, porque basta pintar cada célula uma vez.</p>
+
+      <h2>O jogo e o C são a mesma coisa</h2>
+      <table>
+        <tr><th>No jogo</th><th>No C</th></tr>
+        <tr><td>Clicar numa construção</td><td>o <code>for</code> duplo achando <code>img[i][j] != 0</code>, chamando <code>apaga(i, j)</code> e fazendo <code>cont++</code></td></tr>
+        <tr><td>A tinta se espalhando</td><td>cada <code>apaga(u, v)</code> chamado dentro do <code>for</code> dos 8 vizinhos</td></tr>
+        <tr><td>Célula pintada</td><td><code>img[i][j] = 0</code></td></tr>
+        <tr><td>Contorno tracejado em volta</td><td>os 8 vizinhos <code>(u, v)</code> sendo testados</td></tr>
+        <tr><td>"Só 4 vizinhos"</td><td>vetores <code>dl</code>/<code>dc</code> com 4 direções e o <code>for</code> até 4</td></tr>
+      </table>
+
+      <h2>Desafios em C</h2>
+      <ol>
+        <li>Copie o programa, compile e confira os números das imagens.</li>
+        <li>Faça <code>apaga</code> devolver o <b>tamanho</b> da construção (quantas células ela tem). Qual é a maior construção de cada imagem?</li>
+        <li>Mude pra 4 vizinhos e veja a imagem 2 mudar de 4 pra 12 construções.</li>
+        <li>Em vez de pintar com 0, pinte com o número da construção (2, 3, 4...) e imprima a matriz no fim.</li>
+      </ol>
+      <div class="fonte"><b>Fonte:</b> problema e pseudocódigo dos slides "Backtracking" de Wladimir Araújo Tavares (UFC, Campus de Quixadá, 2017). Os slides trazem só o pseudocódigo; o código em C desta página foi escrito a partir dele. As imagens são nossas.</div>
+    </div>
+  </section>
+</div>
+
+<div id="vitoria" class="oculto"><div class="box">
+  <h2>Contou tudo!</h2>
+  <div id="vTexto"></div>
+  <div class="grandes" id="vStats"></div>
+  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+    <button class="btn" id="vVerC">🔍 Ver o C contar</button>
+    <button class="btn pri" id="vProx">Próxima imagem ▸</button>
+  </div>
+</div></div>
+<div id="perdeu" class="oculto"><div class="box"><h2>Acabaram as vidas</h2><p>No modo especialista, cada palpite errado custa uma vida.</p><button class="btn pri" id="pDeNovo">Tentar de novo</button></div></div>
+
+<script>
+"use strict";
+/* ---------- utilidades comuns (som, abas, relógio e vidas, quiz, vitória) ---------- */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+let AC=null, SOM=true;
+function ac(){ if(!AC){ try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){AC=null;} }
+  if(AC&&AC.state==='suspended') AC.resume(); return AC; }
+function tom(f,t0,dur,tipo,vol,f2){ const a=ac(); if(!a) return; const t=a.currentTime+t0;
+  const o=a.createOscillator(), g=a.createGain(); o.type=tipo; o.frequency.setValueAtTime(f,t);
+  if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+  g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+dur+.03); }
+function som(n){ if(!SOM) return; try{
+  if(n==='pulo') tom(520,0,.09,'square',.05,900);
+  else if(n==='volta') tom(620,0,.16,'triangle',.09,240);
+  else if(n==='erro'){ tom(200,0,.18,'sawtooth',.06,120); }
+  else if(n==='beco'){ tom(300,0,.12,'sawtooth',.04); tom(220,.14,.2,'sawtooth',.04); }
+  else if(n==='vitoria') [523,659,784,1047,1319].forEach((f,i)=>tom(f,i*.1,.22,'square',.05));
+  else if(n==='tick') tom(1000,0,.03,'square',.025);
+  else if(n==='desfaz') tom(340,0,.08,'triangle',.05,200);
+  else if(n==='ok') tom(700,0,.12,'sine',.07,1050);
+  else if(n==='nao') tom(260,0,.15,'sine',.07,180);
+}catch(e){} }
+function treme(){ document.body.classList.remove('treme'); void document.body.offsetWidth; document.body.classList.add('treme'); }
+function confete(){
+  const cores=['#c9ced4','#a9b1ba','#ffd6b0','#dcd8cc','#cfe6f5'];
+  for(let i=0;i<70;i++){ const s=document.createElement('span'); s.className='confete';
+    s.style.left=Math.random()*100+'vw'; s.style.background=cores[i%cores.length];
+    s.style.animationDuration=(1.8+Math.random()*1.8)+'s'; s.style.animationDelay=(Math.random()*.6)+'s';
+    document.body.appendChild(s); setTimeout(()=>s.remove(),4500); }
+}
+/* relógio e vidas do modo especialista */
+const ESPEC={t0:0,timer:null,vidas:3,ativo:false};
+function espInicia(){
+  clearInterval(ESPEC.timer); ESPEC.vidas=3; ESPEC.ativo=ESP(); ESPEC.t0=Date.now();
+  espDesenha();
+  if(ESPEC.ativo) ESPEC.timer=setInterval(espDesenha,500);
+}
+function espPara(){ clearInterval(ESPEC.timer); }
+function espSeg(){ return Math.round((Date.now()-ESPEC.t0)/1000); }
+function espDesenha(){
+  const el=$('espBarra'); if(!el) return;
+  if(!ESP()){ el.classList.add('oculto'); return; }
+  el.classList.remove('oculto');
+  const s=espSeg(); el.innerHTML=`⏱ <b>${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}</b> &nbsp; ${'❤️'.repeat(ESPEC.vidas)}${'🤍'.repeat(3-ESPEC.vidas)}`;
+}
+/* devolve true se ainda tem vida */
+function espErro(){
+  if(!ESP()) return true;
+  ESPEC.vidas--; espDesenha();
+  if(ESPEC.vidas<=0){ espPara(); $('perdeu').classList.remove('oculto'); return false; }
+  return true;
+}
+function estrelas(n){ return '★'.repeat(n)+'☆'.repeat(3-n); }
+/* quiz de prova: QUIZ=[{p, cod?, ops:[...], certa, exp}] */
+function montaQuiz(lista, alvo){
+  const box=$(alvo);
+  box.innerHTML=lista.map((q,k)=>`<div class="card quiz" data-k="${k}">
+    <div class="qNum">Questão ${k+1}</div>
+    <div class="qP">${q.p}</div>
+    ${q.cod?`<pre class="codigo mini">${q.cod.split('\n').map(l=>`<span class="ln">${esc(l)||' '}</span>`).join('')}</pre>`:''}
+    <div class="qOps">${q.ops.map((o,i)=>`<button class="btn qOp" data-i="${i}">${String.fromCharCode(97+i)}) ${o}</button>`).join('')}</div>
+    <div class="msg qExp oculto"></div></div>`).join('');
+  box.querySelectorAll('.quiz').forEach(c=>{
+    const q=lista[+c.dataset.k];
+    c.querySelectorAll('.qOp').forEach(b=>b.addEventListener('click',()=>{
+      if(c.classList.contains('feito')) return;
+      const i=+b.dataset.i, ok=i===q.certa; c.classList.add('feito');
+      b.classList.add(ok?'certo':'errado'); c.querySelectorAll('.qOp')[q.certa].classList.add('certo');
+      const e=c.querySelector('.qExp'); e.classList.remove('oculto'); e.classList.add(ok?'bom':'ruim');
+      e.innerHTML=(ok?'<b>Isso.</b> ':'<b>Não é essa.</b> ')+q.exp; som(ok?'ok':'nao');
+      const feitos=box.querySelectorAll('.quiz.feito').length, certas=box.querySelectorAll('.qOp.certo.errado').length;
+      atualizaPlacar(box);
+    }));
+  });
+  atualizaPlacar(box);
+}
+function atualizaPlacar(box){
+  const tot=box.querySelectorAll('.quiz').length, feitos=[...box.querySelectorAll('.quiz.feito')];
+  const certas=feitos.filter(c=>!c.querySelector('.qOp.errado')).length;
+  const p=$('placar'); if(p) p.innerHTML=`respondidas <b>${feitos.length}</b> de ${tot} · certas <b>${certas}</b>`;
+}
+
+
+const MAPAS=[
+"##....#.\n#...#.#.\n...#....\n.##....#\n.##...##\n......#.",
+"#.#.#...\n.#...#..\n#.#...#.\n.....#..\n##.....#\n##....#.",
+"###..###\n#.#..#.#\n###..###\n........\n#......#\n.######.",
+"#..#..#..#\n.##.##.##.\n..........\n####..####\n#..#..#..#\n####..####"];
+const CORES=['#ffd6b0','#cfe6f5','#d8f2e1','#f6d6e0','#fff0b3','#e2dcf5','#c9ece6','#f3dcc5','#dde7c8','#f5cfcf','#d3def0','#efe1c0'];
+const D8=[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]], D4=[[-1,0],[0,-1],[0,1],[1,0]];
+const DIRS=()=>$('viz4').checked?D4:D8;
+let progresso={}; try{progresso=JSON.parse(localStorage.getItem('satelite-alg2')||'{}');}catch(e){}
+const salvaProg=()=>{try{localStorage.setItem('satelite-alg2',JSON.stringify(progresso));}catch(e){}};
+const grade=m=>MAPAS[m].split('\n').map(r=>r.split('').map(c=>c==='#'?1:0));
+function contaCerto(m){ const g=grade(m), L=g.length, C=g[0].length, D=DIRS(); let c=0;
+  const ap=(i,j)=>{ g[i][j]=0; for(const [a,b] of D){ const u=i+a,v=j+b; if(u>=0&&u<L&&v>=0&&v<C&&g[u][v]) ap(u,v);} };
+  for(let i=0;i<L;i++)for(let j=0;j<C;j++) if(g[i][j]){ap(i,j);c++;} return c; }
+
+function desenhaMapa(el,g,pint,opt={}){
+  const L=g.length, C=g[0].length; el.style.gridTemplateColumns=`repeat(${C},1fr)`;
+  let h='';
+  for(let i=0;i<L;i++)for(let j=0;j<C;j++){
+    let cls='px', st='', txt='';
+    const p=pint[i][j];
+    if(g[i][j]) cls+=' casa';
+    else if(p){ cls+=' pint'; st=`background:${CORES[(p-1)%CORES.length]}`; txt=p; }
+    if(opt.at&&opt.at[0]===i&&opt.at[1]===j) cls+=' atual';
+    if(opt.viz&&opt.viz[0]===i&&opt.viz[1]===j) cls+=opt.vizOk?' vizOk':' viz';
+    h+=`<button class="${cls}" style="${st}" data-i="${i}" data-j="${j}"><span class="n">${txt}</span></button>`;
+  }
+  el.innerHTML=h;
+}
+
+/* =================== JOGAR =================== */
+let J;
+function novoMapa(){
+  const m=+$('selMapa').value;
+  J={m,g:grade(m),pint:null,cont:0,cham:0,anim:false,palpite:null,pilha:[],fim:false};
+  J.pint=J.g.map(r=>r.map(()=>0));
+  espInicia();
+  if($('palp')) $('palp').value='';
+  jMsg(ESP()?'Olhe a imagem, conte de cabeça e trave o seu palpite antes de clicar.':`Clique numa célula escura. ${$('viz4').checked?'<b>Atenção:</b> com a alteração ligada, diagonal não conta como encostado.':'Lembre: encostar na diagonal também conta.'}`);
+  renderJ();
+}
+function jMsg(h,t){const m=$('jMsg');m.innerHTML=h;m.className='msg'+(t?' '+t:'');}
+function renderJ(opt){
+  desenhaMapa($('mapaJ'),J.g,J.pint,opt||{});
+  $('jCont').textContent=J.cont; $('jCham').textContent=J.cham; $('jFalta').textContent=J.g.flat().filter(x=>x).length;
+  $('coresJ').innerHTML=Array.from({length:J.cont},(_,k)=>`<span style="background:${CORES[k%CORES.length]}">construção ${k+1}</span>`).join('');
+  $('jPilha').innerHTML=J.pilha.map((p,k)=>`<div class="${k===J.pilha.length-1?'topo':''}">apaga(${p[0]}, ${p[1]})</div>`).reverse().join('')||'<div>construcoes()</div>';
+  $('mapaJ').querySelectorAll('.px.casa').forEach(b=>b.onclick=()=>clique(+b.dataset.i,+b.dataset.j));
+}
+const espera=ms=>new Promise(r=>setTimeout(r,ms));
+async function clique(i,j){
+  if(J.anim||J.fim) return;
+  if(ESP()&&J.palpite===null){ jMsg('Trave o palpite primeiro.','atencao'); som('nao'); return; }
+  J.anim=true; J.cont++; const cor=J.cont, D=DIRS(), L=J.g.length, C=J.g[0].length;
+  jMsg(`<code>img[${i}][${j}] != 0</code>: construção nova! <code>apaga(${i}, ${j})</code> e <code>cont = ${J.cont}</code>.`);
+  const ms=()=>[0,600,420,300,200,130,80,45,20,6,0][+$('velJ').value];
+  const ap=async(a,b)=>{
+    J.cham++; J.g[a][b]=0; J.pint[a][b]=cor; J.pilha.push([a,b]); som('tick');
+    if(ms()){ renderJ({at:[a,b]}); await espera(ms()); }
+    for(const [x,y] of D){ const u=a+x,v=b+y;
+      if(u>=0&&u<L&&v>=0&&v<C&&J.g[u][v]) await ap(u,v); }
+    J.pilha.pop();
+  };
+  await ap(i,j);
+  J.anim=false; renderJ();
+  const falta=J.g.flat().filter(x=>x).length;
+  if(!falta) termina();
+  else jMsg(`A construção ${J.cont} acabou de ser pintada: ${J.cham} chamadas de <code>apaga</code> até agora. Ainda tem ${falta} célula(s) escura(s).`,'bom');
+}
+function termina(){
+  J.fim=true; espPara();
+  const certo=J.cont;
+  if(ESP()){
+    if(J.palpite!==certo){ som('erro'); treme(); jMsg(`São <b>${certo}</b> construções, e o seu palpite foi ${J.palpite}. ${J.m===1&&!$('viz4').checked?'Lembra que diagonal conta como encostado.':''}`,'ruim');
+      if(espErro()){ setTimeout(()=>{ const v=ESPEC.vidas; novoMapa(); ESPEC.vidas=v; espDesenha(); },1800); } return; }
+    const st=ESPEC.vidas===3?3:ESPEC.vidas===2?2:1; const key=J.m+($('viz4').checked?'-4':'');
+    if(!progresso[key]||progresso[key]<st){ progresso[key]=st; salvaProg(); }
+    $('vStats').innerHTML=`<div class="stat xp">estrelas <b>${estrelas(st)}</b></div><div class="stat">tempo <b>${espSeg()}s</b></div>`;
+  } else $('vStats').innerHTML=`<span class="pequeno">As estrelas só contam no modo 🏆 especialista.</span>`;
+  som('vitoria'); confete();
+  $('vTexto').innerHTML=`<b>${certo}</b> construções, ${J.cham} chamadas de <code>apaga</code>. Repara: ${J.cham} é exatamente o número de células escuras que a imagem tinha. Cada uma foi pintada uma vez só.`;
+  $('vitoria').classList.remove('oculto');
+}
+
+/* =================== VER O C RODAR =================== */
+function codigo(){
+  const m=+$('selMapa').value, g=grade(m), L=g.length, C=g[0].length, q=$('viz4').checked;
+  const linhas=g.map((r,k)=>`    {${r.join(', ')}}${k<L-1?',':''}`);
+  return [
+   ['#include <stdio.h>',''],['',''],[`#define L ${L}`,''],[`#define C ${C}`,''],['',''],
+   ['int img[L][C] = {',''],...linhas.map(t=>[t,'']),['};',''],
+   q?['int dl[4] = {-1,  0, 0, 1};   /* cima, esquerda, direita, baixo */','']:['int dl[8] = {-1, -1, -1,  0, 0,  1, 1, 1};',''],
+   q?['int dc[4] = { 0, -1, 1, 0};','']:['int dc[8] = {-1,  0,  1, -1, 1, -1, 0, 1};',''],['',''],
+   ['void apaga(int i, int j){','enter'],
+   ['    img[i][j] = 0;               /* pinta antes de olhar os vizinhos */','pinta'],
+   [`    for (int k = 0; k < ${q?4:8}; k++){`,'for'],
+   ['        int u = i + dl[k], v = j + dc[k];','uv'],
+   ['        if (u >= 0 && u < L && v >= 0 && v < C)','dentro'],
+   ['            if (img[u][v] != 0)','escuro'],
+   ['                apaga(u, v);','call'],
+   ['    }',''],
+   ['}','fim'],['',''],
+   ['int construcoes(){',''],
+   ['    int cont = 0;','c0'],
+   ['    for (int i = 0; i < L; i++)','scan'],
+   ['        for (int j = 0; j < C; j++)','scan'],
+   ['            if (img[i][j] != 0){','scan'],
+   ['                apaga(i, j);','novo'],
+   ['                cont++;','cont'],
+   ['            }',''],
+   ['    return cont;','ret'],
+   ['}',''],['',''],
+   ['int main(){',''],['    printf("%d\\n", construcoes());','print'],['    return 0;',''],['}','']];
+}
+function realca(t){
+  let cm='', i=t.indexOf('/*'); if(i>=0){cm=t.slice(i);t=t.slice(0,i);}
+  t=esc(t).replace(/("[^"]*")/g,'<span class="nu">$1</span>').replace(/\b(\d+)\b/g,'<span class="nu">$1</span>')
+    .replace(/(#include|#define|\bint\b|\bvoid\b|\breturn\b|\bif\b|\bfor\b|\belse\b)/g,'<span class="kw">$1</span>');
+  return t+(cm?`<span class="cm">${esc(cm)}</span>`:'');
+}
+function montaCodigo(){ $('codigo').innerHTML=codigo().map(([t,id])=>`<span class="ln"${id?` data-id="${id}"`:''}>${realca(t)||' '}</span>`).join(''); }
+function acende(ids){ document.querySelectorAll('#codigo .ln').forEach(el=>el.classList.toggle('hl',ids.includes(el.dataset.id))); }
+let S, GEN, ULT=null, timer=null, rodando=false;
+const ev=(lines,msg,tipo)=>({lines,msg,tipo});
+function* apagaG(i,j){
+  const g=S.g, L=g.length, C=g[0].length, D=S.D;
+  S.stack.push([i,j]); S.cham++; S.prof=Math.max(S.prof,S.stack.length); S.at=[i,j]; S.viz=null;
+  yield ev(['enter'],`Entrou em <code>apaga(${i}, ${j})</code>.`,'enter');
+  g[i][j]=0; S.pint[i][j]=S.cont+1;
+  yield ev(['pinta'],`<code>img[${i}][${j}] = 0</code>: pintou com a cor da construção ${S.cont+1}.`,'pinta');
+  for(let k=0;k<D.length;k++){
+    const u=i+D[k][0], v=j+D[k][1], dentro=u>=0&&u<L&&v>=0&&v<C, esc=dentro&&g[u][v];
+    S.at=[i,j]; S.viz=dentro?[u,v]:null; S.vizOk=!!esc;
+    yield ev(['for','uv','dentro','escuro'],`<code>k = ${k}</code>: vizinho (${u}, ${v}). ${!dentro?'Fora da imagem.':esc?'Está escuro: chama <code>apaga</code> nele.':'Já é 0 (fundo ou já pintado).'}`,esc?'viz':'semviz');
+    if(esc){ yield ev(['call'],`Chama <code>apaga(${u}, ${v})</code>. Esta chamada espera no <code>k = ${k}</code>.`,'call');
+      yield* apagaG(u,v); S.stack.length=S.stack.findIndex(p=>p[0]===i&&p[1]===j)+1; S.at=[i,j];
+      yield ev(['call'],`Voltou pra <code>apaga(${i}, ${j})</code>, que continua no <code>k = ${k+1}</code>. Nada pra desfazer.`,'volta'); }
+  }
+  S.viz=null;
+  yield ev(['fim'],`<code>apaga(${i}, ${j})</code> testou os ${D.length} vizinhos e acaba.`,'ret');
+  S.stack.pop();
+}
+function* tudo(){
+  const g=S.g, L=g.length, C=g[0].length;
+  yield ev(['c0'],`<code>construcoes()</code> começa com <code>cont = 0</code> e varre a imagem linha por linha.`,'enter');
+  for(let i=0;i<L;i++)for(let j=0;j<C;j++){
+    S.at=[i,j]; S.viz=null;
+    if(!g[i][j]){ yield ev(['scan'],`(${i}, ${j}) é 0. Segue a varredura.`,'semviz'); continue; }
+    yield ev(['scan'],`(${i}, ${j}) é escuro e ainda não foi pintado: construção nova!`,'novo');
+    yield ev(['novo'],`Chama <code>apaga(${i}, ${j})</code> pra pintar a construção inteira.`,'call');
+    yield* apagaG(i,j);
+    S.cont++; S.at=[i,j];
+    yield ev(['cont'],`<code>cont++</code>: agora vale <b>${S.cont}</b>.`,'conta');
+  }
+  S.at=null;
+  yield ev(['ret'],`Fim da varredura: <code>return cont</code>, que é ${S.cont}.`,'final');
+}
+function resetAuto(){
+  pausa(); montaCodigo();
+  const m=+$('selMapa').value, g=grade(m);
+  S={g,pint:g.map(r=>r.map(()=>0)),stack:[],cham:0,cont:0,prof:0,evs:0,fim:false,at:null,viz:null,D:DIRS()};
+  GEN=tudo(); ULT=null; acende([]); setMsgA('Aperte <b>Próximo passo</b>. Com "só pintar e voltar" ligado, ele pula os passos que só olham vizinhos.',''); renderAuto();
+}
+function setMsgA(h,t){const m=$('aMsg');m.innerHTML=h;m.className='msg'+(t?' '+t:'');}
+function umPasso(){ if(S.fim) return false; const r=GEN.next(); S.evs++;
+  if(r.done){ S.fim=true; S.at=null; S.viz=null; ULT=ev(['print'],`✅ Imprime <b>${S.cont}</b>. Foram ${S.cham} chamadas de <code>apaga</code>, uma por célula escura.`,'fim'); return false; }
+  ULT=r.value; return true; }
+function avanca(){ if(!$('resumo').checked){ umPasso(); return; } while(umPasso()){ if(['pinta','conta','volta','final'].includes(ULT.tipo)) break; } }
+function renderAuto(){
+  desenhaMapa($('mapaA'),S.g,S.pint,{at:S.at,viz:S.viz,vizOk:S.vizOk});
+  $('aCont').textContent=S.cont; $('aCham').textContent=S.cham; $('aProf').textContent=S.stack.length; $('aEv').textContent=S.evs;
+  $('aPilha').innerHTML=S.stack.map((p,k)=>`<div class="${k===S.stack.length-1?'topo':''}">apaga(${p[0]}, ${p[1]})</div>`).reverse().join('')+'<div>construcoes()</div>';
+  if(ULT){ acende(ULT.lines); const t=ULT.tipo; setMsgA(ULT.msg,(t==='conta'||t==='fim'||t==='final')?'bom':''); }
+  ['btnPasso','btnPlay','btnFim'].forEach(id=>$(id).disabled=S.fim);
+}
+const ATRASOS=[1100,750,500,320,200,110,55,20,6,0];
+function pausa(){rodando=false; clearTimeout(timer); $('btnPlay').textContent='▶ Rodar';}
+function loop(){ if(!rodando) return; const d=ATRASOS[+$('vel').value-1];
+  if(d===0){ for(let i=0;i<30&&!S.fim;i++) avanca(); } else { avanca(); if(d>=55&&ULT&&ULT.tipo==='pinta') som('tick'); }
+  renderAuto(); if(S.fim){pausa(); som('vitoria'); return;} timer=setTimeout(loop,d===0?16:d); }
+
+/* =================== PROVA =================== */
+const QUIZ=[
+ {p:'Na imagem abaixo (1 = escuro), quantas construções o programa conta com 8 vizinhos?',cod:'1 0 1\n0 1 0\n1 0 1',ops:['1','2','4','5'],certa:0,
+  exp:'Com 8 vizinhos, os quatro cantos encostam no centro pela diagonal. Tudo vira uma construção só.'},
+ {p:'E a mesma imagem com a alteração de <b>4 vizinhos</b> (sem diagonais)?',cod:'1 0 1\n0 1 0\n1 0 1',ops:['1','2','4','5'],certa:3,
+  exp:'Sem diagonal, nenhuma célula escura encosta em outra pelos lados. São 5 construções de uma célula cada.'},
+ {p:'Uma imagem tem 15 células escuras divididas em 4 construções. Quantas vezes <code>apaga</code> é chamada no total?',ops:['4','8','15','60'],certa:2,
+  exp:'Cada chamada pinta uma célula, e nenhuma célula pintada volta a ser escura. Então cada célula escura recebe exatamente uma chamada: 15. O número de construções é só quantas dessas chamadas vieram direto do <code>construcoes</code>.'},
+ {p:'Alguém mudou o <code>apaga</code> pra pintar a célula <b>depois</b> do <code>for</code> dos vizinhos, e não antes. O que acontece?',
+  ops:['Funciona igual, só muda a ordem','Conta construções a mais','Recursão infinita: o vizinho olha de volta, vê a célula ainda escura e chama apaga nela de novo','Conta construções a menos'],certa:2,
+  exp:'A célula (i, j) chama apaga num vizinho. Esse vizinho testa os vizinhos dele, inclusive (i, j), que ainda não foi pintado. Chama apaga(i, j) de novo, que chama o vizinho de novo... até estourar a pilha.'},
+ {p:'Por que o <code>apaga</code> não tem uma linha que desfaz (volta a célula pra 1), como o labirinto desmarca a casa?',
+  ops:['Esqueceram','Porque cada célula só precisa ser visitada uma vez: não é um caminho que pode ser trocado por outro','Porque o return desfaz sozinho','Porque img é global'],certa:1,
+  exp:'No labirinto a casa desmarcada pode fazer parte de outro caminho. Aqui o objetivo é só pintar a construção inteira; desfazer faria a mesma construção ser contada de novo na varredura.'},
+ {p:'Quer saber o tamanho da maior construção. Qual mudança faz <code>apaga</code> devolver quantas células pintou?',
+  ops:['int apaga(...){ int t = 1; ... t += apaga(u, v); ... return t; }','int apaga(...){ ... apaga(u, v); return 1; }','Trocar cont++ por cont += 8','Contar quantas vezes k chega em 8'],certa:0,
+  exp:'Cada chamada conta a si mesma (o 1) mais o que as chamadas dos vizinhos devolveram. O <code>construcoes</code> guarda o maior valor devolvido.'}
+];
+
+/* =================== abas e controles =================== */
+let aba='jogar';
+function trocaAba(a){ aba=a; document.querySelectorAll('.abas button').forEach(b=>b.classList.toggle('on',b.dataset.aba===a));
+  ['jogar','auto','prova','como'].forEach(x=>$('aba-'+x).classList.toggle('oculto',x!==a)); if(a!=='auto') pausa(); else renderAuto(); }
+document.querySelectorAll('.abas button').forEach(b=>b.addEventListener('click',()=>trocaAba(b.dataset.aba)));
+$('selMapa').onchange=()=>{ novoMapa(); resetAuto(); }; $('viz4').onchange=()=>{ novoMapa(); resetAuto(); };
+$('btnRecomecar').onclick=novoMapa;
+$('btnPalp').onclick=()=>{ const v=parseInt($('palp').value,10); if(isNaN(v)){ som('nao'); return; } J.palpite=v; som('ok'); jMsg(`Palpite travado: <b>${v}</b>. Agora pinte pra conferir.`); };
+$('btnPasso').onclick=()=>{pausa(); avanca(); renderAuto();};
+$('btnPlay').onclick=()=>{ if(rodando){pausa();return;} rodando=true; $('btnPlay').textContent='⏸ Pausar'; loop(); };
+$('btnFim').onclick=()=>{ pausa(); let g=0; while(umPasso()&&g<1e5) g++; renderAuto(); som('vitoria'); };
+$('btnReset').onclick=resetAuto;
+$('btnCopiar').onclick=()=>{ const txt=codigo().map(x=>x[0]).join('\n'); (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>{$('btnCopiar').textContent='Copiado ✔';setTimeout(()=>$('btnCopiar').textContent='Copiar programa completo',1500);}).catch(()=>{}); };
+$('vVerC').onclick=()=>{ $('vitoria').classList.add('oculto'); resetAuto(); trocaAba('auto'); };
+$('vProx').onclick=()=>{ $('vitoria').classList.add('oculto'); $('selMapa').value=(J.m+1)%MAPAS.length; novoMapa(); resetAuto(); };
+$('pDeNovo').onclick=()=>{ $('perdeu').classList.add('oculto'); novoMapa(); };
+$('btnSom').onclick=()=>{ SOM=!SOM; $('btnSom').textContent=SOM?'🔊':'🔇'; if(SOM){ac(); som('ok');} };
+$('btnTela').onclick=()=>{ const d=document, el=d.documentElement; try{ if(d.fullscreenElement||d.webkitFullscreenElement){ (d.exitFullscreen||d.webkitExitFullscreen).call(d); } else { const r=el.requestFullscreen||el.webkitRequestFullscreen; if(r){ const p=r.call(el); if(p&&p.catch) p.catch(()=>{}); } } }catch(e){} };
+montaQuiz(QUIZ,'quiz'); novoMapa(); resetAuto();
+</script>
+<script>window.addEventListener('modo',()=>location.reload());</script>
+<script src="canto.js"></script>
+</body>
+</html>

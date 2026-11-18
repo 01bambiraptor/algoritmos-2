@@ -32,7 +32,12 @@ Alguns jogos de backtracking usam problemas e códigos de outras disciplinas, co
 
 - **Resta Um em linha** (`resta-um.html`) e **Oito Rainhas** (`rainhas.html`): problemas, pseudocódigo e código dos slides "Backtracking" de Wladimir Araújo Tavares (Universidade Federal do Ceará, Campus de Quixadá, 2017). O original está em C++; aqui foi traduzido pra C mantendo a mesma lógica. O "ache o erro" das rainhas usa o pseudocódigo como ele aparece nos slides.
 
-Esses códigos e pseudocódigos também são dos seus autores e não entram na licença deste projeto.
+- **Tesouro Dividido** (`tesouro.html`): problema e código dos mesmos slides da UFC (soma de subconjuntos), traduzidos de C++ pra C.
+- **Mapa de Satélite** (`satelite.html`): problema e pseudocódigo (flood fill) dos mesmos slides da UFC. O código em C foi escrito a partir do pseudocódigo; as imagens são nossas.
+- **Nim das 13 Moedas** (`nim.html`): jogo e estratégia do capítulo de backtracking do livro *Programming Abstractions in C*, de Eric Roberts, como apresentado nos slides do capítulo 6 de Estrutura de Dados I do Prof. Abrantes Araújo Silva Filho (UVV). O código em C foi escrito a partir dessa explicação.
+- **Quadrado Mágico** (`quadrado.html`): enunciado da Questão 23 da Lista de Exercícios 1 de Algoritmos e Estruturas de Dados II do DCC/UFMG (2007). A lista não traz código; o código em C foi escrito pro jogo.
+
+Os enunciados, códigos e pseudocódigos dessas fontes são dos seus autores e não entram na licença deste projeto.
 
 O resto está sob [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). Use à vontade pra semear conhecimento: copie, adapte, leve pra sua turma. Detalhes no `LICENSE.txt`.
 

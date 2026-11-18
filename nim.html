@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · CC BY-NC-SA 4.0 · veja LICENSE.txt
+     Jogo e estratégia: capítulo de backtracking de Eric Roberts, "Programming Abstractions in C" (Nim com 13 moedas), como apresentado nos slides do Prof. Abrantes Araújo Silva Filho (UVV, Estrutura de Dados I, cap. 6). Código em C escrito a partir dessa explicação. -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f4f5f6">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<title>Nim das 13 Moedas: recursão mútua em C</title>
+<style>
+:root{
+  --ciano:#5f6b76; --cianoF:#3d4852; --magenta:#5f6b76; --magentaF:#3d4852; --limao:#5b8a6a; --limaoF:#5b8a6a;
+  --laranja:#8a8f96; --amarelo:#b8a37a; --vermelho:#b5545f; --texto:#2f343a; --suave:#7a8088;
+  --vidro:#ffffff; --borda:#dde1e5;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{color:var(--texto);font:16px/1.45 'Fredoka',system-ui,sans-serif;
+  -webkit-user-select:none;user-select:none;touch-action:manipulation;
+  background:#f4f5f6}
+body.treme{animation:treme .35s}
+@keyframes treme{20%{transform:translate(-6px,2px)}40%{transform:translate(6px,-2px)}60%{transform:translate(-4px,1px)}80%{transform:translate(3px,0)}}
+header{padding:14px 20px 4px;max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+h1{margin:0;font-size:clamp(22px,3.2vw,32px);font-weight:700;color:#2b3440}
+.sub{color:var(--suave);margin:0;max-width:1280px;padding:0 20px;margin:0 auto;font-size:15px}
+.topoBtns{margin-left:auto;display:flex;gap:8px}
+.wrap{max-width:1280px;margin:0 auto;padding:8px 20px 40px}
+.abas{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0;background:#e6e8eb;padding:5px;border-radius:16px;width:max-content;max-width:100%}
+.abas button{border:0;background:transparent;color:var(--suave);padding:10px 18px;min-height:46px;border-radius:12px;font-weight:600;cursor:pointer;font-size:15px;font-family:inherit}
+.abas button.on{background:#fff;color:var(--texto);box-shadow:0 2px 6px #0001}
+.barra{display:flex;gap:14px;flex-wrap:wrap;align-items:center;background:#fff;border:1px solid var(--borda);border-radius:16px;padding:10px 14px;margin-bottom:14px;box-shadow:0 2px 10px #2f5d7c0d}
+.barra label{display:flex;gap:8px;align-items:center;font-size:15px;font-weight:600}
+input[type=range]{accent-color:var(--magentaF);width:130px;height:28px}
+input[type=checkbox]{accent-color:var(--magentaF);width:22px;height:22px}
+select{border:2px solid var(--borda);border-radius:10px;padding:8px 10px;background:#fff;color:var(--texto);font:inherit;font-weight:600;min-height:44px}
+.btn{border:2px solid var(--borda);background:#fff;color:var(--cianoF);padding:10px 14px;min-height:48px;border-radius:13px;cursor:pointer;font-weight:600;font-size:15px;font-family:inherit;transition:transform .08s}
+.btn:active{transform:scale(.96)}
+.btn.pri{background:#3d4852;border-color:#2f3740;color:#fff}
+.btn.alerta{background:#6b7480;border-color:#555d68;color:#fff}
+.btn.on{background:#eceef1;border-color:#8a9099;color:#2f343a}
+.btn.icone{min-width:48px;padding:8px 10px;font-size:20px}
+.btn:disabled{opacity:.4;cursor:default}
+.grade{display:grid;grid-template-columns:min(46vw,72vh) 1fr;gap:18px;align-items:start}
+@media (max-width:900px){.grade{grid-template-columns:1fr}}
+.card{background:#fff;border:1px solid var(--borda);border-radius:18px;padding:14px;box-shadow:0 2px 10px #2f5d7c0d}
+.card h3{margin:0 0 8px;font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--magentaF)}
+#tabWrap{position:relative;width:100%;aspect-ratio:1/1;margin:0 auto}
+@media (max-width:900px){#tabWrap{max-width:min(92vw,50vh)}}
+#tab{position:absolute;inset:0;display:grid;gap:5px}
+#tab .casa{border:2px solid #e3e6e9;border-radius:12px;background:#fdfdfd;position:relative;font-weight:700;color:var(--cianoF);font-size:clamp(16px,3.4vh,30px);cursor:default;padding:0;display:flex;align-items:center;justify-content:center;transition:background .15s,box-shadow .15s;font-family:inherit}
+#tab .casa.esc{background:#f0f1f3}
+#tab .casa.vis{background:#d9dfe5;border-color:#8a949f;color:#2f343a}
+#tab .casa.topo{background:#d5dbe1;border-color:#3d4852;color:#2f343a;box-shadow:0 0 0 3px #3d485233;z-index:2}
+#tab .casa.alvo{cursor:pointer;background:#eef3ef;border:2px dashed var(--limao);animation:pulsa 1.3s ease-in-out infinite}
+@keyframes pulsa{50%{box-shadow:0 0 0 4px #5b8a6a33}}
+#tab .casa.alvo:active{background:#d3f0de}
+#tab .casa.mina{background:#f3e7e8;border-color:#d4a9ae}
+#tab .casa.minaFraca{opacity:.6}
+#tab .casa.probe-ok{border:3px solid var(--limao);background:#e8f0ea}
+#tab .casa.probe-no{border:3px solid var(--vermelho);background:#f3e7e8}
+#tab .casa.desfeito{animation:desf .6s}
+@keyframes desf{0%{background:#e4c7cb}100%{background:#fdfdfd}}
+#tab .casa.boom{animation:boom .5s}
+@keyframes boom{0%{transform:scale(1)}30%{transform:scale(1.2);background:#e4c7cb}100%{transform:scale(1)}}
+.casa .badge{position:absolute;top:3px;right:6px;font-size:clamp(11px,1.6vh,15px);font-weight:700;line-height:1}
+.casa .rot{position:absolute;bottom:3px;left:6px;font-size:clamp(10px,1.4vh,13px);font-weight:700;line-height:1}
+.casa .coord{position:absolute;bottom:3px;right:6px;font-size:10px;color:#a9b8c6;font-weight:500}
+#linhas{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:visible}
+#tab{z-index:2}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}
+.stat{background:#f2f3f5;border:1px solid var(--borda);border-radius:12px;padding:6px 12px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--suave)}
+.stat b{color:var(--magentaF);font-size:20px;font-family:'JetBrains Mono',ui-monospace,monospace;letter-spacing:0}
+.stat.xp{border-color:#cfd3d8;background:#eceef1}
+.stat.xp b{color:#3d4852}
+.msg{border-radius:14px;padding:12px 14px;margin-top:12px;background:#f2f3f5;border:2px solid #dde1e5;min-height:50px;font-size:15.5px}
+.msg.ruim{background:#f6ecee;border-color:#e0bcc2}
+.msg.bom{background:#ebf2ed;border-color:#bcd3c3}
+.msg.atencao{background:#f3f1ec;border-color:#d8d0bf}
+code{background:#eceef1;border-radius:6px;padding:0 5px;font-size:.9em;font-family:'JetBrains Mono',ui-monospace,monospace;color:#3d4852}
+pre.codigo{margin:0;background:#f8f9fa;border:1px solid var(--borda);border-radius:14px;padding:8px 0;font:14px/1.6 'JetBrains Mono',ui-monospace,monospace;overflow:auto;max-height:62vh;-webkit-overflow-scrolling:touch;color:#2b3440}
+pre.codigo .ln{display:block;padding:0 12px;white-space:pre;border-left:5px solid transparent}
+pre.codigo .ln.hl{background:#e4e8ec;border-left-color:#3d4852}
+pre.codigo .ln.hl2{background:#e8f0ea;border-left-color:var(--limao)}
+pre.codigo .kw{color:#3d4852;font-weight:700}
+pre.codigo .cm{color:#8a9aa8;font-style:italic}
+pre.codigo .nu{color:#6b7480;font-weight:600}
+.pilha{display:flex;flex-direction:column;gap:4px;max-height:240px;overflow:auto;font:13.5px 'JetBrains Mono',ui-monospace,monospace;-webkit-overflow-scrolling:touch}
+.pilha div{background:#f6f7f8;border:1px solid var(--borda);border-radius:9px;padding:4px 10px}
+.pilha div.topo{background:#e4e8ec;border-color:#3d4852;font-weight:700;color:#2f343a}
+.log{max-height:200px;overflow:auto;font-size:14px;display:flex;flex-direction:column;-webkit-overflow-scrolling:touch}
+.log div{padding:4px 0;border-bottom:1px dashed #e1e9f0}
+.dois{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:1100px){.dois{grid-template-columns:1fr}}
+.legenda{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--suave);margin-top:10px;font-weight:600}
+.legenda span i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:5px;box-shadow:none!important}
+.oculto{display:none!important}
+.texto{-webkit-user-select:text;user-select:text}
+.texto h2{font-size:19px;margin:20px 0 6px;color:var(--magentaF)}
+.texto h2:first-child{margin-top:0}
+.texto table{border-collapse:collapse;width:100%;font-size:15px}
+.texto td,.texto th{border:1px solid var(--borda);padding:8px 10px;text-align:left;vertical-align:top}
+.texto th{background:#f0f1f3;color:var(--cianoF);font-size:13px}
+.caixa{background:#f0f1f3;border-radius:14px;padding:12px 16px;margin:10px 0}
+.caixa.pessego{background:#f5f4f0;border:2px solid #dcd8cc}
+.caixa.rosa{background:#f3eef0}
+.pequeno{font-size:13px;color:var(--suave)}
+#vitoria{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#ffffffb0;backdrop-filter:blur(4px);z-index:50;padding:20px}
+#vitoria .box{background:#fff;border:3px solid var(--magentaF);border-radius:24px;padding:26px 30px;max-width:520px;text-align:center;box-shadow:0 10px 30px #0003;animation:entra .4s}
+@keyframes entra{from{transform:scale(.7);opacity:0}}
+#vitoria h2{margin:0 0 6px;font-size:34px;font-weight:700;color:var(--magentaF)}
+#vitoria .grandes{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.confete{position:fixed;top:-20px;width:10px;height:16px;border-radius:3px;z-index:60;pointer-events:none;animation:cai linear forwards}
+@keyframes cai{to{transform:translateY(110vh) rotate(720deg)}}
+
+/* ---- comum aos jogos novos (resta um e rainhas) ---- */
+.espBarra{display:inline-flex;gap:8px;align-items:center;background:#fff3e6;border:2px solid #f0d2b0;color:#7a4a1c;border-radius:999px;padding:6px 14px;font-weight:600;margin-left:10px}
+.espBarra b{font-family:'JetBrains Mono',ui-monospace,monospace}
+#perdeu{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#ffffffb0;backdrop-filter:blur(4px);z-index:50;padding:20px}
+#perdeu .box{background:#fff;border:3px solid var(--vermelho);border-radius:24px;padding:24px 28px;max-width:480px;text-align:center;box-shadow:0 10px 30px #0003;animation:entra .4s}
+#perdeu h2{margin:0 0 6px;color:var(--vermelho)}
+.quizGrade{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:1000px){.quizGrade{grid-template-columns:1fr}}
+.quiz .qNum{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--suave)}
+.quiz .qP{margin:4px 0 8px;font-size:15.5px}
+.quiz .qOps{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.quiz .qOp{text-align:left;min-height:42px;font-weight:500}
+.quiz .qOp.certo{background:#ebf2ed;border-color:#5b8a6a;color:#24563a}
+.quiz .qOp.errado{background:#f6ecee;border-color:#b5545f;color:#7a2d36}
+pre.codigo.mini{max-height:none;font-size:13px}
+.achaErro .ln{cursor:pointer}
+.achaErro .ln:hover{background:#f2f4f6}
+.achaErro .ln.certo{background:#e8f0ea;border-left-color:#5b8a6a}
+.achaErro .ln.errado{background:#f6ecee;border-left-color:#b5545f}
+.fonte{font-size:13px;color:var(--suave);background:#f6f7f8;border:1px dashed #d5d9de;border-radius:12px;padding:10px 14px;margin-top:16px}
+.escondido{background:#f5f4f0;border:2px solid #dcd8cc;border-radius:14px;padding:10px 14px;margin:10px 0}
+.escondido b:first-child{color:#8a5a2b}
+details.resp{margin-top:6px}
+details.resp summary{cursor:pointer;color:var(--cianoF);font-weight:600}
+
+.grade2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media (max-width:900px){.grade2{grid-template-columns:1fr}}
+/* ---- nim ---- */
+.barra label{flex-wrap:wrap}
+.mesa{background:radial-gradient(circle at 50% 40%,#e9f3e4,#d5e6cc);border:3px solid #b5cfa8;border-radius:22px;padding:18px;min-height:150px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center}
+.moeda{width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff2c2,#e8b84a 60%,#c98f22);box-shadow:0 3px 0 #a87618,0 5px 8px #0002;display:flex;align-items:center;justify-content:center;font:700 13px 'JetBrains Mono',monospace;color:#7a5410;transition:transform .3s,opacity .3s}
+.moeda.sai{transform:translateY(-30px) scale(.6);opacity:0}
+.moeda.marca{box-shadow:0 0 0 3px #b5545f,0 3px 0 #a87618}
+.vez{font-size:18px;font-weight:700;text-align:center;margin:10px 0 4px}
+.tirar{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+.tirar .btn{min-width:110px;font-size:17px}
+.posTab{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:5px}
+.pos{border-radius:10px;text-align:center;padding:5px 2px;border:2px solid transparent;font:700 16px 'JetBrains Mono',monospace;background:#f2f3f5;color:#6b7785}
+.pos small{display:block;font:500 10px 'Fredoka',sans-serif}
+.pos.boa{background:#e8f2ea;color:#2f6b45}
+.pos.ruim{background:#f6e3e6;color:#9a3c48}
+.pos.agora{border-color:#2f3740}
+.pilha div.fa{border-left:5px solid #8fb3cf}
+.pilha div.fr{border-left:5px solid #e8b0a0}
+.rep{display:flex;gap:4px;flex-wrap:wrap;font:600 12px 'JetBrains Mono',monospace}
+.rep span{background:#f6f7f8;border:1px solid var(--borda);border-radius:8px;padding:2px 7px}
+.rep span b{color:#9a3c48}
+</style>
+<script src="modo.js"></script>
+</head>
+<body>
+<header>
+  <a class="btn" href="index.html" style="text-decoration:none;display:inline-flex;align-items:center">🕹 Início</a>
+  <h1>🪙 Nim das 13 Moedas</h1>
+  <div class="topoBtns">
+    <button class="btn icone" id="btnSom" title="som">🔊</button>
+    <button class="btn icone" id="btnTela" title="tela cheia">⛶</button>
+  </div>
+</header>
+<p class="sub">Você e o computador tiram 1, 2 ou 3 moedas por vez. <b>Perde quem for obrigado a tirar a última.</b> O computador não erra: ele usa duas funções que chamam uma à outra pra decidir. Dá pra ganhar dele? Dá, mas só começando na posição certa.</p>
+<div class="wrap">
+  <div class="abas">
+    <button data-aba="jogar" class="on">🎮 Jogar</button>
+    <button data-aba="auto">🔍 Ver o C rodar</button>
+    <button data-aba="prova">📝 Treino de prova</button>
+    <button data-aba="como">📖 Como funciona</button>
+  </div>
+  <div style="margin:4px 0 12px;display:flex;align-items:center;flex-wrap:wrap;gap:6px"><span id="modoSlot" data-ap="sem relógio, com a tabela de posições e a dica" data-esp="relógio, 3 vidas, sem tabela"></span><span class="espBarra oculto" id="espBarra"></span></div>
+
+  <!-- ===================== JOGAR ===================== -->
+  <section id="aba-jogar">
+    <div class="barra">
+      <label>Moedas <select id="selQtd"><option>9</option><option>10</option><option selected>13</option><option>17</option><option>21</option></select></label>
+      <label>Quem começa <select id="selQuem"><option value="pc" selected>o computador</option><option value="eu">eu</option></select></label>
+      <label>Tirar no máximo <select id="selMax"><option value="3" selected>3</option><option value="4">4 (alteração)</option></select></label>
+      <button class="btn pri" id="btnNovo">Nova partida</button>
+    </div>
+    <div class="grade grade2">
+      <div class="card">
+        <div class="mesa" id="mesa"></div>
+        <div class="vez" id="vez"></div>
+        <div class="tirar" id="tirar"></div>
+        <div class="stats">
+          <div class="stat xp">moedas: <b id="jMoedas">0</b></div>
+          <div class="stat">vitórias: <b id="jVit">0</b></div>
+          <div class="stat">derrotas: <b id="jDer">0</b></div>
+        </div>
+        <div class="msg" id="jMsg"></div>
+      </div>
+      <div>
+        <div class="card soAprender">
+          <h3>Tabela de posições (pra quem vai jogar)</h3>
+          <p class="pequeno" style="margin:0 0 6px"><b style="color:#2f6b45">boa</b> = tem um movimento que deixa o outro numa ruim. <b style="color:#9a3c48">ruim</b> = qualquer movimento deixa o outro numa boa.</p>
+          <div class="posTab" id="posTab"></div>
+          <button class="btn" id="btnDica" style="margin-top:10px">🤔 O que o computador faria no meu lugar?</button>
+        </div>
+        <div class="card" style="margin-top:12px">
+          <h3>O que o computador pensou</h3>
+          <div class="msg" id="pcPensou" style="margin-top:0">Ainda não jogou.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== AUTO ===================== -->
+  <section id="aba-auto" class="oculto">
+    <div class="barra">
+      <label>Chamar <code>achar_bom_movimento(</code><select id="selN"><option>2</option><option>3</option><option>4</option><option selected>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>13</option></select><code>)</code></label>
+      <label>MAX_TIRAR <select id="selMaxA"><option selected>3</option><option>4</option></select></label>
+    </div>
+    <div class="grade grade2">
+      <div>
+        <div class="card">
+          <h3>Pilha de chamadas</h3>
+          <p class="pequeno" style="margin:0 0 6px"><span style="border-left:5px solid #8fb3cf;padding-left:5px">achar_bom_movimento</span> &nbsp; <span style="border-left:5px solid #e8b0a0;padding-left:5px">e_posicao_ruim</span> &nbsp; Uma chama a outra, alternando.</p>
+          <div class="pilha" id="aPilha" style="max-height:320px"></div>
+          <div class="stats">
+            <div class="stat">chamadas: <b id="aCham">0</b></div>
+            <div class="stat">profundidade: <b id="aProf">0</b></div>
+            <div class="stat">passos: <b id="aEv">0</b></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:12px">
+          <h3>Quantas vezes cada posição foi avaliada</h3>
+          <p class="pequeno" style="margin:0 0 6px">Número de chamadas de <code>e_posicao_ruim(m)</code> pra cada <code>m</code>. A mesma posição é recalculada várias vezes.</p>
+          <div class="rep" id="aRep"></div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button class="btn pri" id="btnPasso">Próximo passo ▸</button>
+            <button class="btn" id="btnPlay">▶ Rodar</button>
+            <button class="btn" id="btnFim">⏭ Até o fim</button>
+            <button class="btn" id="btnReset">↺ Reiniciar</button>
+            <label style="font-size:14px;display:flex;gap:6px;align-items:center">velocidade <input type="range" id="vel" min="1" max="10" value="5"></label>
+          </div>
+          <div class="msg" id="aMsg"></div>
+        </div>
+        <div class="card" style="margin-top:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="margin:0">O código em C</h3><button class="btn" id="btnCopiar">Copiar programa completo</button></div>
+          <pre class="codigo" id="codigo"></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PROVA ===================== -->
+  <section id="aba-prova" class="oculto">
+    <div class="card" style="margin-bottom:12px"><h3>Treino no estilo da prova</h3><p style="margin:0">Responda antes de olhar a aba do C rodando. <span class="pequeno" id="placar"></span></p></div>
+    <div class="quizGrade" id="quiz"></div>
+  </section>
+
+  <!-- ===================== COMO FUNCIONA ===================== -->
+  <section id="aba-como" class="oculto">
+    <div class="card texto">
+      <h2>A ideia antes do código: pensar de trás pra frente</h2>
+      <p>Comece pelo fim. Se sobrou <b>1</b> moeda na sua vez, você é obrigado a pegar ela e perde: posição <b>ruim</b>. Com <b>2, 3 ou 4</b>, você tira 1, 2 ou 3 e deixa o outro com 1: posição <b>boa</b>. Com <b>5</b>, qualquer coisa que você tire deixa o outro com 4, 3 ou 2, que são boas pra ele: posição <b>ruim</b>. E assim por diante: 6, 7 e 8 são boas (você deixa 5), 9 é ruim...</p>
+      <p>Duas frases resumem tudo, e uma depende da outra:</p>
+      <div class="caixa"><b>Bom movimento</b> é o que deixa o outro numa posição ruim.<br><b>Posição ruim</b> é aquela em que não existe bom movimento.</div>
+      <p>Parece que as frases andam em círculo, mas não andam: cada vez a pilha tem menos moedas, até chegar em 1, que é o caso base. Cada frase vira uma função, e uma chama a outra. Isso se chama <b>recursão mútua</b>.</p>
+
+      <h2>O que não está escrito mas existe</h2>
+      <div class="escondido">
+        <b>1. O protótipo lá em cima.</b> <code>int e_posicao_ruim(int moedas);</code> aparece antes de <code>achar_bom_movimento</code> porque esta usa aquela, e o C precisa conhecer uma função antes do primeiro uso. Sem o protótipo, não compila direito.<br><br>
+        <b>2. O <code>tirar &lt; moedas</code> no <code>for</code>.</b> Foi acrescentado aqui. Tirar todas as moedas é pegar a última, então não é um movimento que alguém faria. E sem esse limite, com 1 moeda o código chamaria <code>e_posicao_ruim(0)</code>, depois com números negativos, e nunca pararia.<br><br>
+        <b>3. Quem joga quando não tem bom movimento?</b> A função devolve <code>SEM_BOM</code> (-1). Aí quem chamou decide o que fazer: no jogo, o computador tira 1 moeda e torce pra você errar.<br><br>
+        <b>4. Onde está o backtracking?</b> Em <code>achar_bom_movimento</code>: ela tenta tirar 1, olha o que acontece até o fim do jogo; se não presta, "volta" e tenta tirar 2, e depois 3. Não tem linha de desfazer porque <code>moedas - tirar</code> vai por valor, igual à <code>soma</code> do Tesouro Dividido.
+      </div>
+
+      <h2>O jogo e o C são a mesma coisa</h2>
+      <table>
+        <tr><th>No jogo</th><th>No C</th></tr>
+        <tr><td>Computador decidindo quantas tirar</td><td><code>achar_bom_movimento(moedas)</code></td></tr>
+        <tr><td>"Será que se eu tirar 2 o outro fica mal?"</td><td><code>e_posicao_ruim(moedas - 2)</code></td></tr>
+        <tr><td>Posição verde da tabela</td><td><code>achar_bom_movimento</code> devolve 1, 2 ou 3</td></tr>
+        <tr><td>Posição vermelha da tabela</td><td><code>achar_bom_movimento</code> devolve <code>SEM_BOM</code></td></tr>
+        <tr><td>Sobrou 1 moeda</td><td>caso base: <code>if (moedas == 1) return 1;</code></td></tr>
+      </table>
+
+      <h2>Por que fica lento com muitas moedas</h2>
+      <p>Com 13 moedas são 1254 chamadas; com 20, mais de 35 mil; com 25, mais de 430 mil. A função recalcula as mesmas posições muitas vezes (veja o contador na aba do C rodando). A saída é guardar a resposta de cada posição num vetor na primeira vez que ela for calculada. Isso se chama <b>memorização</b> e aparece mais pra frente na computação.</p>
+
+      <h2>Desafios em C</h2>
+      <ol>
+        <li>Copie o programa e imprima a tabela inteira de 1 a 20: <code>boa</code> ou <code>ruim</code>.</li>
+        <li>Conte as chamadas com uma variável global e confira os números acima.</li>
+        <li>Faça a memorização: um vetor <code>int resp[100]</code> começando com -2 ("ainda não sei").</li>
+        <li>Mude <code>MAX_TIRAR</code> pra 4. Qual é a regra das posições ruins agora?</li>
+      </ol>
+      <div class="fonte"><b>Fonte:</b> jogo e estratégia do capítulo de backtracking do livro <i>Programming Abstractions in C</i>, de Eric Roberts, como apresentado nos slides do capítulo 6 de Estrutura de Dados I do Prof. Abrantes Araújo Silva Filho (UVV). O código em C desta página foi escrito a partir dessa explicação, com a proteção <code>tirar &lt; moedas</code> acrescentada.</div>
+    </div>
+  </section>
+</div>
+
+<div id="vitoria" class="oculto"><div class="box">
+  <h2 id="vTit">Você ganhou!</h2>
+  <div id="vTexto"></div>
+  <div class="grandes" id="vStats"></div>
+  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+    <button class="btn" id="vVerC">🔍 Ver o computador pensar</button>
+    <button class="btn pri" id="vDeNovo">Outra partida ▸</button>
+  </div>
+</div></div>
+<div id="perdeu" class="oculto"><div class="box"><h2>Acabaram as vidas</h2><p>No modo especialista, cada partida perdida custa uma vida.</p><button class="btn pri" id="pDeNovo">Tentar de novo</button></div></div>
+
+<script>
+"use strict";
+/* ---------- utilidades comuns (som, abas, relógio e vidas, quiz, vitória) ---------- */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+let AC=null, SOM=true;
+function ac(){ if(!AC){ try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){AC=null;} }
+  if(AC&&AC.state==='suspended') AC.resume(); return AC; }
+function tom(f,t0,dur,tipo,vol,f2){ const a=ac(); if(!a) return; const t=a.currentTime+t0;
+  const o=a.createOscillator(), g=a.createGain(); o.type=tipo; o.frequency.setValueAtTime(f,t);
+  if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+  g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+dur+.03); }
+function som(n){ if(!SOM) return; try{
+  if(n==='pulo') tom(520,0,.09,'square',.05,900);
+  else if(n==='volta') tom(620,0,.16,'triangle',.09,240);
+  else if(n==='erro'){ tom(200,0,.18,'sawtooth',.06,120); }
+  else if(n==='beco'){ tom(300,0,.12,'sawtooth',.04); tom(220,.14,.2,'sawtooth',.04); }
+  else if(n==='vitoria') [523,659,784,1047,1319].forEach((f,i)=>tom(f,i*.1,.22,'square',.05));
+  else if(n==='tick') tom(1000,0,.03,'square',.025);
+  else if(n==='desfaz') tom(340,0,.08,'triangle',.05,200);
+  else if(n==='ok') tom(700,0,.12,'sine',.07,1050);
+  else if(n==='nao') tom(260,0,.15,'sine',.07,180);
+}catch(e){} }
+function treme(){ document.body.classList.remove('treme'); void document.body.offsetWidth; document.body.classList.add('treme'); }
+function confete(){
+  const cores=['#c9ced4','#a9b1ba','#ffd6b0','#dcd8cc','#cfe6f5'];
+  for(let i=0;i<70;i++){ const s=document.createElement('span'); s.className='confete';
+    s.style.left=Math.random()*100+'vw'; s.style.background=cores[i%cores.length];
+    s.style.animationDuration=(1.8+Math.random()*1.8)+'s'; s.style.animationDelay=(Math.random()*.6)+'s';
+    document.body.appendChild(s); setTimeout(()=>s.remove(),4500); }
+}
+/* relógio e vidas do modo especialista */
+const ESPEC={t0:0,timer:null,vidas:3,ativo:false};
+function espInicia(){
+  clearInterval(ESPEC.timer); ESPEC.vidas=3; ESPEC.ativo=ESP(); ESPEC.t0=Date.now();
+  espDesenha();
+  if(ESPEC.ativo) ESPEC.timer=setInterval(espDesenha,500);
+}
+function espPara(){ clearInterval(ESPEC.timer); }
+function espSeg(){ return Math.round((Date.now()-ESPEC.t0)/1000); }
+function espDesenha(){
+  const el=$('espBarra'); if(!el) return;
+  if(!ESP()){ el.classList.add('oculto'); return; }
+  el.classList.remove('oculto');
+  const s=espSeg(); el.innerHTML=`⏱ <b>${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}</b> &nbsp; ${'❤️'.repeat(ESPEC.vidas)}${'🤍'.repeat(3-ESPEC.vidas)}`;
+}
+/* devolve true se ainda tem vida */
+function espErro(){
+  if(!ESP()) return true;
+  ESPEC.vidas--; espDesenha();
+  if(ESPEC.vidas<=0){ espPara(); $('perdeu').classList.remove('oculto'); return false; }
+  return true;
+}
+function estrelas(n){ return '★'.repeat(n)+'☆'.repeat(3-n); }
+/* quiz de prova: QUIZ=[{p, cod?, ops:[...], certa, exp}] */
+function montaQuiz(lista, alvo){
+  const box=$(alvo);
+  box.innerHTML=lista.map((q,k)=>`<div class="card quiz" data-k="${k}">
+    <div class="qNum">Questão ${k+1}</div>
+    <div class="qP">${q.p}</div>
+    ${q.cod?`<pre class="codigo mini">${q.cod.split('\n').map(l=>`<span class="ln">${esc(l)||' '}</span>`).join('')}</pre>`:''}
+    <div class="qOps">${q.ops.map((o,i)=>`<button class="btn qOp" data-i="${i}">${String.fromCharCode(97+i)}) ${o}</button>`).join('')}</div>
+    <div class="msg qExp oculto"></div></div>`).join('');
+  box.querySelectorAll('.quiz').forEach(c=>{
+    const q=lista[+c.dataset.k];
+    c.querySelectorAll('.qOp').forEach(b=>b.addEventListener('click',()=>{
+      if(c.classList.contains('feito')) return;
+      const i=+b.dataset.i, ok=i===q.certa; c.classList.add('feito');
+      b.classList.add(ok?'certo':'errado'); c.querySelectorAll('.qOp')[q.certa].classList.add('certo');
+      const e=c.querySelector('.qExp'); e.classList.remove('oculto'); e.classList.add(ok?'bom':'ruim');
+      e.innerHTML=(ok?'<b>Isso.</b> ':'<b>Não é essa.</b> ')+q.exp; som(ok?'ok':'nao');
+      const feitos=box.querySelectorAll('.quiz.feito').length, certas=box.querySelectorAll('.qOp.certo.errado').length;
+      atualizaPlacar(box);
+    }));
+  });
+  atualizaPlacar(box);
+}
+function atualizaPlacar(box){
+  const tot=box.querySelectorAll('.quiz').length, feitos=[...box.querySelectorAll('.quiz.feito')];
+  const certas=feitos.filter(c=>!c.querySelector('.qOp.errado')).length;
+  const p=$('placar'); if(p) p.innerHTML=`respondidas <b>${feitos.length}</b> de ${tot} · certas <b>${certas}</b>`;
+}
+
+
+const SEM_BOM=-1;
+let MAXT=3;
+let placar={v:0,d:0}; try{placar=JSON.parse(localStorage.getItem('nim-alg2')||'{"v":0,"d":0}');}catch(e){}
+const salvaPl=()=>{try{localStorage.setItem('nim-alg2',JSON.stringify(placar));}catch(e){}};
+/* versão rápida (com memória) só pra tabela e pro jogo; a aba do C roda a versão sem memória */
+const MEMO={};
+function bom(m,M){ const k=m+'/'+M; if(k in MEMO) return MEMO[k];
+  let r=SEM_BOM; for(let t=1;t<=M&&t<m;t++){ if(ruim(m-t,M)){ r=t; break; } } return MEMO[k]=r; }
+function ruim(m,M){ if(m===1) return true; return bom(m,M)===SEM_BOM; }
+
+/* =================== JOGAR =================== */
+let J;
+function novaPartida(){
+  MAXT=+$('selMax').value;
+  J={m:+$('selQtd').value,vez:$('selQuem').value,fim:false,hist:[]};
+  espInicia(); $('pcPensou').innerHTML='Ainda não jogou.';
+  const r=ruim(J.m,MAXT);
+  jMsg(`${J.m} moedas, ${J.vez==='pc'?'o computador começa':'você começa'}. ${!ESP()?(r?`${J.m} é posição <b>ruim</b> pra quem começa.`:`${J.m} é posição <b>boa</b> pra quem começa.`):''}`);
+  render();
+  if(J.vez==='pc') setTimeout(jogaPC,900);
+}
+function jMsg(h,t){const m=$('jMsg');m.innerHTML=h;m.className='msg'+(t?' '+t:'');}
+function render(marcar=0){
+  $('mesa').innerHTML=Array.from({length:J.m},(_,k)=>`<div class="moeda${k>=J.m-marcar?' marca':''}">${k+1}</div>`).join('')||'<span class="pequeno">sem moedas</span>';
+  $('jMoedas').textContent=J.m; $('jVit').textContent=placar.v; $('jDer').textContent=placar.d;
+  $('vez').textContent=J.fim?'':J.vez==='eu'?'Sua vez':'Vez do computador…';
+  $('tirar').innerHTML=Array.from({length:MAXT},(_,k)=>k+1).map(t=>`<button class="btn pri" data-t="${t}" ${J.vez!=='eu'||J.fim||t>J.m?'disabled':''}>tirar ${t}</button>`).join('');
+  $('tirar').querySelectorAll('button').forEach(b=>b.onclick=()=>jogaEu(+b.dataset.t));
+  const max=Math.max(+$('selQtd').value,13);
+  $('posTab').innerHTML=Array.from({length:max},(_,k)=>k+1).map(m=>{ const r=ruim(m,MAXT); return `<div class="pos ${r?'ruim':'boa'} ${m===J.m?'agora':''}">${m}<small>${r?'ruim':'tire '+bom(m,MAXT)}</small></div>`; }).join('');
+}
+async function tira(t,quem){
+  const els=[...$('mesa').querySelectorAll('.moeda')].slice(-t); els.forEach(e=>e.classList.add('sai')); som(quem==='eu'?'pulo':'tick');
+  await new Promise(r=>setTimeout(r,350));
+  J.m-=t; J.hist.push([quem,t]);
+  if(J.m===0){ fimDeJogo(quem==='eu'?'pc':'eu'); return true; }
+  return false;
+}
+async function jogaEu(t){
+  if(J.vez!=='eu'||J.fim||t>J.m) return;
+  const antes=J.m; J.vez='x';
+  if(await tira(t,'eu')) return;
+  const deixei=J.m, r=ruim(deixei,MAXT);
+  jMsg(`Você tirou ${t}: sobraram ${deixei}. ${!ESP()?(r?'Deixou o computador numa posição <b>ruim</b>. Boa!':'Deixou o computador numa posição <b>boa</b> pra ele...'):''}`, !ESP()?(r?'bom':'atencao'):'');
+  J.vez='pc'; render(); setTimeout(jogaPC,800);
+}
+async function jogaPC(){
+  if(J.fim) return;
+  let t=bom(J.m,MAXT), txt;
+  if(J.m===1){ t=1; txt=`Sobrou 1 moeda pro computador: ele é obrigado a tirar. <code>e_posicao_ruim(1)</code> é o caso base.`; }
+  else if(t===SEM_BOM){ t=1; txt=`<code>achar_bom_movimento(${J.m})</code> devolveu <code>SEM_BOM</code>: testou tirar ${Array.from({length:Math.min(MAXT,J.m-1)},(_,k)=>k+1).join(', ')} e todas deixavam você numa posição boa. Sem saída, ele tira 1 e torce pra você errar.`; }
+  else txt=`<code>achar_bom_movimento(${J.m})</code> devolveu <b>${t}</b>: <code>e_posicao_ruim(${J.m} - ${t})</code> = <code>e_posicao_ruim(${J.m-t})</code> deu verdadeiro, então tirar ${t} deixa você numa posição ruim.`;
+  $('pcPensou').innerHTML=txt; render(t);
+  await new Promise(r=>setTimeout(r,650));
+  if(await tira(t,'pc')) return;
+  J.vez='eu'; jMsg(`O computador tirou ${t}. Sobraram ${J.m}. Sua vez.`); render();
+}
+function fimDeJogo(venc){
+  J.fim=true; espPara();
+  if(venc==='eu'){ placar.v++; salvaPl(); som('vitoria'); confete();
+    $('vTit').textContent='Você ganhou!';
+    $('vTexto').innerHTML=`O computador pegou a última moeda. Você jogou como o <code>achar_bom_movimento</code>: sempre deixando o outro numa posição ruim.`;
+    $('vStats').innerHTML=ESP()?`<div class="stat xp">estrelas <b>${estrelas(ESPEC.vidas)}</b></div><div class="stat">tempo <b>${espSeg()}s</b></div>`:'';
+    $('vitoria').classList.remove('oculto');
+  } else { placar.d++; salvaPl(); som('beco');
+    const ini=+$('selQtd').value, quem=$('selQuem').value;
+    jMsg(`Você pegou a última moeda e perdeu. ${ruim(ini,MAXT)&&quem==='eu'?`Começar com ${ini} moedas é começar numa posição ruim: contra quem não erra, não tem como ganhar. Tente deixar o computador começar.`:'Em algum momento você deixou o computador numa posição boa. Veja a tabela.'}`,'ruim');
+    if(espErro()) setTimeout(()=>{ const v=ESPEC.vidas; novaPartida(); ESPEC.vidas=v; espDesenha(); },2200);
+  }
+  render();
+}
+function dica(){
+  if(J.fim||J.vez!=='eu') return; const t=bom(J.m,MAXT);
+  if(J.m===1) jMsg('Só sobrou 1: não tem jeito, você vai ter que tirar.','ruim');
+  else if(t===SEM_BOM) jMsg(`Com ${J.m} moedas não existe bom movimento: <code>achar_bom_movimento(${J.m})</code> devolveria <code>SEM_BOM</code>. Tire 1 e torça.`,'atencao');
+  else jMsg(`O computador tiraria <b>${t}</b>: aí sobram ${J.m-t}, que é posição ruim.`,'bom');
+}
+
+/* =================== VER O C RODAR =================== */
+function codigo(){ const M=+$('selMaxA').value, n=+$('selN').value; return [
+ ['#include <stdio.h>',''],['',''],[`#define MAX_TIRAR ${M}`,''],['#define SEM_BOM -1',''],['',''],
+ ['int e_posicao_ruim(int moedas);   /* protótipo: uma chama a outra */','proto'],['',''],
+ ['int achar_bom_movimento(int moedas){','aEnter'],
+ ['    for (int tirar = 1; tirar <= MAX_TIRAR && tirar < moedas; tirar++){','aFor'],
+ ['        if (e_posicao_ruim(moedas - tirar))','aIf'],
+ ['            return tirar;','aRet'],
+ ['    }',''],
+ ['    return SEM_BOM;','aSem'],
+ ['}',''],['',''],
+ ['int e_posicao_ruim(int moedas){','rEnter'],
+ ['    if (moedas == 1) return 1;','rBase'],
+ ['    return achar_bom_movimento(moedas) == SEM_BOM;','rCall'],
+ ['}',''],['',''],
+ ['int main(){',''],
+ [`    int t = achar_bom_movimento(${n});`,'main'],
+ ['    if (t == SEM_BOM) printf("posição ruim\\n");','print'],
+ ['    else printf("tire %d\\n", t);','print'],
+ ['    return 0;',''],['}','']]; }
+function realca(t){
+  let cm='', i=t.indexOf('/*'); if(i>=0){cm=t.slice(i);t=t.slice(0,i);}
+  t=esc(t).replace(/("[^"]*")/g,'<span class="nu">$1</span>').replace(/\b(\d+)\b/g,'<span class="nu">$1</span>')
+    .replace(/(#include|#define|\bint\b|\breturn\b|\bif\b|\bfor\b|\belse\b)/g,'<span class="kw">$1</span>');
+  return t+(cm?`<span class="cm">${esc(cm)}</span>`:'');
+}
+function montaCodigo(){ $('codigo').innerHTML=codigo().map(([t,id])=>`<span class="ln"${id?` data-id="${id}"`:''}>${realca(t)||' '}</span>`).join(''); }
+function acende(ids){ document.querySelectorAll('#codigo .ln').forEach(el=>el.classList.toggle('hl',ids.includes(el.dataset.id))); }
+let S, GEN, ULT=null, timer=null, rodando=false;
+const ev=(lines,msg,tipo)=>({lines,msg,tipo});
+function* achaG(m){
+  const fr={f:'a',m,t:'-'}; S.stack.push(fr); S.cham++; S.prof=Math.max(S.prof,S.stack.length);
+  yield ev(['aEnter'],`Entrou em <code>achar_bom_movimento(${m})</code>: procura um jeito de deixar o outro numa posição ruim.`,'enter');
+  for(let t=1;t<=S.M&&t<m;t++){
+    fr.t=t; S.stack.length=S.stack.indexOf(fr)+1;
+    yield ev(['aFor','aIf'],`<code>tirar = ${t}</code>: se eu tirar ${t}, sobram ${m-t}. Pergunta: <code>e_posicao_ruim(${m-t})</code>?`,'call');
+    const r=yield* ruimG(m-t); S.stack.length=S.stack.indexOf(fr)+1;
+    if(r){ yield ev(['aRet'],`<code>e_posicao_ruim(${m-t})</code> deu 1: deixar ${m-t} é bom pra mim. <code>return ${t}</code>.`,'achou'); S.stack.pop(); return t; }
+    yield ev(['aIf'],`<code>e_posicao_ruim(${m-t})</code> deu 0: com ${m-t} o outro se dá bem. Tenta a próxima quantidade.`,'falha');
+  }
+  yield ev(['aSem'],`Nenhuma quantidade deixou o outro numa posição ruim: <code>return SEM_BOM</code>.`,'sem');
+  S.stack.pop(); return SEM_BOM;
+}
+function* ruimG(m){
+  const fr={f:'r',m}; S.stack.push(fr); S.cham++; S.prof=Math.max(S.prof,S.stack.length); S.rep[m]=(S.rep[m]||0)+1;
+  yield ev(['rEnter'],`Entrou em <code>e_posicao_ruim(${m})</code>${S.rep[m]>1?` (é a <b>${S.rep[m]}ª vez</b> que calcula a posição ${m}!)`:''}.`,'enter');
+  if(m===1){ yield ev(['rBase'],`<code>moedas == 1</code>: caso base. Com 1 moeda é obrigado a pegar a última. Devolve 1 (ruim).`,'achou'); S.stack.pop(); return true; }
+  yield ev(['rBase','rCall'],`${m} não é 1. Uma posição é ruim se não tem bom movimento: chama <code>achar_bom_movimento(${m})</code>.`,'call');
+  const t=yield* achaG(m); S.stack.length=S.stack.indexOf(fr)+1;
+  const r=t===SEM_BOM;
+  yield ev(['rCall'],`<code>achar_bom_movimento(${m})</code> devolveu ${t}. ${r?`É <code>SEM_BOM</code>: ${m} é posição <b>ruim</b>, devolve 1.`:`Tem bom movimento: ${m} é posição <b>boa</b>, devolve 0.`}`,r?'achou':'falha');
+  S.stack.pop(); return r;
+}
+function resetAuto(){
+  pausa(); montaCodigo();
+  const n=+$('selN').value;
+  S={stack:[],cham:0,prof:0,evs:0,fim:false,rep:{},M:+$('selMaxA').value};
+  GEN=achaG(n); ULT=null; acende(['main']); setMsgA(`O <code>main</code> chama <code>achar_bom_movimento(${n})</code>. Aperte <b>Próximo passo</b>.`,''); renderAuto();
+}
+function setMsgA(h,t){const m=$('aMsg');m.innerHTML=h;m.className='msg'+(t?' '+t:'');}
+function umPasso(){ if(S.fim) return false; const r=GEN.next(); S.evs++;
+  if(r.done){ S.fim=true; ULT=ev(['print'],`✅ Devolveu ${r.value}: imprime <b>${r.value===SEM_BOM?'posição ruim':'tire '+r.value}</b>. Foram ${S.cham} chamadas no total (somando as duas funções).`,'fim'); return false; }
+  ULT=r.value; return true; }
+function renderAuto(){
+  $('aPilha').innerHTML=S.stack.map((f,k)=>`<div class="${k===S.stack.length-1?'topo ':''}${f.f==='a'?'fa':'fr'}">${f.f==='a'?`achar_bom_movimento(${f.m})   tirar = ${f.t}`:`e_posicao_ruim(${f.m})`}</div>`).reverse().join('')||'<div>main</div>';
+  $('aCham').textContent=S.cham; $('aProf').textContent=S.stack.length; $('aEv').textContent=S.evs;
+  $('aRep').innerHTML=Object.keys(S.rep).sort((a,b)=>a-b).map(m=>`<span>${m}: <b>${S.rep[m]}×</b></span>`).join('')||'<span>nenhuma ainda</span>';
+  if(ULT){ acende(ULT.lines); const t=ULT.tipo; setMsgA(ULT.msg,t==='falha'?'ruim':(t==='achou'||t==='fim')?'bom':t==='sem'?'atencao':''); }
+  ['btnPasso','btnPlay','btnFim'].forEach(id=>$(id).disabled=S.fim);
+}
+const ATRASOS=[1100,750,500,320,200,110,55,20,6,0];
+function pausa(){rodando=false; clearTimeout(timer); $('btnPlay').textContent='▶ Rodar';}
+function loop(){ if(!rodando) return; const d=ATRASOS[+$('vel').value-1];
+  if(d===0){ for(let i=0;i<40&&!S.fim;i++) umPasso(); } else { umPasso(); if(d>=55&&ULT&&ULT.tipo==='enter') som('tick'); }
+  renderAuto(); if(S.fim){pausa(); som('vitoria'); return;} timer=setTimeout(loop,d===0?16:d); }
+
+/* =================== PROVA =================== */
+const QUIZ=[
+ {p:'O que <code>achar_bom_movimento(7)</code> devolve (com <code>MAX_TIRAR 3</code>)?',ops:['1','2','3','SEM_BOM'],certa:1,
+  exp:'Tirar 1 deixa 6 (boa pro outro), tirar 2 deixa 5 (ruim pro outro). O <code>for</code> para no primeiro que serve: devolve 2.'},
+ {p:'<code>e_posicao_ruim(9)</code> devolve 1 ou 0?',ops:['1 (é ruim)','0 (é boa)'],certa:0,
+  exp:'De 9, tirando 1, 2 ou 3 sobram 8, 7 ou 6, e todas são boas pro outro (ele deixa 5). Não existe bom movimento, então 9 é ruim. As ruins são 1, 5, 9, 13...'},
+ {p:'Num jogo com 13 moedas, contra um adversário que nunca erra, é melhor começar ou deixar o outro começar?',ops:['Começar','Deixar o outro começar','Tanto faz'],certa:1,
+  exp:'13 é posição ruim: quem começa nela perde se o outro jogar certo. Por isso no jogo você só ganha do computador quando ele começa.'},
+ {p:'Por que a linha <code>int e_posicao_ruim(int moedas);</code> aparece antes de <code>achar_bom_movimento</code>?',
+  ops:['É uma variável global','É o protótipo: achar_bom_movimento usa e_posicao_ruim, que só é definida depois','Pra função rodar mais rápido','É opcional e não muda nada'],certa:1,
+  exp:'Na recursão mútua, cada função chama a outra. Uma delas vai ser escrita primeiro e vai usar uma função que o compilador ainda não viu. O protótipo avisa o nome, os parâmetros e o tipo de retorno.'},
+ {p:'Com <code>MAX_TIRAR 4</code>, quais são as posições ruins até 16?',ops:['1, 5, 9, 13','1, 6, 11, 16','1, 4, 7, 10, 13, 16','Só a 1'],certa:1,
+  exp:'Com 2 a 5 você deixa 1; com 6, qualquer coisa deixa 2 a 5. Então as ruins andam de 5 em 5: 1, 6, 11, 16. (Com até 3 andavam de 4 em 4.)'},
+ {p:'Com 13 moedas o código faz 1254 chamadas; com 25, mais de 430 mil. Por quê?',
+  ops:['Porque o for vai até 25','Porque a mesma posição é recalculada muitas vezes, em ramos diferentes','Porque a recursão mútua é sempre lenta','Porque 25 é ímpar'],certa:1,
+  exp:'Pra decidir 9 ele calcula 8, 7 e 6; pra decidir 8, calcula 7, 6 e 5 de novo... O contador da aba do C mostra a posição 1 sendo avaliada dezenas de vezes. Guardar cada resposta num vetor (memorização) resolve.'},
+ {p:'Alguém tirou o <code>tirar &lt; moedas</code> do <code>for</code>. O que acontece quando o computador tem 1 moeda e chama <code>achar_bom_movimento(1)</code>?',
+  ops:['Devolve 1, normal','Chama e_posicao_ruim(0), que chama achar_bom_movimento(0), depois -1, -2... e nunca para','Devolve SEM_BOM','Dá erro de compilação'],certa:1,
+  exp:'Com <code>moedas = 1</code>, <code>tirar = 1</code> leva a <code>e_posicao_ruim(0)</code>. Zero não é o caso base (1), então chama <code>achar_bom_movimento(0)</code>, que testa <code>e_posicao_ruim(-1)</code>... A pilha estoura.'}
+];
+
+/* =================== abas e controles =================== */
+let aba='jogar';
+function trocaAba(a){ aba=a; document.querySelectorAll('.abas button').forEach(b=>b.classList.toggle('on',b.dataset.aba===a));
+  ['jogar','auto','prova','como'].forEach(x=>$('aba-'+x).classList.toggle('oculto',x!==a)); if(a!=='auto') pausa(); else renderAuto(); }
+document.querySelectorAll('.abas button').forEach(b=>b.addEventListener('click',()=>trocaAba(b.dataset.aba)));
+$('btnNovo').onclick=novaPartida; $('selMax').onchange=novaPartida; $('selQtd').onchange=novaPartida; $('selQuem').onchange=novaPartida;
+$('btnDica').onclick=dica;
+$('btnPasso').onclick=()=>{pausa(); umPasso(); renderAuto();};
+$('btnPlay').onclick=()=>{ if(rodando){pausa();return;} rodando=true; $('btnPlay').textContent='⏸ Pausar'; loop(); };
+$('btnFim').onclick=()=>{ pausa(); let g=0; while(umPasso()&&g<5e4) g++; renderAuto(); som('vitoria'); };
+$('btnReset').onclick=resetAuto; $('selN').onchange=resetAuto; $('selMaxA').onchange=resetAuto;
+$('btnCopiar').onclick=()=>{ const txt=codigo().map(x=>x[0]).join('\n'); (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>{$('btnCopiar').textContent='Copiado ✔';setTimeout(()=>$('btnCopiar').textContent='Copiar programa completo',1500);}).catch(()=>{}); };
+$('vVerC').onclick=()=>{ $('vitoria').classList.add('oculto'); trocaAba('auto'); };
+$('vDeNovo').onclick=()=>{ $('vitoria').classList.add('oculto'); novaPartida(); };
+$('pDeNovo').onclick=()=>{ $('perdeu').classList.add('oculto'); novaPartida(); };
+$('btnSom').onclick=()=>{ SOM=!SOM; $('btnSom').textContent=SOM?'🔊':'🔇'; if(SOM){ac(); som('ok');} };
+$('btnTela').onclick=()=>{ const d=document, el=d.documentElement; try{ if(d.fullscreenElement||d.webkitFullscreenElement){ (d.exitFullscreen||d.webkitExitFullscreen).call(d); } else { const r=el.requestFullscreen||el.webkitRequestFullscreen; if(r){ const p=r.call(el); if(p&&p.catch) p.catch(()=>{}); } } }catch(e){} };
+montaQuiz(QUIZ,'quiz'); novaPartida(); resetAuto();
+</script>
+<script>window.addEventListener('modo',()=>location.reload());</script>
+<script src="canto.js"></script>
+</body>
+</html>
