@@ -153,6 +153,10 @@ details.resp summary{cursor:pointer;color:var(--cianoF);font-weight:600}
 .px.vizOk{outline:3px solid #5b8a6a;z-index:1}
 .px.fora{outline:none}
 .px .n{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.kRot{position:absolute;top:2px;right:4px;font:700 11px 'JetBrains Mono',monospace;color:#8a95a0;background:#ffffffcc;border-radius:5px;padding:0 3px;z-index:3}
+.kRot.kEsc{color:#2f5d7c;background:#fff;box-shadow:0 0 0 1px #8fb3cf}
+.px.dicaQ{animation:pisca 0.9s ease-in-out infinite}
+@keyframes pisca{50%{box-shadow:0 0 0 4px #ffd6b0}}
 .palpite{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
 .palpite input{width:80px;font:700 18px 'JetBrains Mono',monospace;border:2px solid var(--borda);border-radius:10px;padding:6px 8px;text-align:center}
 .cores{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
@@ -169,7 +173,7 @@ details.resp summary{cursor:pointer;color:var(--cianoF);font-weight:600}
     <button class="btn icone" id="btnTela" title="tela cheia">⛶</button>
   </div>
 </header>
-<p class="sub">Quantas construções tem nesta imagem de satélite? Células escuras <b>encostadas</b> (dos lados ou na diagonal) são a mesma construção. Clique numa construção e veja a tinta se espalhar: é a função <code>apaga</code> chamando ela mesma.</p>
+<p class="sub">Quantas construções tem nesta imagem de satélite? Células escuras <b>encostadas</b> (dos lados ou na diagonal) são a mesma construção. Aqui você é a função <code>apaga</code>: pinte célula por célula, na mesma ordem que o C pintaria, e diga quando cada chamada dá <code>return</code>.</p>
 <div class="wrap">
   <div class="abas">
     <button data-aba="jogar" class="on">🎮 Jogar</button>
@@ -177,7 +181,7 @@ details.resp summary{cursor:pointer;color:var(--cianoF);font-weight:600}
     <button data-aba="prova">📝 Treino de prova</button>
     <button data-aba="como">📖 Como funciona</button>
   </div>
-  <div style="margin:4px 0 12px;display:flex;align-items:center;flex-wrap:wrap;gap:6px"><span id="modoSlot" data-ap="sem relógio, sem palpite obrigatório" data-esp="relógio, 3 vidas, palpite antes de pintar"></span><span class="espBarra oculto" id="espBarra"></span></div>
+  <div style="margin:4px 0 12px;display:flex;align-items:center;flex-wrap:wrap;gap:6px"><span id="modoSlot" data-ap="sem relógio, com a ordem do k aparecendo" data-esp="relógio, 3 vidas, sem a ordem do k"></span><span class="espBarra oculto" id="espBarra"></span></div>
   <div class="barra">
     <label>Imagem <select id="selMapa"><option value="0">1</option><option value="1">2 (cuidado com as diagonais)</option><option value="2">3</option><option value="3">4</option></select></label>
     <label><input type="checkbox" id="viz4"> alteração: só 4 vizinhos (sem diagonais)</label>
@@ -189,24 +193,28 @@ details.resp summary{cursor:pointer;color:var(--cianoF);font-weight:600}
       <div class="card">
         <div class="mapa" id="mapaJ"></div>
         <div class="cores" id="coresJ"></div>
+        <div class="legenda soAprender" style="justify-content:center">
+          <span>números pequenos em volta = ordem do <code>k</code> que o <code>for</code> testa</span>
+        </div>
       </div>
       <div>
         <div class="card">
-          <h3>Conte as construções</h3>
-          <p style="margin:0 0 8px">Cada clique é o <code>for</code> de <code>construcoes</code> achando uma célula escura: ele chama <code>apaga(i, j)</code> e soma 1 em <code>cont</code>. <span class="soEsp"><b>Modo especialista:</b> dê o seu palpite antes de começar a pintar.</span></p>
-          <div class="palpite soEsp"><label>Meu palpite: <input type="number" id="palp" min="0" max="40"></label><button class="btn pri" id="btnPalp">Travar palpite</button></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <h3>Seja o apaga</h3>
+          <p style="margin:0 0 8px">Agora quem pinta é você, <b>na ordem exata do C</b>. Clique na próxima célula que o programa pintaria. Quando a célula do topo da pilha não tiver mais vizinho escuro, a chamada acaba: aperte <b>return</b>. Sem nada na pilha, é a vez da varredura de <code>construcoes</code>, que lê a imagem linha por linha.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn alerta" id="btnReturn">↩ return (a chamada acabou)</button>
+            <button class="btn soAprender" id="btnDica">🤔 Qual é a próxima?</button>
             <button class="btn" id="btnRecomecar">Recomeçar imagem</button>
-            <label style="font-size:14px;display:flex;gap:6px;align-items:center">velocidade da tinta <input type="range" id="velJ" min="1" max="10" value="6"></label>
           </div>
           <div class="stats">
             <div class="stat xp">cont: <b id="jCont">0</b></div>
             <div class="stat">chamadas de apaga: <b id="jCham">0</b></div>
+            <div class="stat">erros: <b id="jErros">0</b></div>
             <div class="stat">células escuras que faltam: <b id="jFalta">0</b></div>
           </div>
           <div class="msg" id="jMsg"></div>
         </div>
-        <div class="card" style="margin-top:12px"><h3>Pilha de chamadas da tinta</h3><p class="pequeno" style="margin:0 0 6px">Repara que nunca tem "desfaz": célula pintada fica pintada.</p><div class="pilha" id="jPilha"></div></div>
+        <div class="card" style="margin-top:12px"><h3>Sua pilha de chamadas</h3><p class="pequeno" style="margin:0 0 6px">Topo em cima. O <code>for</code> sempre continua de onde parou na chamada do topo.</p><div class="pilha" id="jPilha"></div></div>
       </div>
     </div>
   </section>
@@ -273,10 +281,11 @@ details.resp summary{cursor:pointer;color:var(--cianoF);font-weight:600}
       <h2>O jogo e o C são a mesma coisa</h2>
       <table>
         <tr><th>No jogo</th><th>No C</th></tr>
-        <tr><td>Clicar numa construção</td><td>o <code>for</code> duplo achando <code>img[i][j] != 0</code>, chamando <code>apaga(i, j)</code> e fazendo <code>cont++</code></td></tr>
-        <tr><td>A tinta se espalhando</td><td>cada <code>apaga(u, v)</code> chamado dentro do <code>for</code> dos 8 vizinhos</td></tr>
+        <tr><td>Clicar com a pilha vazia</td><td>o <code>for</code> duplo de <code>construcoes</code> achando <code>img[i][j] != 0</code> e chamando <code>apaga(i, j)</code></td></tr>
+        <tr><td>Clicar num vizinho</td><td>o <code>for</code> do <code>apaga</code> do topo achando o menor <code>k</code> com vizinho escuro e chamando <code>apaga(u, v)</code></td></tr>
+        <tr><td>Botão return</td><td>o <code>for</code> chegou no fim; a chamada acaba e desempilha (se era a primeira, <code>construcoes</code> faz <code>cont++</code>)</td></tr>
         <tr><td>Célula pintada</td><td><code>img[i][j] = 0</code></td></tr>
-        <tr><td>Contorno tracejado em volta</td><td>os 8 vizinhos <code>(u, v)</code> sendo testados</td></tr>
+        <tr><td>Números pequenos em volta</td><td>a ordem do <code>k</code>, que vem de <code>dl</code> e <code>dc</code></td></tr>
         <tr><td>"Só 4 vizinhos"</td><td>vetores <code>dl</code>/<code>dc</code> com 4 direções e o <code>for</code> até 4</td></tr>
       </table>
 
@@ -301,7 +310,7 @@ details.resp summary{cursor:pointer;color:var(--cianoF);font-weight:600}
     <button class="btn pri" id="vProx">Próxima imagem ▸</button>
   </div>
 </div></div>
-<div id="perdeu" class="oculto"><div class="box"><h2>Acabaram as vidas</h2><p>No modo especialista, cada palpite errado custa uma vida.</p><button class="btn pri" id="pDeNovo">Tentar de novo</button></div></div>
+<div id="perdeu" class="oculto"><div class="box"><h2>Acabaram as vidas</h2><p>No modo especialista, cada célula ou return fora da ordem do C custa uma vida.</p><button class="btn pri" id="pDeNovo">Tentar de novo</button></div></div>
 
 <script>
 "use strict";
@@ -418,57 +427,102 @@ function desenhaMapa(el,g,pint,opt={}){
   el.innerHTML=h;
 }
 
-/* =================== JOGAR =================== */
+/* =================== JOGAR: seja o apaga =================== */
+const NOMES8=['↖','↑','↗','←','→','↙','↓','↘'], NOMES4=['↑','←','→','↓'];
 let J;
 function novoMapa(){
   const m=+$('selMapa').value;
-  J={m,g:grade(m),pint:null,cont:0,cham:0,anim:false,palpite:null,pilha:[],fim:false};
+  J={m,g:grade(m),pint:null,cont:0,cham:0,erros:0,pilha:[],varre:0,fim:false,errosSeguidos:0,mostraDica:false};
   J.pint=J.g.map(r=>r.map(()=>0));
   espInicia();
-  if($('palp')) $('palp').value='';
-  jMsg(ESP()?'Olhe a imagem, conte de cabeça e trave o seu palpite antes de clicar.':`Clique numa célula escura. ${$('viz4').checked?'<b>Atenção:</b> com a alteração ligada, diagonal não conta como encostado.':'Lembre: encostar na diagonal também conta.'}`);
+  jMsg(`A pilha está vazia: quem trabalha é a varredura de <code>construcoes</code>, que lê a imagem linha por linha, da esquerda pra direita. Clique na <b>primeira</b> célula escura que ela encontra.${$('viz4').checked?' <b>Alteração ligada:</b> só 4 vizinhos, sem diagonal.':''}`);
   renderJ();
 }
 function jMsg(h,t){const m=$('jMsg');m.innerHTML=h;m.className='msg'+(t?' '+t:'');}
-function renderJ(opt){
-  desenhaMapa($('mapaJ'),J.g,J.pint,opt||{});
-  $('jCont').textContent=J.cont; $('jCham').textContent=J.cham; $('jFalta').textContent=J.g.flat().filter(x=>x).length;
-  $('coresJ').innerHTML=Array.from({length:J.cont},(_,k)=>`<span style="background:${CORES[k%CORES.length]}">construção ${k+1}</span>`).join('');
-  $('jPilha').innerHTML=J.pilha.map((p,k)=>`<div class="${k===J.pilha.length-1?'topo':''}">apaga(${p[0]}, ${p[1]})</div>`).reverse().join('')||'<div>construcoes()</div>';
-  $('mapaJ').querySelectorAll('.px.casa').forEach(b=>b.onclick=()=>clique(+b.dataset.i,+b.dataset.j));
+const LC=()=>[J.g.length,J.g[0].length];
+function vizEscuro(i,j){ const D=DIRS(), [L,C]=LC();
+  for(let k=0;k<D.length;k++){ const u=i+D[k][0], v=j+D[k][1]; if(u>=0&&u<L&&v>=0&&v<C&&J.g[u][v]) return {k,u,v}; } return null; }
+function proximaVarredura(){ const [L,C]=LC(); for(let p=J.varre;p<L*C;p++){ const i=p/C|0, j=p%C; if(J.g[i][j]) return {i,j,p}; } return null; }
+/* o que o C faria agora: {tipo:'clica',i,j,k?} ou {tipo:'return'} ou {tipo:'fim'} */
+function esperado(){
+  if(J.pilha.length){ const [i,j]=J.pilha[J.pilha.length-1]; const n=vizEscuro(i,j); return n?{tipo:'clica',i:n.u,j:n.v,k:n.k,de:[i,j]}:{tipo:'return',de:[i,j]}; }
+  const n=proximaVarredura(); return n?{tipo:'clica',i:n.i,j:n.j,p:n.p,varre:true}:{tipo:'fim'};
 }
-const espera=ms=>new Promise(r=>setTimeout(r,ms));
-async function clique(i,j){
-  if(J.anim||J.fim) return;
-  if(ESP()&&J.palpite===null){ jMsg('Trave o palpite primeiro.','atencao'); som('nao'); return; }
-  J.anim=true; J.cont++; const cor=J.cont, D=DIRS(), L=J.g.length, C=J.g[0].length;
-  jMsg(`<code>img[${i}][${j}] != 0</code>: construção nova! <code>apaga(${i}, ${j})</code> e <code>cont = ${J.cont}</code>.`);
-  const ms=()=>[0,600,420,300,200,130,80,45,20,6,0][+$('velJ').value];
-  const ap=async(a,b)=>{
-    J.cham++; J.g[a][b]=0; J.pint[a][b]=cor; J.pilha.push([a,b]); som('tick');
-    if(ms()){ renderJ({at:[a,b]}); await espera(ms()); }
-    for(const [x,y] of D){ const u=a+x,v=b+y;
-      if(u>=0&&u<L&&v>=0&&v<C&&J.g[u][v]) await ap(u,v); }
-    J.pilha.pop();
-  };
-  await ap(i,j);
-  J.anim=false; renderJ();
-  const falta=J.g.flat().filter(x=>x).length;
-  if(!falta) termina();
-  else jMsg(`A construção ${J.cont} acabou de ser pintada: ${J.cham} chamadas de <code>apaga</code> até agora. Ainda tem ${falta} célula(s) escura(s).`,'bom');
+function renderJ(){
+  const [L,C]=LC(), D=DIRS(), nomes=D.length===8?NOMES8:NOMES4;
+  const topo=J.pilha.length?J.pilha[J.pilha.length-1]:null;
+  desenhaMapa($('mapaJ'),J.g,J.pint,{at:topo});
+  // rótulos de k em volta do topo (só no modo aprender)
+  if(topo&&!ESP()){
+    D.forEach(([a,b],k)=>{ const u=topo[0]+a, v=topo[1]+b; if(u<0||u>=L||v<0||v>=C) return;
+      const el=$('mapaJ').children[u*C+v]; const s=document.createElement('span'); s.className='kRot'+(J.g[u][v]?' kEsc':''); s.textContent=k; el.appendChild(s); });
+  }
+  if(J.mostraDica&&!ESP()){ const e=esperado(); if(e.tipo==='clica') $('mapaJ').children[e.i*C+e.j].classList.add('dicaQ'); }
+  $('jCont').textContent=J.cont; $('jCham').textContent=J.cham; $('jErros').textContent=J.erros; $('jFalta').textContent=J.g.flat().filter(x=>x).length;
+  $('coresJ').innerHTML=Array.from({length:J.cont+(J.pilha.length?1:0)},(_,k)=>`<span style="background:${CORES[k%CORES.length]}">construção ${k+1}${k===J.cont?' (pintando)':''}</span>`).join('');
+  $('jPilha').innerHTML=J.pilha.map((p,k)=>`<div class="${k===J.pilha.length-1?'topo':''}">apaga(${p[0]}, ${p[1]})</div>`).reverse().join('')+`<div class="${J.pilha.length?'':'topo'}">construcoes()   varrendo</div>`;
+  $('mapaJ').querySelectorAll('.px').forEach(b=>b.onclick=()=>clique(+b.dataset.i,+b.dataset.j));
+  $('btnReturn').disabled=J.fim;
+}
+function erro(txt){
+  J.erros++; J.errosSeguidos++; som('erro'); treme();
+  if(J.errosSeguidos>=2&&!ESP()) J.mostraDica=true;
+  jMsg(txt+(J.mostraDica&&!ESP()?' <b>A célula certa está piscando.</b>':''),'ruim');
+  if(espErro()) renderJ();
+}
+function explicaErro(e,i,j){
+  const D=DIRS(), nomes=D.length===8?NOMES8:NOMES4;
+  if(e.tipo==='return') return `A chamada <code>apaga(${e.de[0]}, ${e.de[1]})</code> não tem mais vizinho escuro: o <code>for</code> chega no fim sem chamar ninguém. Agora é <b>return</b>, não clique.`;
+  if(e.varre) return `A pilha está vazia, então quem procura é a varredura, linha por linha, da esquerda pra direita. A primeira célula escura que ela acha é (${e.i}, ${e.j}), não (${i}, ${j}).`;
+  if(J.pint[i][j]||(!J.g[i][j])) return `(${i}, ${j}) não é escura (já foi pintada ou é fundo). O <code>if (img[u][v] != 0)</code> daria falso.`;
+  const de=e.de, ehViz=D.some(([a,b])=>de[0]+a===i&&de[1]+b===j);
+  if(!ehViz) return `(${i}, ${j}) não é vizinha de (${de[0]}, ${de[1]}), que está no topo da pilha. A recursão só anda pra vizinhos da chamada atual.`;
+  const kSua=D.findIndex(([a,b])=>de[0]+a===i&&de[1]+b===j);
+  return `(${i}, ${j}) é vizinha, sim (k = ${kSua}, ${nomes[kSua]}), mas o <code>for</code> testa os k em ordem e acha antes o k = ${e.k} (${nomes[e.k]}), que também é escuro. Ele chama esse primeiro.`;
+}
+function clique(i,j){
+  if(J.fim) return;
+  const e=esperado();
+  if(e.tipo!=='clica'||e.i!==i||e.j!==j){ erro(explicaErro(e,i,j)); return; }
+  J.errosSeguidos=0; J.mostraDica=false;
+  const cor=J.cont+1; J.g[i][j]=0; J.pint[i][j]=cor; J.cham++; som('pulo');
+  if(e.varre){ J.varre=e.p!==undefined?e.p:J.varre; J.pilha=[[i,j]];
+    jMsg(`A varredura achou (${i}, ${j}) escura: chama <code>apaga(${i}, ${j})</code>, que pinta e começa a olhar os vizinhos. Construção ${cor} começando.`); }
+  else { J.pilha.push([i,j]);
+    jMsg(`Isso: no <code>for</code> de <code>apaga(${e.de[0]}, ${e.de[1]})</code>, o <code>k = ${e.k}</code> achou (${i}, ${j}) escura e chamou <code>apaga(${i}, ${j})</code>. Ela pinta e começa o próprio <code>for</code> do k = 0.`,'bom'); }
+  renderJ();
+}
+function fazReturn(){
+  if(J.fim) return;
+  const e=esperado();
+  if(e.tipo!=='return'){
+    if(e.tipo==='clica'&&e.varre) erro('A pilha já está vazia: não tem chamada de <code>apaga</code> pra dar return. Agora é a varredura procurando a próxima célula escura.');
+    else erro(`Ainda não: <code>apaga(${e.de[0]}, ${e.de[1]})</code> tem vizinho escuro no k = ${e.k}. O <code>for</code> só acaba depois de testar todos.`);
+    return;
+  }
+  J.errosSeguidos=0; J.mostraDica=false; som('volta');
+  const [i,j]=J.pilha.pop();
+  if(!J.pilha.length){
+    J.cont++;
+    const n=proximaVarredura();
+    if(!n){ renderJ(); termina(); return; }
+    jMsg(`<code>apaga(${i}, ${j})</code> era a primeira chamada: voltou pra <code>construcoes</code>, que faz <code>cont++</code> (agora <b>${J.cont}</b>) e continua a varredura de onde parou.`,'bom');
+  } else { const [a,b]=J.pilha[J.pilha.length-1];
+    jMsg(`<code>apaga(${i}, ${j})</code> acabou e desempilhou. Volta pra <code>apaga(${a}, ${b})</code>, que continua o <code>for</code> do k seguinte. Nada pra desfazer: (${i}, ${j}) fica pintada.`,'atencao'); }
+  renderJ();
+}
+function dica(){
+  if(J.fim) return; const e=esperado(), D=DIRS(), nomes=D.length===8?NOMES8:NOMES4;
+  if(e.tipo==='return') jMsg(`A chamada do topo, <code>apaga(${e.de[0]}, ${e.de[1]})</code>, não tem vizinho escuro. É hora do return.`,'atencao');
+  else if(e.varre) jMsg('Pilha vazia: a varredura lê linha por linha, da esquerda pra direita. Qual é a primeira célula escura nessa ordem?','atencao');
+  else jMsg(`No topo está <code>apaga(${e.de[0]}, ${e.de[1]})</code>. Olhe os números em volta dela: qual é o <b>menor</b> k que cai numa célula escura?`,'atencao');
 }
 function termina(){
-  J.fim=true; espPara();
-  const certo=J.cont;
-  if(ESP()){
-    if(J.palpite!==certo){ som('erro'); treme(); jMsg(`São <b>${certo}</b> construções, e o seu palpite foi ${J.palpite}. ${J.m===1&&!$('viz4').checked?'Lembra que diagonal conta como encostado.':''}`,'ruim');
-      if(espErro()){ setTimeout(()=>{ const v=ESPEC.vidas; novoMapa(); ESPEC.vidas=v; espDesenha(); },1800); } return; }
-    const st=ESPEC.vidas===3?3:ESPEC.vidas===2?2:1; const key=J.m+($('viz4').checked?'-4':'');
-    if(!progresso[key]||progresso[key]<st){ progresso[key]=st; salvaProg(); }
-    $('vStats').innerHTML=`<div class="stat xp">estrelas <b>${estrelas(st)}</b></div><div class="stat">tempo <b>${espSeg()}s</b></div>`;
-  } else $('vStats').innerHTML=`<span class="pequeno">As estrelas só contam no modo 🏆 especialista.</span>`;
-  som('vitoria'); confete();
-  $('vTexto').innerHTML=`<b>${certo}</b> construções, ${J.cham} chamadas de <code>apaga</code>. Repara: ${J.cham} é exatamente o número de células escuras que a imagem tinha. Cada uma foi pintada uma vez só.`;
+  J.fim=true; espPara(); som('vitoria'); confete();
+  const st=J.erros===0?3:J.erros<=3?2:1;
+  if(ESP()){ const key=J.m+($('viz4').checked?'-4':''); if(!progresso[key]||progresso[key]<st){ progresso[key]=st; salvaProg(); } }
+  $('vTexto').innerHTML=`Você fez o papel do C inteiro: <b>${J.cont}</b> construções e ${J.cham} chamadas de <code>apaga</code>, uma por célula escura. A ordem em que você pintou é exatamente a ordem do programa.`;
+  $('vStats').innerHTML=`<div class="stat xp">estrelas <b>${estrelas(st)}</b></div><div class="stat">erros <b>${J.erros}</b></div>${ESP()?`<div class="stat">tempo <b>${espSeg()}s</b></div>`:'<span class="pequeno">As estrelas só ficam salvas no modo 🏆 especialista.</span>'}`;
   $('vitoria').classList.remove('oculto');
 }
 
@@ -595,7 +649,7 @@ function trocaAba(a){ aba=a; document.querySelectorAll('.abas button').forEach(b
 document.querySelectorAll('.abas button').forEach(b=>b.addEventListener('click',()=>trocaAba(b.dataset.aba)));
 $('selMapa').onchange=()=>{ novoMapa(); resetAuto(); }; $('viz4').onchange=()=>{ novoMapa(); resetAuto(); };
 $('btnRecomecar').onclick=novoMapa;
-$('btnPalp').onclick=()=>{ const v=parseInt($('palp').value,10); if(isNaN(v)){ som('nao'); return; } J.palpite=v; som('ok'); jMsg(`Palpite travado: <b>${v}</b>. Agora pinte pra conferir.`); };
+$('btnReturn').onclick=fazReturn; $('btnDica').onclick=dica;
 $('btnPasso').onclick=()=>{pausa(); avanca(); renderAuto();};
 $('btnPlay').onclick=()=>{ if(rodando){pausa();return;} rodando=true; $('btnPlay').textContent='⏸ Pausar'; loop(); };
 $('btnFim').onclick=()=>{ pausa(); let g=0; while(umPasso()&&g<1e5) g++; renderAuto(); som('vitoria'); };
