@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · CC BY-NC-SA 4.0 · veja LICENSE.txt
+     Problema e código originais: slides "Backtracking" de Wladimir Araújo Tavares (UFC, Campus de Quixadá, 2017), traduzidos de C++ para C. -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f4f5f6">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<title>Resta Um em linha: backtracking em C</title>
+<style>
+:root{
+  --ciano:#5f6b76; --cianoF:#3d4852; --magenta:#5f6b76; --magentaF:#3d4852; --limao:#5b8a6a; --limaoF:#5b8a6a;
+  --laranja:#8a8f96; --amarelo:#b8a37a; --vermelho:#b5545f; --texto:#2f343a; --suave:#7a8088;
+  --vidro:#ffffff; --borda:#dde1e5;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{color:var(--texto);font:16px/1.45 'Fredoka',system-ui,sans-serif;
+  -webkit-user-select:none;user-select:none;touch-action:manipulation;
+  background:#f4f5f6}
+body.treme{animation:treme .35s}
+@keyframes treme{20%{transform:translate(-6px,2px)}40%{transform:translate(6px,-2px)}60%{transform:translate(-4px,1px)}80%{transform:translate(3px,0)}}
+header{padding:14px 20px 4px;max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+h1{margin:0;font-size:clamp(22px,3.2vw,32px);font-weight:700;color:#2b3440}
+.sub{color:var(--suave);margin:0;max-width:1280px;padding:0 20px;margin:0 auto;font-size:15px}
+.topoBtns{margin-left:auto;display:flex;gap:8px}
+.wrap{max-width:1280px;margin:0 auto;padding:8px 20px 40px}
+.abas{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0;background:#e6e8eb;padding:5px;border-radius:16px;width:max-content;max-width:100%}
+.abas button{border:0;background:transparent;color:var(--suave);padding:10px 18px;min-height:46px;border-radius:12px;font-weight:600;cursor:pointer;font-size:15px;font-family:inherit}
+.abas button.on{background:#fff;color:var(--texto);box-shadow:0 2px 6px #0001}
+.barra{display:flex;gap:14px;flex-wrap:wrap;align-items:center;background:#fff;border:1px solid var(--borda);border-radius:16px;padding:10px 14px;margin-bottom:14px;box-shadow:0 2px 10px #2f5d7c0d}
+.barra label{display:flex;gap:8px;align-items:center;font-size:15px;font-weight:600}
+input[type=range]{accent-color:var(--magentaF);width:130px;height:28px}
+input[type=checkbox]{accent-color:var(--magentaF);width:22px;height:22px}
+select{border:2px solid var(--borda);border-radius:10px;padding:8px 10px;background:#fff;color:var(--texto);font:inherit;font-weight:600;min-height:44px}
+.btn{border:2px solid var(--borda);background:#fff;color:var(--cianoF);padding:10px 14px;min-height:48px;border-radius:13px;cursor:pointer;font-weight:600;font-size:15px;font-family:inherit;transition:transform .08s}
+.btn:active{transform:scale(.96)}
+.btn.pri{background:#3d4852;border-color:#2f3740;color:#fff}
+.btn.alerta{background:#6b7480;border-color:#555d68;color:#fff}
+.btn.on{background:#eceef1;border-color:#8a9099;color:#2f343a}
+.btn.icone{min-width:48px;padding:8px 10px;font-size:20px}
+.btn:disabled{opacity:.4;cursor:default}
+.grade{display:grid;grid-template-columns:min(46vw,72vh) 1fr;gap:18px;align-items:start}
+@media (max-width:900px){.grade{grid-template-columns:1fr}}
+.card{background:#fff;border:1px solid var(--borda);border-radius:18px;padding:14px;box-shadow:0 2px 10px #2f5d7c0d}
+.card h3{margin:0 0 8px;font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--magentaF)}
+#tabWrap{position:relative;width:100%;aspect-ratio:1/1;margin:0 auto}
+@media (max-width:900px){#tabWrap{max-width:min(92vw,50vh)}}
+#tab{position:absolute;inset:0;display:grid;gap:5px}
+#tab .casa{border:2px solid #e3e6e9;border-radius:12px;background:#fdfdfd;position:relative;font-weight:700;color:var(--cianoF);font-size:clamp(16px,3.4vh,30px);cursor:default;padding:0;display:flex;align-items:center;justify-content:center;transition:background .15s,box-shadow .15s;font-family:inherit}
+#tab .casa.esc{background:#f0f1f3}
+#tab .casa.vis{background:#d9dfe5;border-color:#8a949f;color:#2f343a}
+#tab .casa.topo{background:#d5dbe1;border-color:#3d4852;color:#2f343a;box-shadow:0 0 0 3px #3d485233;z-index:2}
+#tab .casa.alvo{cursor:pointer;background:#eef3ef;border:2px dashed var(--limao);animation:pulsa 1.3s ease-in-out infinite}
+@keyframes pulsa{50%{box-shadow:0 0 0 4px #5b8a6a33}}
+#tab .casa.alvo:active{background:#d3f0de}
+#tab .casa.mina{background:#f3e7e8;border-color:#d4a9ae}
+#tab .casa.minaFraca{opacity:.6}
+#tab .casa.probe-ok{border:3px solid var(--limao);background:#e8f0ea}
+#tab .casa.probe-no{border:3px solid var(--vermelho);background:#f3e7e8}
+#tab .casa.desfeito{animation:desf .6s}
+@keyframes desf{0%{background:#e4c7cb}100%{background:#fdfdfd}}
+#tab .casa.boom{animation:boom .5s}
+@keyframes boom{0%{transform:scale(1)}30%{transform:scale(1.2);background:#e4c7cb}100%{transform:scale(1)}}
+.casa .badge{position:absolute;top:3px;right:6px;font-size:clamp(11px,1.6vh,15px);font-weight:700;line-height:1}
+.casa .rot{position:absolute;bottom:3px;left:6px;font-size:clamp(10px,1.4vh,13px);font-weight:700;line-height:1}
+.casa .coord{position:absolute;bottom:3px;right:6px;font-size:10px;color:#a9b8c6;font-weight:500}
+#linhas{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:visible}
+#tab{z-index:2}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}
+.stat{background:#f2f3f5;border:1px solid var(--borda);border-radius:12px;padding:6px 12px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--suave)}
+.stat b{color:var(--magentaF);font-size:20px;font-family:'JetBrains Mono',ui-monospace,monospace;letter-spacing:0}
+.stat.xp{border-color:#cfd3d8;background:#eceef1}
+.stat.xp b{color:#3d4852}
+.msg{border-radius:14px;padding:12px 14px;margin-top:12px;background:#f2f3f5;border:2px solid #dde1e5;min-height:50px;font-size:15.5px}
+.msg.ruim{background:#f6ecee;border-color:#e0bcc2}
+.msg.bom{background:#ebf2ed;border-color:#bcd3c3}
+.msg.atencao{background:#f3f1ec;border-color:#d8d0bf}
+code{background:#eceef1;border-radius:6px;padding:0 5px;font-size:.9em;font-family:'JetBrains Mono',ui-monospace,monospace;color:#3d4852}
+pre.codigo{margin:0;background:#f8f9fa;border:1px solid var(--borda);border-radius:14px;padding:8px 0;font:14px/1.6 'JetBrains Mono',ui-monospace,monospace;overflow:auto;max-height:62vh;-webkit-overflow-scrolling:touch;color:#2b3440}
+pre.codigo .ln{display:block;padding:0 12px;white-space:pre;border-left:5px solid transparent}
+pre.codigo .ln.hl{background:#e4e8ec;border-left-color:#3d4852}
+pre.codigo .ln.hl2{background:#e8f0ea;border-left-color:var(--limao)}
+pre.codigo .kw{color:#3d4852;font-weight:700}
+pre.codigo .cm{color:#8a9aa8;font-style:italic}
+pre.codigo .nu{color:#6b7480;font-weight:600}
+.pilha{display:flex;flex-direction:column;gap:4px;max-height:240px;overflow:auto;font:13.5px 'JetBrains Mono',ui-monospace,monospace;-webkit-overflow-scrolling:touch}
+.pilha div{background:#f6f7f8;border:1px solid var(--borda);border-radius:9px;padding:4px 10px}
+.pilha div.topo{background:#e4e8ec;border-color:#3d4852;font-weight:700;color:#2f343a}
+.log{max-height:200px;overflow:auto;font-size:14px;display:flex;flex-direction:column;-webkit-overflow-scrolling:touch}
+.log div{padding:4px 0;border-bottom:1px dashed #e1e9f0}
+.dois{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:1100px){.dois{grid-template-columns:1fr}}
+.legenda{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--suave);margin-top:10px;font-weight:600}
+.legenda span i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:5px;box-shadow:none!important}
+.oculto{display:none!important}
+.texto{-webkit-user-select:text;user-select:text}
+.texto h2{font-size:19px;margin:20px 0 6px;color:var(--magentaF)}
+.texto h2:first-child{margin-top:0}
+.texto table{border-collapse:collapse;width:100%;font-size:15px}
+.texto td,.texto th{border:1px solid var(--borda);padding:8px 10px;text-align:left;vertical-align:top}
+.texto th{background:#f0f1f3;color:var(--cianoF);font-size:13px}
+.caixa{background:#f0f1f3;border-radius:14px;padding:12px 16px;margin:10px 0}
+.caixa.pessego{background:#f5f4f0;border:2px solid #dcd8cc}
+.caixa.rosa{background:#f3eef0}
+.pequeno{font-size:13px;color:var(--suave)}
+#vitoria{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#ffffffb0;backdrop-filter:blur(4px);z-index:50;padding:20px}
+#vitoria .box{background:#fff;border:3px solid var(--magentaF);border-radius:24px;padding:26px 30px;max-width:520px;text-align:center;box-shadow:0 10px 30px #0003;animation:entra .4s}
+@keyframes entra{from{transform:scale(.7);opacity:0}}
+#vitoria h2{margin:0 0 6px;font-size:34px;font-weight:700;color:var(--magentaF)}
+#vitoria .grandes{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.confete{position:fixed;top:-20px;width:10px;height:16px;border-radius:3px;z-index:60;pointer-events:none;animation:cai linear forwards}
+@keyframes cai{to{transform:translateY(110vh) rotate(720deg)}}
+
+/* ---- comum aos jogos novos (resta um e rainhas) ---- */
+.espBarra{display:inline-flex;gap:8px;align-items:center;background:#fff3e6;border:2px solid #f0d2b0;color:#7a4a1c;border-radius:999px;padding:6px 14px;font-weight:600;margin-left:10px}
+.espBarra b{font-family:'JetBrains Mono',ui-monospace,monospace}
+#perdeu{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#ffffffb0;backdrop-filter:blur(4px);z-index:50;padding:20px}
+#perdeu .box{background:#fff;border:3px solid var(--vermelho);border-radius:24px;padding:24px 28px;max-width:480px;text-align:center;box-shadow:0 10px 30px #0003;animation:entra .4s}
+#perdeu h2{margin:0 0 6px;color:var(--vermelho)}
+.quizGrade{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:1000px){.quizGrade{grid-template-columns:1fr}}
+.quiz .qNum{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--suave)}
+.quiz .qP{margin:4px 0 8px;font-size:15.5px}
+.quiz .qOps{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.quiz .qOp{text-align:left;min-height:42px;font-weight:500}
+.quiz .qOp.certo{background:#ebf2ed;border-color:#5b8a6a;color:#24563a}
+.quiz .qOp.errado{background:#f6ecee;border-color:#b5545f;color:#7a2d36}
+pre.codigo.mini{max-height:none;font-size:13px}
+.achaErro .ln{cursor:pointer}
+.achaErro .ln:hover{background:#f2f4f6}
+.achaErro .ln.certo{background:#e8f0ea;border-left-color:#5b8a6a}
+.achaErro .ln.errado{background:#f6ecee;border-left-color:#b5545f}
+.fonte{font-size:13px;color:var(--suave);background:#f6f7f8;border:1px dashed #d5d9de;border-radius:12px;padding:10px 14px;margin-top:16px}
+.escondido{background:#f5f4f0;border:2px solid #dcd8cc;border-radius:14px;padding:10px 14px;margin:10px 0}
+.escondido b:first-child{color:#8a5a2b}
+details.resp{margin-top:6px}
+details.resp summary{cursor:pointer;color:var(--cianoF);font-weight:600}
+
+.grade2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media (max-width:900px){.grade2{grid-template-columns:1fr}}
+@media (max-width:600px){.cel .rot{display:none}.buraco .idx{font-size:10px;bottom:-20px}}
+/* ---- resta um ---- */
+.trilho{position:relative;max-width:980px;margin:0 auto;background:linear-gradient(#ead5b6,#e2c8a3);border:3px solid #c9a77c;border-radius:22px;padding:22px 14px 30px;display:grid;gap:6px;box-shadow:inset 0 2px 6px #9c7a5022}
+.buraco{position:relative;aspect-ratio:1/1;border-radius:50%;background:radial-gradient(circle at 50% 40%,#b8956a,#a3825a);border:0;padding:0;cursor:default;box-shadow:inset 0 3px 5px #6d4f2e55;transition:box-shadow .15s}
+.buraco .pedra{position:absolute;inset:8%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8fb0cf,#3f6488 70%);box-shadow:0 3px 4px #3d2a1450;transition:transform .2s}
+.buraco.clicavel{cursor:pointer}
+.buraco.sel .pedra{transform:translateY(-6px) scale(1.06);box-shadow:0 0 0 4px #ffd6b0,0 8px 10px #3d2a1440}
+.buraco.destino{cursor:pointer;box-shadow:inset 0 3px 5px #6d4f2e55,0 0 0 3px #5b8a6a;animation:pulsaB 1.2s ease-in-out infinite}
+@keyframes pulsaB{50%{box-shadow:inset 0 3px 5px #6d4f2e55,0 0 0 6px #5b8a6a55}}
+.buraco .idx{position:absolute;left:50%;transform:translateX(-50%);bottom:-24px;font:600 12px 'JetBrains Mono',monospace;color:#7a5a36}
+.buraco .letra{position:absolute;left:50%;transform:translateX(-50%);top:-21px;font:700 13px 'JetBrains Mono',monospace;color:#2f343a;background:#fff;border-radius:6px;padding:0 5px;border:1px solid #c9a77c}
+.buraco.tA{box-shadow:inset 0 3px 5px #6d4f2e55,0 0 0 3px #3d4852}
+.buraco.tok{box-shadow:inset 0 3px 5px #6d4f2e55,0 0 0 3px #5b8a6a}
+.buraco.tno{box-shadow:inset 0 3px 5px #6d4f2e55,0 0 0 3px #b5545f}
+.buraco.fantasma .pedra{opacity:.35}
+.buraco.desfeito{animation:desfB .6s}
+@keyframes desfB{0%{box-shadow:0 0 0 6px #e4c7cb}100%{box-shadow:inset 0 3px 5px #6d4f2e55}}
+.strC{font:600 15px 'JetBrains Mono',monospace;background:#f6f7f8;border:1px solid var(--borda);border-radius:10px;padding:6px 10px;display:inline-block;letter-spacing:.12em;margin-top:10px}
+.fases{display:flex;gap:6px;flex-wrap:wrap}
+.fases button{min-width:48px}
+.fases button .st{display:block;font-size:11px;color:#c08a3e;letter-spacing:0}
+.melhorBox{font-weight:700;color:#3d4852}
+</style>
+<script src="modo.js"></script>
+</head>
+<body>
+<header>
+  <a class="btn" href="index.html" style="text-decoration:none;display:inline-flex;align-items:center">🕹 Início</a>
+  <h1>⚪ Resta Um em linha</h1>
+  <div class="topoBtns">
+    <button class="btn icone" id="btnSom" title="som">🔊</button>
+    <button class="btn icone" id="btnTela" title="tela cheia">⛶</button>
+  </div>
+</header>
+<p class="sub">Uma pedra pula por cima da vizinha e cai no buraco vazio do outro lado. A pedra pulada sai do jogo. Objetivo: deixar o <b>menor número de pedras possível</b>. Se travou com pedras demais, desfaz e tenta outro caminho. Isso é backtracking.</p>
+<div class="wrap">
+  <div class="abas">
+    <button data-aba="jogar" class="on">🎮 Jogar</button>
+    <button data-aba="auto">🔍 Ver o C rodar</button>
+    <button data-aba="prova">📝 Treino de prova</button>
+    <button data-aba="como">📖 Como funciona</button>
+  </div>
+
+  <div style="margin:4px 0 12px;display:flex;align-items:center;flex-wrap:wrap;gap:6px"><span id="modoSlot" data-ap="sem relógio, com destinos acesos e a ajuda &quot;Ainda dá?&quot;" data-esp="relógio, 3 vidas, sem destinos acesos"></span><span class="espBarra oculto" id="espBarra"></span></div>
+
+  <!-- ===================== JOGAR ===================== -->
+  <section id="aba-jogar">
+    <div class="card" style="margin-bottom:12px">
+      <h3>Fases</h3>
+      <div class="fases" id="fases"></div>
+    </div>
+    <div class="card">
+      <div class="trilho" id="trilhoJ"></div>
+      <div><span class="strC" id="jStr"></span> <span class="pequeno">← é assim que o C enxerga o tabuleiro: <code>o</code> = pedra, <code>-</code> = vazio</span></div>
+    </div>
+    <div class="grade grade2" style="margin-top:12px">
+      <div class="card">
+        <h3>Sua vez de ser o algoritmo</h3>
+        <p style="margin:0 0 8px">Clique numa pedra e depois no buraco onde ela vai cair (dois buracos pra esquerda ou pra direita, pulando uma pedra). Se travar com pedras demais, use <b>Desfazer</b>.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn alerta" id="btnDesfazer">↩ Desfazer (backtrack)</button>
+          <button class="btn soAprender" id="btnDica">🤔 Ainda dá pra chegar no mínimo?</button>
+          <button class="btn" id="btnRecomecar">Recomeçar fase</button>
+        </div>
+        <div class="stats">
+          <div class="stat xp">pedras: <b id="jPedras">0</b></div>
+          <div class="stat">meta (mínimo possível): <b id="jMeta">0</b></div>
+          <div class="stat">jogadas: <b id="jJog">0</b></div>
+          <div class="stat">voltas: <b id="jVoltas">0</b></div>
+        </div>
+        <div class="msg" id="jMsg"></div>
+      </div>
+      <div class="dois" style="grid-template-columns:1fr">
+        <div class="card"><h3>Sua pilha de chamadas</h3><p class="pequeno" style="margin:0 0 6px">Cada jogada é uma chamada nova de <code>restaUm(aux)</code> com o tabuleiro mudado. Desfazer desempilha.</p><div class="pilha" id="jPilha"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== AUTO ===================== -->
+  <section id="aba-auto" class="oculto">
+    <div class="barra">
+      <label>Tabuleiro
+        <select id="selAuto">
+          <option value="oo-">oo- (2 chamadas)</option>
+          <option value="-oo-" selected>-oo- (3 chamadas)</option>
+          <option value="-ooo-o-">-ooo-o-</option>
+          <option value="-oo-oo-">-oo-oo-</option>
+          <option value="-o--o-oo----">-o--o-oo---- (dos slides)</option>
+          <option value="---oo-------">---oo------- (dos slides)</option>
+        </select>
+      </label>
+      <label><input type="checkbox" id="semDesfazer"> versão com erro: sem as linhas que desfazem a jogada</label>
+    </div>
+    <div class="grade grade2">
+      <div>
+        <div class="card">
+          <div class="trilho" id="trilhoA"></div>
+          <div><span class="strC" id="aStr"></span></div>
+          <div class="stats">
+            <div class="stat xp">cnt (melhor até agora): <b id="aCnt">-</b></div>
+            <div class="stat">chamadas: <b id="aCham">0</b></div>
+            <div class="stat">profundidade: <b id="aProf">0</b></div>
+            <div class="stat">passos: <b id="aEv">0</b></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:12px">
+          <h3>Pilha de chamadas</h3>
+          <p class="pequeno" style="margin:0 0 6px">Topo em cima. Todas as chamadas apontam pro <b>mesmo</b> vetor <code>aux</code> (é um ponteiro). Por isso quem muda o tabuleiro tem que desfazer depois.</p>
+          <div class="pilha" id="aPilha"></div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button class="btn pri" id="btnPasso">Próximo passo ▸</button>
+            <button class="btn" id="btnPlay">▶ Rodar</button>
+            <button class="btn" id="btnFim">⏭ Até o fim</button>
+            <button class="btn" id="btnReset">↺ Reiniciar</button>
+            <label style="font-size:14px;display:flex;gap:6px;align-items:center">velocidade <input type="range" id="vel" min="1" max="10" value="5"></label>
+            <label style="font-size:14px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="resumo"> só jogadas e desfeitas</label>
+          </div>
+          <div class="msg" id="aMsg"></div>
+        </div>
+        <div class="card" style="margin-top:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <h3 style="margin:0">O código em C</h3>
+            <button class="btn" id="btnCopiar">Copiar programa completo</button>
+          </div>
+          <pre class="codigo" id="codigo"></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PROVA ===================== -->
+  <section id="aba-prova" class="oculto">
+    <div class="card" style="margin-bottom:12px">
+      <h3>Treino no estilo da prova</h3>
+      <p style="margin:0">Perguntas de ler o código, prever o que imprime e adaptar. Responda antes de olhar a aba do C rodando. Depois confira lá, ligando e desligando a versão com erro. <span class="pequeno" id="placar"></span></p>
+    </div>
+    <div class="quizGrade" id="quiz"></div>
+  </section>
+
+  <!-- ===================== COMO FUNCIONA ===================== -->
+  <section id="aba-como" class="oculto">
+    <div class="card texto">
+      <h2>A ideia antes do código</h2>
+      <p>Pensa numa partida de damas onde você pode voltar no tempo. Você faz uma jogada, depois outra, e quando não tem mais o que fazer você anota quantas pedras sobraram. Aí volta <b>uma</b> jogada e tenta a outra opção daquele momento. Quando acabarem as opções daquele momento, volta mais uma. No fim você testou todas as partidas possíveis e sabe qual deixou menos pedras.</p>
+      <p>É isso que o <code>restaUm</code> faz. Ele é diferente do cavalo e do labirinto num ponto importante: <b>não para na primeira solução</b>. Ele quer a <b>menor</b> quantidade de pedras, então precisa olhar tudo. Por isso a função é <code>void</code> e não tem <code>return 1</code> no meio do <code>for</code>.</p>
+
+      <h2>O que não está escrito mas existe</h2>
+      <div class="escondido">
+        <b>1. O valor inicial de <code>cnt</code>.</b> A função só faz <code>if (contador &lt; cnt) cnt = contador;</code>. Quem dá o primeiro valor é o <code>main</code>, com <code>cnt = strlen(tab)</code>, ou seja, o tabuleiro inteiro cheio de pedras. Qualquer contagem real vai ser menor ou igual a isso, então o primeiro <code>if</code> já troca.<br><br>
+        <b>2. O <code>aux</code> é o mesmo vetor em todas as chamadas.</b> <code>char *aux</code> é um ponteiro. A chamada de baixo não recebe uma cópia: ela mexe no mesmo tabuleiro. Por isso as três linhas depois de <code>restaUm(aux);</code> são obrigatórias.<br><br>
+        <b>3. A base da recursão.</b> Não tem um <code>if</code> de parada. A recursão para sozinha quando nenhuma pedra consegue pular: os dois <code>if</code> de movimento dão falso pra todo <code>i</code>, o <code>for</code> termina e a função acaba.
+      </div>
+
+      <h2>As três palavras de sempre: escolhe, explora, desfaz</h2>
+      <div class="caixa">
+        <b>1. Escolhe:</b> <code>aux[i] = '-'; aux[i+1] = '-'; aux[i+2] = 'o';</code> faz a jogada no tabuleiro.<br>
+        <b>2. Explora:</b> <code>restaUm(aux);</code> continua a partir desse tabuleiro novo.<br>
+        <b>3. Desfaz:</b> <code>aux[i] = 'o'; aux[i+1] = 'o'; aux[i+2] = '-';</code> devolve o tabuleiro como estava, pra testar a próxima jogada.
+      </div>
+
+      <h2>O jogo e o C são a mesma coisa</h2>
+      <table>
+        <tr><th>No jogo</th><th>No C</th></tr>
+        <tr><td>Contar as pedras</td><td>o primeiro <code>for</code>, que soma <code>contador</code></td></tr>
+        <tr><td>A meta (mínimo possível)</td><td>o valor final de <code>cnt</code></td></tr>
+        <tr><td>Clicar numa pedra</td><td><code>if (aux[i] == 'o')</code></td></tr>
+        <tr><td>Pular pra direita</td><td><code>i+2 &lt; n &amp;&amp; aux[i+1] == 'o' &amp;&amp; aux[i+2] == '-'</code></td></tr>
+        <tr><td>Pular pra esquerda</td><td><code>i-2 &gt;= 0 &amp;&amp; aux[i-1] == 'o' &amp;&amp; aux[i-2] == '-'</code></td></tr>
+        <tr><td>Ficar sem jogada</td><td>o <code>for</code> chega no fim sem entrar em nenhum <code>if</code></td></tr>
+        <tr><td>Botão Desfazer</td><td>a função termina e quem chamou executa as três linhas que desfazem</td></tr>
+      </table>
+
+      <h2>Comparando com o cavalo</h2>
+      <table>
+        <tr><th></th><th>Cavalo (<code>solveKTUtil</code>)</th><th>Resta Um (<code>restaUm</code>)</th></tr>
+        <tr><td>Quer</td><td>uma solução qualquer</td><td>a melhor de todas</td></tr>
+        <tr><td>Quando acha</td><td><code>return 1</code> e para tudo</td><td>anota em <code>cnt</code> e continua</td></tr>
+        <tr><td>Desfaz</td><td>só se a chamada falhou (<code>else</code>)</td><td>sempre, depois de toda chamada</td></tr>
+      </table>
+
+      <h2>Desafios em C (pra fazer no terminal)</h2>
+      <ol>
+        <li>Copie o programa (aba Ver o C rodar), compile com <code>gcc -Wall -Wextra -std=c99</code> e rode com as entradas dos slides: <code>---oo-------</code> (1), <code>-o--o-oo----</code> (2), <code>-o----ooo---</code> (3), <code>oooooooooooo</code> (12), <code>oooooooooo-o</code> (1).</li>
+        <li>Coloque um contador global de chamadas e compare com a aba do C rodando.</li>
+        <li>Guarde também o tabuleiro final do melhor caso (dica: <code>strcpy</code> no lugar certo).</li>
+        <li>Poda: se <code>cnt</code> já chegou em 1, não tem como melhorar. Faça a função parar de explorar nesse caso e meça quantas chamadas sobram.</li>
+      </ol>
+      <div class="fonte"><b>Fonte:</b> problema e código dos slides "Backtracking" de Wladimir Araújo Tavares (UFC, Campus de Quixadá, 2017). O original está em C++; aqui foi traduzido pra C mantendo a mesma lógica. O enunciado é o problema "Pebble Solitaire" usado em maratonas de programação.</div>
+    </div>
+  </section>
+</div>
+
+<div id="vitoria" class="oculto"><div class="box">
+  <h2>Chegou no mínimo!</h2>
+  <div id="vTexto"></div>
+  <div class="grandes" id="vStats"></div>
+  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+    <button class="btn" id="vVerC">🔍 Ver o C resolver</button>
+    <button class="btn pri" id="vProx">Próxima fase ▸</button>
+  </div>
+</div></div>
+<div id="perdeu" class="oculto"><div class="box">
+  <h2>Acabaram as vidas</h2>
+  <p>No modo especialista cada jogada inválida custa uma vida. Respira e tenta de novo.</p>
+  <button class="btn pri" id="pDeNovo">Tentar de novo</button>
+</div></div>
+
+<script>
+"use strict";
+/* ---------- utilidades comuns (som, abas, relógio e vidas, quiz, vitória) ---------- */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+let AC=null, SOM=true;
+function ac(){ if(!AC){ try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){AC=null;} }
+  if(AC&&AC.state==='suspended') AC.resume(); return AC; }
+function tom(f,t0,dur,tipo,vol,f2){ const a=ac(); if(!a) return; const t=a.currentTime+t0;
+  const o=a.createOscillator(), g=a.createGain(); o.type=tipo; o.frequency.setValueAtTime(f,t);
+  if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+  g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+dur+.03); }
+function som(n){ if(!SOM) return; try{
+  if(n==='pulo') tom(520,0,.09,'square',.05,900);
+  else if(n==='volta') tom(620,0,.16,'triangle',.09,240);
+  else if(n==='erro'){ tom(200,0,.18,'sawtooth',.06,120); }
+  else if(n==='beco'){ tom(300,0,.12,'sawtooth',.04); tom(220,.14,.2,'sawtooth',.04); }
+  else if(n==='vitoria') [523,659,784,1047,1319].forEach((f,i)=>tom(f,i*.1,.22,'square',.05));
+  else if(n==='tick') tom(1000,0,.03,'square',.025);
+  else if(n==='desfaz') tom(340,0,.08,'triangle',.05,200);
+  else if(n==='ok') tom(700,0,.12,'sine',.07,1050);
+  else if(n==='nao') tom(260,0,.15,'sine',.07,180);
+}catch(e){} }
+function treme(){ document.body.classList.remove('treme'); void document.body.offsetWidth; document.body.classList.add('treme'); }
+function confete(){
+  const cores=['#c9ced4','#a9b1ba','#ffd6b0','#dcd8cc','#cfe6f5'];
+  for(let i=0;i<70;i++){ const s=document.createElement('span'); s.className='confete';
+    s.style.left=Math.random()*100+'vw'; s.style.background=cores[i%cores.length];
+    s.style.animationDuration=(1.8+Math.random()*1.8)+'s'; s.style.animationDelay=(Math.random()*.6)+'s';
+    document.body.appendChild(s); setTimeout(()=>s.remove(),4500); }
+}
+/* relógio e vidas do modo especialista */
+const ESPEC={t0:0,timer:null,vidas:3,ativo:false};
+function espInicia(){
+  clearInterval(ESPEC.timer); ESPEC.vidas=3; ESPEC.ativo=ESP(); ESPEC.t0=Date.now();
+  espDesenha();
+  if(ESPEC.ativo) ESPEC.timer=setInterval(espDesenha,500);
+}
+function espPara(){ clearInterval(ESPEC.timer); }
+function espSeg(){ return Math.round((Date.now()-ESPEC.t0)/1000); }
+function espDesenha(){
+  const el=$('espBarra'); if(!el) return;
+  if(!ESP()){ el.classList.add('oculto'); return; }
+  el.classList.remove('oculto');
+  const s=espSeg(); el.innerHTML=`⏱ <b>${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}</b> &nbsp; ${'❤️'.repeat(ESPEC.vidas)}${'🤍'.repeat(3-ESPEC.vidas)}`;
+}
+/* devolve true se ainda tem vida */
+function espErro(){
+  if(!ESP()) return true;
+  ESPEC.vidas--; espDesenha();
+  if(ESPEC.vidas<=0){ espPara(); $('perdeu').classList.remove('oculto'); return false; }
+  return true;
+}
+function estrelas(n){ return '★'.repeat(n)+'☆'.repeat(3-n); }
+/* quiz de prova: QUIZ=[{p, cod?, ops:[...], certa, exp}] */
+function montaQuiz(lista, alvo){
+  const box=$(alvo);
+  box.innerHTML=lista.map((q,k)=>`<div class="card quiz" data-k="${k}">
+    <div class="qNum">Questão ${k+1}</div>
+    <div class="qP">${q.p}</div>
+    ${q.cod?`<pre class="codigo mini">${q.cod.split('\n').map(l=>`<span class="ln">${esc(l)||' '}</span>`).join('')}</pre>`:''}
+    <div class="qOps">${q.ops.map((o,i)=>`<button class="btn qOp" data-i="${i}">${String.fromCharCode(97+i)}) ${o}</button>`).join('')}</div>
+    <div class="msg qExp oculto"></div></div>`).join('');
+  box.querySelectorAll('.quiz').forEach(c=>{
+    const q=lista[+c.dataset.k];
+    c.querySelectorAll('.qOp').forEach(b=>b.addEventListener('click',()=>{
+      if(c.classList.contains('feito')) return;
+      const i=+b.dataset.i, ok=i===q.certa; c.classList.add('feito');
+      b.classList.add(ok?'certo':'errado'); c.querySelectorAll('.qOp')[q.certa].classList.add('certo');
+      const e=c.querySelector('.qExp'); e.classList.remove('oculto'); e.classList.add(ok?'bom':'ruim');
+      e.innerHTML=(ok?'<b>Isso.</b> ':'<b>Não é essa.</b> ')+q.exp; som(ok?'ok':'nao');
+      const feitos=box.querySelectorAll('.quiz.feito').length, certas=box.querySelectorAll('.qOp.certo.errado').length;
+      atualizaPlacar(box);
+    }));
+  });
+  atualizaPlacar(box);
+}
+function atualizaPlacar(box){
+  const tot=box.querySelectorAll('.quiz').length, feitos=[...box.querySelectorAll('.quiz.feito')];
+  const certas=feitos.filter(c=>!c.querySelector('.qOp.errado')).length;
+  const p=$('placar'); if(p) p.innerHTML=`respondidas <b>${feitos.length}</b> de ${tot} · certas <b>${certas}</b>`;
+}
+
+
+const FASES=["---oo-------","-o--o-oo----","--oo-oo-----","-oo-oo-oo---","-ooo-oo-o---","o-oooo-ooo--","oo-ooo-o-oo-","oooooooooo-o"];
+let progresso={}; try{progresso=JSON.parse(localStorage.getItem('restaum-alg2')||'{}');}catch(e){}
+const salvaProg=()=>{try{localStorage.setItem('restaum-alg2',JSON.stringify(progresso));}catch(e){}};
+
+/* ---------- regras ---------- */
+function jogadas(s){ // lista de [de, meio, para]
+  const r=[], n=s.length;
+  for(let i=0;i<n;i++) if(s[i]==='o'){
+    if(i+2<n&&s[i+1]==='o'&&s[i+2]==='-') r.push([i,i+1,i+2]);
+    if(i-2>=0&&s[i-1]==='o'&&s[i-2]==='-') r.push([i,i-1,i-2]);
+  }
+  return r;
+}
+function aplica(s,[a,b,c]){ const t=s.split(''); t[a]='-'; t[b]='-'; t[c]='o'; return t.join(''); }
+const pedras=s=>s.split('').filter(ch=>ch==='o').length;
+const MEMO=new Map();
+function melhor(s){ if(MEMO.has(s)) return MEMO.get(s);
+  let b=pedras(s); for(const m of jogadas(s)) b=Math.min(b,melhor(aplica(s,m)));
+  MEMO.set(s,b); return b; }
+
+/* ---------- desenho do trilho ---------- */
+function desenhaTrilho(el,s,opts={}){
+  el.style.gridTemplateColumns=`repeat(${s.length},1fr)`;
+  el.innerHTML=s.split('').map((ch,i)=>{
+    let cls='buraco'; let extra='';
+    if(opts.sel===i) cls+=' sel';
+    if(opts.destinos&&opts.destinos.includes(i)) cls+=' destino';
+    if(opts.clicavel&&(ch==='o'||(opts.destinos&&opts.destinos.includes(i)))) cls+=' clicavel';
+    if(opts.marca&&opts.marca[i]){ cls+=' '+opts.marca[i].cls; extra=`<span class="letra">${opts.marca[i].txt}</span>`; }
+    if(opts.flash&&opts.flash.includes(i)) cls+=' desfeito';
+    return `<button class="${cls}" data-i="${i}" aria-label="buraco ${i}${ch==='o'?' com pedra':''}">${ch==='o'?'<span class="pedra"></span>':''}${extra}<span class="idx">${i}</span></button>`;
+  }).join('');
+}
+
+/* =================== MODO JOGAR =================== */
+let J;
+function desenhaFases(){
+  $('fases').innerHTML=FASES.map((f,k)=>`<button class="btn${J&&J.fase===k?' on':''}" data-k="${k}">${k+1}<span class="st">${progresso[k]?estrelas(progresso[k]):'&nbsp;'}</span></button>`).join('');
+  $('fases').querySelectorAll('button').forEach(b=>b.onclick=()=>novaFase(+b.dataset.k));
+}
+function novaFase(k){
+  const s=FASES[k];
+  J={fase:k, hist:[s], movs:[], sel:null, voltas:0, meta:melhor(s), venceu:false};
+  espInicia(); desenhaFases();
+  jMsg(`Fase ${k+1}: <code>${s}</code> tem ${pedras(s)} pedras. Dá pra terminar com <b>${J.meta}</b>. ${ESP()?'Modo especialista: os destinos não acendem e jogada inválida custa vida.':'Clique numa pedra pra ver pra onde ela pode pular.'}`);
+  renderJ();
+}
+const atual=()=>J.hist[J.hist.length-1];
+function jMsg(h,t){const m=$('jMsg');m.innerHTML=h;m.className='msg'+(t?' '+t:'');}
+function destinosDe(i){ return jogadas(atual()).filter(m=>m[0]===i).map(m=>m[2]); }
+function renderJ(){
+  const s=atual();
+  desenhaTrilho($('trilhoJ'),s,{sel:J.sel,destinos:(J.sel!==null&&!ESP())?destinosDe(J.sel):[],clicavel:true,flash:J.flash});
+  J.flash=null;
+  $('jStr').textContent=s;
+  $('jPedras').textContent=pedras(s); $('jMeta').textContent=J.meta; $('jJog').textContent=J.movs.length; $('jVoltas').textContent=J.voltas;
+  $('jPilha').innerHTML=J.hist.map((h,k)=>`<div class="${k===J.hist.length-1?'topo':''}">restaUm("${h}")${k?`  ← pedra ${J.movs[k-1][0]} pulou pra ${J.movs[k-1][2]}`:'  ← main'}</div>`).reverse().join('');
+  $('btnDesfazer').disabled=J.hist.length<2;
+  $('trilhoJ').querySelectorAll('.buraco').forEach(b=>b.addEventListener('click',()=>clique(+b.dataset.i)));
+}
+function clique(i){
+  if(J.venceu) return;
+  const s=atual();
+  if(J.sel===null){
+    if(s[i]!=='o'){ return; }
+    J.sel=i; som('tick');
+    if(!ESP()){ const d=destinosDe(i); jMsg(d.length?`A pedra ${i} pode cair em ${d.join(' ou ')}. No C: <code>aux[${i}] == 'o'</code> e um dos dois <code>if</code> de movimento deu verdadeiro.`:`A pedra ${i} não tem pra onde pular: os dois <code>if</code> de movimento dão falso pra <code>i = ${i}</code>.`, d.length?'':'atencao'); }
+    renderJ(); return;
+  }
+  if(i===J.sel){ J.sel=null; renderJ(); return; }
+  if(s[i]==='o'&&!jogadas(s).some(m=>m[0]===J.sel&&m[2]===i)){ J.sel=i; som('tick');
+    if(!ESP()){ const d=destinosDe(i); jMsg(d.length?`A pedra ${i} pode cair em ${d.join(' ou ')}.`:`A pedra ${i} não tem pra onde pular.`, d.length?'':'atencao'); }
+    renderJ(); return; }
+  const m=jogadas(s).find(m=>m[0]===J.sel&&m[2]===i);
+  if(!m){
+    som('erro'); treme();
+    const d=i-J.sel;
+    let por = Math.abs(d)!==2 ? 'a pedra só anda exatamente 2 buracos' : (s[J.sel+d/2]!=='o' ? `não tem pedra no meio (aux[${J.sel+d/2}] é '-')` : `o buraco ${i} não está vazio`);
+    jMsg(`Jogada inválida: ${por}.`,'ruim'); J.sel=null;
+    if(espErro()) renderJ(); return;
+  }
+  J.hist.push(aplica(s,m)); J.movs.push(m); J.sel=null; som('pulo');
+  const t=atual(), p=pedras(t);
+  if(jogadas(t).length===0){
+    if(p===J.meta){ J.venceu=true; renderJ(); vence(); return; }
+    som('beco');
+    jMsg(`Travou com <b>${p}</b> pedras, mas dá pra terminar com <b>${J.meta}</b>. No C, esta chamada termina sem jogada e só atualiza <code>cnt</code> se ${p} for menor. Desfaça e tente outra jogada.`,'atencao');
+  } else jMsg(`Pedra ${m[0]} pulou a ${m[1]} e caiu em ${m[2]}. No C: <code>aux[${m[0]}] = '-'; aux[${m[1]}] = '-'; aux[${m[2]}] = 'o';</code> e chama <code>restaUm(aux)</code> de novo. Sobraram ${p}.`,'');
+  renderJ();
+}
+function desfazer(){
+  if(J.hist.length<2||J.venceu) return;
+  const m=J.movs.pop(); J.hist.pop(); J.voltas++; J.sel=null; J.flash=[m[0],m[1],m[2]]; som('volta');
+  jMsg(`Desfez: <code>aux[${m[0]}] = 'o'; aux[${m[1]}] = 'o'; aux[${m[2]}] = '-';</code>. O tabuleiro voltou a ser <code>${atual()}</code>.`,'atencao');
+  renderJ();
+}
+function dica(){
+  const s=atual(), b=melhor(s);
+  if(b===J.meta){ som('ok'); jMsg(`Ainda dá: a partir de <code>${s}</code> o melhor possível é ${b}, que é a meta. Segue.`,'bom'); }
+  else { som('nao'); jMsg(`Daqui não dá mais: o melhor a partir de <code>${s}</code> é ${b} pedras, e a meta é ${J.meta}. Precisa desfazer pelo menos uma jogada.`,'ruim'); }
+}
+function vence(){
+  espPara(); som('vitoria'); confete();
+  let st = J.voltas<=1?3:J.voltas<=4?2:1;
+  if(ESP()){ const seg=espSeg(); if(seg>90) st=Math.min(st,2); }
+  const vale=ESP();
+  if(vale&&(!progresso[J.fase]||progresso[J.fase]<st)){ progresso[J.fase]=st; salvaProg(); }
+  $('vTexto').innerHTML=`Terminou com <b>${J.meta}</b> pedra${J.meta>1?'s':''}, o mesmo valor que o programa guarda em <code>cnt</code>. ${vale?'':'<br><span class="pequeno">As estrelas só contam no modo 🏆 especialista.</span>'}`;
+  $('vStats').innerHTML=`<div class="stat xp">estrelas <b>${estrelas(st)}</b></div><div class="stat">jogadas <b>${J.movs.length}</b></div><div class="stat">voltas <b>${J.voltas}</b></div>${ESP()?`<div class="stat">tempo <b>${espSeg()}s</b></div>`:''}`;
+  $('vProx').textContent = J.fase<FASES.length-1 ? 'Próxima fase ▸' : 'Voltar pra fase 1';
+  $('vitoria').classList.remove('oculto'); desenhaFases();
+}
+
+/* =================== VER O C RODAR =================== */
+const CODIGO=[
+ ['#include <stdio.h>',''],['#include <string.h>',''],['',''],
+ ['int cnt;   /* menor número de pedras já visto */',''],['',''],
+ ['void restaUm(char *aux){','enter'],
+ ['    int n = strlen(aux);','n'],
+ ['    int contador = 0;','cont'],
+ ['    for (int i = 0; i < n; i++)','cont'],
+ ['        if (aux[i] == \'o\')','cont'],
+ ['            contador++;','cont'],
+ ['    if (contador < cnt)','cmp'],
+ ['        cnt = contador;','cmpT'],
+ ['    for (int i = 0; i < n; i++){','fori'],
+ ['        if (aux[i] == \'o\'){','ifo'],
+ ['            if (i+2 < n && aux[i+1] == \'o\' && aux[i+2] == \'-\'){   /* direita */','dirT'],
+ ['                aux[i] = \'-\'; aux[i+1] = \'-\'; aux[i+2] = \'o\';','dirF'],
+ ['                restaUm(aux);','dirC'],
+ ['                aux[i] = \'o\'; aux[i+1] = \'o\'; aux[i+2] = \'-\';','dirD'],
+ ['            }',''],
+ ['            if (i-2 >= 0 && aux[i-1] == \'o\' && aux[i-2] == \'-\'){  /* esquerda */','esqT'],
+ ['                aux[i] = \'-\'; aux[i-1] = \'-\'; aux[i-2] = \'o\';','esqF'],
+ ['                restaUm(aux);','esqC'],
+ ['                aux[i] = \'o\'; aux[i-1] = \'o\'; aux[i-2] = \'-\';','esqD'],
+ ['            }',''],
+ ['        }',''],
+ ['    }',''],
+ ['}','fim'],['',''],
+ ['int main(){',''],
+ ['    char tab[] = "-oo-";','main'],
+ ['    cnt = strlen(tab);   /* começa com o pior caso: tudo pedra */','main'],
+ ['    restaUm(tab);','main'],
+ ['    printf("%d\\n", cnt);','print'],
+ ['    return 0;',''],
+ ['}','']
+];
+function realca(t){
+  let cm='', i=t.indexOf('/*'); if(i>=0){cm=t.slice(i);t=t.slice(0,i);}
+  t=esc(t).replace(/(&quot;|"[^"]*")/g,'<span class="nu">$1</span>').replace(/\b(\d+)\b/g,'<span class="nu">$1</span>')
+    .replace(/(#include|\bint\b|\bchar\b|\bvoid\b|\breturn\b|\bif\b|\bfor\b|\belse\b)/g,'<span class="kw">$1</span>');
+  return t+(cm?`<span class="cm">${esc(cm)}</span>`:'');
+}
+function codigoAtual(){ const s=$('selAuto').value, sem=$('semDesfazer').checked;
+  return CODIGO.filter(([t,id])=>!(sem&&(id==='dirD'||id==='esqD'))).map(([t,id])=>[id==='main'&&t.includes('char tab')?`    char tab[] = "${s}";`:t,id]); }
+function montaCodigo(){ $('codigo').innerHTML=codigoAtual().map(([t,id])=>`<span class="ln"${id?` data-id="${id}"`:''}>${realca(t)||' '}</span>`).join(''); }
+function acende(ids){ document.querySelectorAll('#codigo .ln').forEach(el=>el.classList.toggle('hl',ids.includes(el.dataset.id))); }
+
+let S, GEN, ULT=null, timer=null, rodando=false;
+const ev=(lines,msg,tipo,extra)=>Object.assign({lines,msg,tipo},extra||{});
+function* resta(){
+  const aux=S.aux, n=aux.length, sem=S.sem;
+  const fr={tab:aux.join(''),i:'-'}; S.stack.push(fr); S.calls++; S.prof=Math.max(S.prof,S.stack.length); S.marca=null;
+  yield ev(['enter'],`Entrou em <code>restaUm(aux)</code> com <code>aux = "${aux.join('')}"</code>. Caixinha nova na pilha.`,'enter');
+  yield ev(['n'],`<code>n = strlen(aux) = ${n}</code>.`,'n');
+  const c=aux.filter(x=>x==='o').length;
+  yield ev(['cont'],`O primeiro <code>for</code> conta as pedras: <code>contador = ${c}</code>.`,'cont');
+  if(c<S.cnt){ const ant=S.cnt; S.cnt=c; yield ev(['cmp','cmpT'],`<code>${c} &lt; cnt</code> (que era ${ant})? Sim: <code>cnt = ${c}</code>. Melhor resultado até agora.`,'melhor'); }
+  else yield ev(['cmp'],`<code>${c} &lt; cnt</code> (que é ${S.cnt})? Não. <code>cnt</code> continua ${S.cnt}.`,'cmp');
+  for(let i=0;i<n;i++){
+    fr.i=i;
+    if(aux[i]!=='o'){ S.marca={[i]:{cls:'tA',txt:'i'}}; yield ev(['fori','ifo'],`<code>i = ${i}</code>: <code>aux[${i}]</code> é <code>'-'</code>, não é pedra. Pula.`,'skip'); continue; }
+    S.marca={[i]:{cls:'tA',txt:'i'}};
+    yield ev(['fori','ifo'],`<code>i = ${i}</code>: <code>aux[${i}] == 'o'</code>, tem pedra. Vai testar os dois pulos.`,'ifo');
+    for(const d of [1,-1]){
+      const b=i+d, cc=i+2*d, dir=d===1;
+      const dentro=dir?cc<n:cc>=0;
+      const ok=dentro&&aux[b]==='o'&&aux[cc]==='-';
+      const mk={[i]:{cls:'tA',txt:'A'}}; if(b>=0&&b<n) mk[b]={cls:ok?'tok':'tno',txt:'B'}; if(dentro) mk[cc]={cls:ok?'tok':'tno',txt:'C'};
+      S.marca=mk;
+      const L=dir?'dir':'esq', lado=dir?'direita':'esquerda';
+      let por = !dentro ? (dir?`<code>i+2 = ${cc}</code> não é menor que ${n} (sairia do tabuleiro)`:`<code>i-2 = ${cc}</code> é negativo (sairia do tabuleiro)`)
+        : aux[b]!=='o' ? `<code>aux[${b}]</code> é <code>'-'</code>, não tem pedra pra pular` : aux[cc]!=='-' ? `<code>aux[${cc}]</code> é <code>'o'</code>, o destino está ocupado` : '';
+      if(!ok){ yield ev([L+'T'],`Pulo pra ${lado} a partir de ${i}: não dá, ${por}.`,'no'); continue; }
+      yield ev([L+'T'],`Pulo pra ${lado}: <code>aux[${b}] == 'o'</code> e <code>aux[${cc}] == '-'</code>. Dá!`,'ok');
+      aux[i]='-'; aux[b]='-'; aux[cc]='o';
+      yield ev([L+'F'],`<b>Escolhe:</b> faz a jogada. A pedra ${i} cai em ${cc} e a ${b} sai. Agora <code>aux = "${aux.join('')}"</code>.`,'mark');
+      yield ev([L+'C'],`Chama <code>restaUm(aux)</code> com o tabuleiro novo. Esta chamada fica esperando.`,'call');
+      yield* resta();
+      S.stack.length=S.stack.indexOf(fr)+1;
+      if(sem){
+        S.marca={[i]:{cls:'tA',txt:'i'}};
+        yield ev([L+'C'],`Voltou da chamada. <b>Nesta versão não tem as linhas que desfazem</b>: o tabuleiro continua <code>"${aux.join('')}"</code>, e o resto deste <code>for</code> vai testar jogadas em cima de um tabuleiro que não é mais o desta chamada.`,'erro');
+      } else {
+        aux[i]='o'; aux[b]='o'; aux[cc]='-'; S.flash=[i,b,cc]; S.marca={[i]:{cls:'tA',txt:'i'}};
+        yield ev([L+'D'],`Voltou da chamada. <b>Desfaz:</b> devolve as pedras. <code>aux = "${aux.join('')}"</code> de novo, igual estava quando esta chamada começou a testar <code>i = ${i}</code>.`,'unmark');
+      }
+    }
+  }
+  S.marca=null;
+  yield ev(['fim'],`Testou todos os <code>i</code> de 0 a ${n-1}. A função acaba (é <code>void</code>, não devolve nada) e desempilha.`,'ret');
+  S.stack.pop();
+}
+function resetAuto(){
+  pausa(); montaCodigo();
+  const s=$('selAuto').value;
+  S={aux:s.split(''),stack:[],calls:0,prof:0,cnt:s.length,marca:null,flash:null,evs:0,fim:false,sem:$('semDesfazer').checked};
+  GEN=resta(); ULT=null; acende(['main']);
+  setMsgA(`O <code>main</code> faz <code>cnt = strlen(tab) = ${s.length}</code> (pior caso possível) e chama <code>restaUm(tab)</code>. Aperte <b>Próximo passo</b>.`,'');
+  renderAuto();
+}
+function setMsgA(h,t){const m=$('aMsg');m.innerHTML=h;m.className='msg'+(t?' '+t:'');}
+function umPasso(){
+  if(S.fim) return false;
+  const r=GEN.next(); S.evs++;
+  if(r.done){ S.fim=true; const certo=melhor($('selAuto').value);
+    ULT=ev(['print'],`✅ Terminou. O <code>main</code> imprime <b>${S.cnt}</b>. Foram ${S.calls} chamadas.${S.sem?(S.cnt===certo?` Desta vez a resposta saiu certa por sorte, mas o tabuleiro final ficou bagunçado: <code>"${S.aux.join('')}"</code>.`:` <b>Resposta errada:</b> o certo é ${certo}. Sem desfazer, as jogadas seguintes partiram de tabuleiros errados.`):''}`,'final');
+    return false; }
+  ULT=r.value; return true;
+}
+function avanca(){ if(!$('resumo').checked){ umPasso(); return; }
+  while(umPasso()){ if(['mark','unmark','melhor','erro'].includes(ULT.tipo)) break; } }
+function renderAuto(){
+  desenhaTrilho($('trilhoA'),S.aux.join(''),{marca:S.marca,flash:S.flash}); S.flash=null;
+  $('aStr').textContent=`aux = "${S.aux.join('')}"`;
+  $('aCnt').textContent=S.cnt; $('aCham').textContent=S.calls; $('aProf').textContent=S.stack.length; $('aEv').textContent=S.evs;
+  $('aPilha').innerHTML=S.stack.map((f,k)=>`<div class="${k===S.stack.length-1?'topo':''}">restaUm  (entrou com "${f.tab}")   i = ${f.i}</div>`).reverse().join('')||'<div>main</div>';
+  if(ULT){ acende(ULT.lines); const t=ULT.tipo; setMsgA(ULT.msg, t==='unmark'||t==='no'?'ruim':(t==='melhor'||t==='final')?'bom':t==='erro'?'atencao':''); }
+  ['btnPasso','btnPlay','btnFim'].forEach(id=>$(id).disabled=S.fim);
+}
+const ATRASOS=[1100,750,500,320,200,110,55,20,6,0];
+function pausa(){rodando=false; clearTimeout(timer); $('btnPlay').textContent='▶ Rodar';}
+function loop(){
+  if(!rodando) return;
+  const d=ATRASOS[+$('vel').value-1];
+  if(d===0){ for(let i=0;i<40&&!S.fim;i++) avanca(); } else { avanca(); if(d>=55&&ULT){ if(ULT.tipo==='mark') som('tick'); else if(ULT.tipo==='unmark') som('desfaz'); } }
+  renderAuto();
+  if(S.fim){pausa(); som('vitoria'); return;}
+  timer=setTimeout(loop, d===0?16:d);
+}
+
+/* =================== TREINO DE PROVA =================== */
+const QUIZ=[
+ {p:'Com <code>char tab[] = "oo-";</code> no <code>main</code>, quantas vezes a função <code>restaUm</code> é chamada no total (contando a chamada do <code>main</code>)?',
+  ops:['1','2','3','4'],certa:1,
+  exp:'A primeira chamada vê "oo-". Só a pedra 0 pode pular (pra direita, caindo em 2), e isso gera a segunda chamada com "--o". Nela nenhuma pedra pula, então ela acaba sem chamar ninguém. Total: 2.'},
+ {p:'O que o programa imprime com <code>char tab[] = "-o--o-oo----";</code>?',
+  ops:['1','2','3','4'],certa:1,
+  exp:'Começa com 4 pedras. O melhor caminho é 7 pular a 6 e cair em 5 ("-o--oo------"), depois 4 pular a 5 e cair em 6 ("-o----o-----"). Sobram 2 e ninguém mais pula. Dá pra conferir na aba do C rodando.'},
+ {p:'Alguém apagou as duas linhas que desfazem a jogada (as que vêm logo depois de cada <code>restaUm(aux);</code>). Com <code>"-o--o-oo----"</code>, o que acontece?',
+  ops:['Imprime 2, igual ao original, porque cnt guarda o mínimo de qualquer jeito','Imprime 3: depois da primeira chamada voltar, o for continua testando jogadas num tabuleiro que já foi mudado','O programa entra em loop infinito','Dá erro de compilação'],certa:1,
+  exp:'Sem desfazer, a chamada de baixo deixa o tabuleiro mudado, e a de cima continua o for como se nada tivesse acontecido. Ela perde as jogadas que existiam no tabuleiro original e acaba achando 3 em vez de 2. Ligue "versão com erro" na aba do C pra ver.'},
+ {p:'Por que esta função não tem <code>return</code> logo depois de achar um tabuleiro sem jogadas, como o cavalo tem <code>return 1</code>?',
+  ops:['Porque função void não pode ter return','Porque ela quer o menor número de pedras de todos os caminhos, então precisa explorar tudo','Porque a recursão nunca chega num tabuleiro sem jogadas','Porque o cnt já faz o papel do return'],certa:1,
+  exp:'O cavalo quer uma solução qualquer e para na primeira. Aqui o objetivo é o mínimo, e um tabuleiro travado com 3 pedras não impede que outro caminho chegue em 2. Ela só anota em cnt e continua. (Função void pode ter return; sem valor.)'},
+ {p:'Quer guardar também o tabuleiro final do melhor caso numa variável global <code>char melhorTab[13];</code>. Onde entra <code>strcpy(melhorTab, aux);</code>?',
+  ops:['Logo no começo da função, antes de contar','Dentro do if (contador < cnt), junto com cnt = contador','Depois de cada restaUm(aux);','No main, depois de restaUm(tab);'],certa:1,
+  exp:'O único momento em que se sabe que este tabuleiro é o melhor até agora é quando cnt é atualizado. Copiar no começo guardaria todos os tabuleiros; copiar no main guardaria o tabuleiro inicial (que volta intacto, porque tudo foi desfeito).'},
+ {p:'Por que o <code>main</code> começa com <code>cnt = strlen(tab)</code> e não com <code>cnt = 0</code>?',
+  ops:['Tanto faz, o resultado é o mesmo','Com 0, o if (contador < cnt) nunca seria verdadeiro e imprimiria 0','Com 0, daria divisão por zero','Porque strlen é mais rápido'],certa:1,
+  exp:'cnt guarda o menor visto até agora. Ele precisa começar maior ou igual a qualquer contagem possível. O máximo de pedras é o tamanho do tabuleiro, então strlen(tab) funciona. Com 0, nenhuma contagem é menor que 0 e a saída seria 0, que está errado.'}
+];
+
+/* =================== abas e controles =================== */
+let aba='jogar';
+function trocaAba(a){
+  aba=a; document.querySelectorAll('.abas button').forEach(b=>b.classList.toggle('on',b.dataset.aba===a));
+  ['jogar','auto','prova','como'].forEach(x=>$('aba-'+x).classList.toggle('oculto',x!==a));
+  if(a!=='auto') pausa(); else renderAuto();
+}
+document.querySelectorAll('.abas button').forEach(b=>b.addEventListener('click',()=>trocaAba(b.dataset.aba)));
+$('btnDesfazer').onclick=desfazer; $('btnDica').onclick=dica; $('btnRecomecar').onclick=()=>novaFase(J.fase);
+$('btnPasso').onclick=()=>{pausa(); avanca(); renderAuto(); if(ULT&&ULT.tipo==='mark') som('tick'); else if(ULT&&ULT.tipo==='unmark') som('desfaz');};
+$('btnPlay').onclick=()=>{ if(rodando){pausa();return;} rodando=true; $('btnPlay').textContent='⏸ Pausar'; loop(); };
+$('btnFim').onclick=()=>{ pausa(); let g=0; while(umPasso()&&g<200000) g++; renderAuto(); som('vitoria'); };
+$('btnReset').onclick=resetAuto; $('selAuto').onchange=resetAuto; $('semDesfazer').onchange=resetAuto;
+$('btnCopiar').onclick=()=>{ const txt=codigoAtual().map(x=>x[0]).join('\n'); (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>{$('btnCopiar').textContent='Copiado ✔';setTimeout(()=>$('btnCopiar').textContent='Copiar programa completo',1500);}).catch(()=>{}); };
+$('vVerC').onclick=()=>{ $('vitoria').classList.add('oculto'); const s=FASES[J.fase]; const op=[...$('selAuto').options].find(o=>o.value===s); if(op){$('selAuto').value=s; resetAuto();} trocaAba('auto'); };
+$('vProx').onclick=()=>{ $('vitoria').classList.add('oculto'); novaFase(J.fase<FASES.length-1?J.fase+1:0); };
+$('pDeNovo').onclick=()=>{ $('perdeu').classList.add('oculto'); novaFase(J.fase); };
+$('btnSom').onclick=()=>{ SOM=!SOM; $('btnSom').textContent=SOM?'🔊':'🔇'; if(SOM){ac(); som('ok');} };
+$('btnTela').onclick=()=>{ const d=document, el=d.documentElement; try{
+  if(d.fullscreenElement||d.webkitFullscreenElement){ (d.exitFullscreen||d.webkitExitFullscreen).call(d); }
+  else { const r=el.requestFullscreen||el.webkitRequestFullscreen; if(r){ const p=r.call(el); if(p&&p.catch) p.catch(()=>{}); } }
+}catch(e){} };
+
+/* início */
+montaQuiz(QUIZ,'quiz');
+novaFase(0);
+resetAuto();
+</script>
+<script>window.addEventListener('modo',()=>location.reload());</script>
+<script src="canto.js"></script>
+</body>
+</html>

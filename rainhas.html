@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<!-- Algoritmos II com jogos e animações · CC BY-NC-SA 4.0 · veja LICENSE.txt
+     Problema, pseudocódigo e código originais: slides "Backtracking" de Wladimir Araújo Tavares (UFC, Campus de Quixadá, 2017), código traduzido de C++ para C. -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f4f5f6">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<title>Oito Rainhas: backtracking em C</title>
+<style>
+:root{
+  --ciano:#5f6b76; --cianoF:#3d4852; --magenta:#5f6b76; --magentaF:#3d4852; --limao:#5b8a6a; --limaoF:#5b8a6a;
+  --laranja:#8a8f96; --amarelo:#b8a37a; --vermelho:#b5545f; --texto:#2f343a; --suave:#7a8088;
+  --vidro:#ffffff; --borda:#dde1e5;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{color:var(--texto);font:16px/1.45 'Fredoka',system-ui,sans-serif;
+  -webkit-user-select:none;user-select:none;touch-action:manipulation;
+  background:#f4f5f6}
+body.treme{animation:treme .35s}
+@keyframes treme{20%{transform:translate(-6px,2px)}40%{transform:translate(6px,-2px)}60%{transform:translate(-4px,1px)}80%{transform:translate(3px,0)}}
+header{padding:14px 20px 4px;max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+h1{margin:0;font-size:clamp(22px,3.2vw,32px);font-weight:700;color:#2b3440}
+.sub{color:var(--suave);margin:0;max-width:1280px;padding:0 20px;margin:0 auto;font-size:15px}
+.topoBtns{margin-left:auto;display:flex;gap:8px}
+.wrap{max-width:1280px;margin:0 auto;padding:8px 20px 40px}
+.abas{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0;background:#e6e8eb;padding:5px;border-radius:16px;width:max-content;max-width:100%}
+.abas button{border:0;background:transparent;color:var(--suave);padding:10px 18px;min-height:46px;border-radius:12px;font-weight:600;cursor:pointer;font-size:15px;font-family:inherit}
+.abas button.on{background:#fff;color:var(--texto);box-shadow:0 2px 6px #0001}
+.barra{display:flex;gap:14px;flex-wrap:wrap;align-items:center;background:#fff;border:1px solid var(--borda);border-radius:16px;padding:10px 14px;margin-bottom:14px;box-shadow:0 2px 10px #2f5d7c0d}
+.barra label{display:flex;gap:8px;align-items:center;font-size:15px;font-weight:600}
+input[type=range]{accent-color:var(--magentaF);width:130px;height:28px}
+input[type=checkbox]{accent-color:var(--magentaF);width:22px;height:22px}
+select{border:2px solid var(--borda);border-radius:10px;padding:8px 10px;background:#fff;color:var(--texto);font:inherit;font-weight:600;min-height:44px}
+.btn{border:2px solid var(--borda);background:#fff;color:var(--cianoF);padding:10px 14px;min-height:48px;border-radius:13px;cursor:pointer;font-weight:600;font-size:15px;font-family:inherit;transition:transform .08s}
+.btn:active{transform:scale(.96)}
+.btn.pri{background:#3d4852;border-color:#2f3740;color:#fff}
+.btn.alerta{background:#6b7480;border-color:#555d68;color:#fff}
+.btn.on{background:#eceef1;border-color:#8a9099;color:#2f343a}
+.btn.icone{min-width:48px;padding:8px 10px;font-size:20px}
+.btn:disabled{opacity:.4;cursor:default}
+.grade{display:grid;grid-template-columns:min(46vw,72vh) 1fr;gap:18px;align-items:start}
+@media (max-width:900px){.grade{grid-template-columns:1fr}}
+.card{background:#fff;border:1px solid var(--borda);border-radius:18px;padding:14px;box-shadow:0 2px 10px #2f5d7c0d}
+.card h3{margin:0 0 8px;font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--magentaF)}
+#tabWrap{position:relative;width:100%;aspect-ratio:1/1;margin:0 auto}
+@media (max-width:900px){#tabWrap{max-width:min(92vw,50vh)}}
+#tab{position:absolute;inset:0;display:grid;gap:5px}
+#tab .casa{border:2px solid #e3e6e9;border-radius:12px;background:#fdfdfd;position:relative;font-weight:700;color:var(--cianoF);font-size:clamp(16px,3.4vh,30px);cursor:default;padding:0;display:flex;align-items:center;justify-content:center;transition:background .15s,box-shadow .15s;font-family:inherit}
+#tab .casa.esc{background:#f0f1f3}
+#tab .casa.vis{background:#d9dfe5;border-color:#8a949f;color:#2f343a}
+#tab .casa.topo{background:#d5dbe1;border-color:#3d4852;color:#2f343a;box-shadow:0 0 0 3px #3d485233;z-index:2}
+#tab .casa.alvo{cursor:pointer;background:#eef3ef;border:2px dashed var(--limao);animation:pulsa 1.3s ease-in-out infinite}
+@keyframes pulsa{50%{box-shadow:0 0 0 4px #5b8a6a33}}
+#tab .casa.alvo:active{background:#d3f0de}
+#tab .casa.mina{background:#f3e7e8;border-color:#d4a9ae}
+#tab .casa.minaFraca{opacity:.6}
+#tab .casa.probe-ok{border:3px solid var(--limao);background:#e8f0ea}
+#tab .casa.probe-no{border:3px solid var(--vermelho);background:#f3e7e8}
+#tab .casa.desfeito{animation:desf .6s}
+@keyframes desf{0%{background:#e4c7cb}100%{background:#fdfdfd}}
+#tab .casa.boom{animation:boom .5s}
+@keyframes boom{0%{transform:scale(1)}30%{transform:scale(1.2);background:#e4c7cb}100%{transform:scale(1)}}
+.casa .badge{position:absolute;top:3px;right:6px;font-size:clamp(11px,1.6vh,15px);font-weight:700;line-height:1}
+.casa .rot{position:absolute;bottom:3px;left:6px;font-size:clamp(10px,1.4vh,13px);font-weight:700;line-height:1}
+.casa .coord{position:absolute;bottom:3px;right:6px;font-size:10px;color:#a9b8c6;font-weight:500}
+#linhas{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:visible}
+#tab{z-index:2}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}
+.stat{background:#f2f3f5;border:1px solid var(--borda);border-radius:12px;padding:6px 12px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--suave)}
+.stat b{color:var(--magentaF);font-size:20px;font-family:'JetBrains Mono',ui-monospace,monospace;letter-spacing:0}
+.stat.xp{border-color:#cfd3d8;background:#eceef1}
+.stat.xp b{color:#3d4852}
+.msg{border-radius:14px;padding:12px 14px;margin-top:12px;background:#f2f3f5;border:2px solid #dde1e5;min-height:50px;font-size:15.5px}
+.msg.ruim{background:#f6ecee;border-color:#e0bcc2}
+.msg.bom{background:#ebf2ed;border-color:#bcd3c3}
+.msg.atencao{background:#f3f1ec;border-color:#d8d0bf}
+code{background:#eceef1;border-radius:6px;padding:0 5px;font-size:.9em;font-family:'JetBrains Mono',ui-monospace,monospace;color:#3d4852}
+pre.codigo{margin:0;background:#f8f9fa;border:1px solid var(--borda);border-radius:14px;padding:8px 0;font:14px/1.6 'JetBrains Mono',ui-monospace,monospace;overflow:auto;max-height:62vh;-webkit-overflow-scrolling:touch;color:#2b3440}
+pre.codigo .ln{display:block;padding:0 12px;white-space:pre;border-left:5px solid transparent}
+pre.codigo .ln.hl{background:#e4e8ec;border-left-color:#3d4852}
+pre.codigo .ln.hl2{background:#e8f0ea;border-left-color:var(--limao)}
+pre.codigo .kw{color:#3d4852;font-weight:700}
+pre.codigo .cm{color:#8a9aa8;font-style:italic}
+pre.codigo .nu{color:#6b7480;font-weight:600}
+.pilha{display:flex;flex-direction:column;gap:4px;max-height:240px;overflow:auto;font:13.5px 'JetBrains Mono',ui-monospace,monospace;-webkit-overflow-scrolling:touch}
+.pilha div{background:#f6f7f8;border:1px solid var(--borda);border-radius:9px;padding:4px 10px}
+.pilha div.topo{background:#e4e8ec;border-color:#3d4852;font-weight:700;color:#2f343a}
+.log{max-height:200px;overflow:auto;font-size:14px;display:flex;flex-direction:column;-webkit-overflow-scrolling:touch}
+.log div{padding:4px 0;border-bottom:1px dashed #e1e9f0}
+.dois{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:1100px){.dois{grid-template-columns:1fr}}
+.legenda{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--suave);margin-top:10px;font-weight:600}
+.legenda span i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:5px;box-shadow:none!important}
+.oculto{display:none!important}
+.texto{-webkit-user-select:text;user-select:text}
+.texto h2{font-size:19px;margin:20px 0 6px;color:var(--magentaF)}
+.texto h2:first-child{margin-top:0}
+.texto table{border-collapse:collapse;width:100%;font-size:15px}
+.texto td,.texto th{border:1px solid var(--borda);padding:8px 10px;text-align:left;vertical-align:top}
+.texto th{background:#f0f1f3;color:var(--cianoF);font-size:13px}
+.caixa{background:#f0f1f3;border-radius:14px;padding:12px 16px;margin:10px 0}
+.caixa.pessego{background:#f5f4f0;border:2px solid #dcd8cc}
+.caixa.rosa{background:#f3eef0}
+.pequeno{font-size:13px;color:var(--suave)}
+#vitoria{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#ffffffb0;backdrop-filter:blur(4px);z-index:50;padding:20px}
+#vitoria .box{background:#fff;border:3px solid var(--magentaF);border-radius:24px;padding:26px 30px;max-width:520px;text-align:center;box-shadow:0 10px 30px #0003;animation:entra .4s}
+@keyframes entra{from{transform:scale(.7);opacity:0}}
+#vitoria h2{margin:0 0 6px;font-size:34px;font-weight:700;color:var(--magentaF)}
+#vitoria .grandes{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.confete{position:fixed;top:-20px;width:10px;height:16px;border-radius:3px;z-index:60;pointer-events:none;animation:cai linear forwards}
+@keyframes cai{to{transform:translateY(110vh) rotate(720deg)}}
+
+/* ---- comum aos jogos novos (resta um e rainhas) ---- */
+.espBarra{display:inline-flex;gap:8px;align-items:center;background:#fff3e6;border:2px solid #f0d2b0;color:#7a4a1c;border-radius:999px;padding:6px 14px;font-weight:600;margin-left:10px}
+.espBarra b{font-family:'JetBrains Mono',ui-monospace,monospace}
+#perdeu{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#ffffffb0;backdrop-filter:blur(4px);z-index:50;padding:20px}
+#perdeu .box{background:#fff;border:3px solid var(--vermelho);border-radius:24px;padding:24px 28px;max-width:480px;text-align:center;box-shadow:0 10px 30px #0003;animation:entra .4s}
+#perdeu h2{margin:0 0 6px;color:var(--vermelho)}
+.quizGrade{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:1000px){.quizGrade{grid-template-columns:1fr}}
+.quiz .qNum{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--suave)}
+.quiz .qP{margin:4px 0 8px;font-size:15.5px}
+.quiz .qOps{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.quiz .qOp{text-align:left;min-height:42px;font-weight:500}
+.quiz .qOp.certo{background:#ebf2ed;border-color:#5b8a6a;color:#24563a}
+.quiz .qOp.errado{background:#f6ecee;border-color:#b5545f;color:#7a2d36}
+pre.codigo.mini{max-height:none;font-size:13px}
+.achaErro .ln{cursor:pointer}
+.achaErro .ln:hover{background:#f2f4f6}
+.achaErro .ln.certo{background:#e8f0ea;border-left-color:#5b8a6a}
+.achaErro .ln.errado{background:#f6ecee;border-left-color:#b5545f}
+.fonte{font-size:13px;color:var(--suave);background:#f6f7f8;border:1px dashed #d5d9de;border-radius:12px;padding:10px 14px;margin-top:16px}
+.escondido{background:#f5f4f0;border:2px solid #dcd8cc;border-radius:14px;padding:10px 14px;margin:10px 0}
+.escondido b:first-child{color:#8a5a2b}
+details.resp{margin-top:6px}
+details.resp summary{cursor:pointer;color:var(--cianoF);font-weight:600}
+
+.grade2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media (max-width:900px){.grade2{grid-template-columns:1fr}}
+@media (max-width:600px){.cel .rot{display:none}.buraco .idx{font-size:10px;bottom:-20px}}
+/* ---- rainhas ---- */
+.tab{display:grid;gap:3px;aspect-ratio:1/1;width:100%;max-width:min(560px,70vh);margin:0 auto;position:relative}
+@media (max-width:900px){.tab{max-width:min(92vw,52vh)}}
+.cel{position:relative;border:0;border-radius:8px;background:#fbfbfc;padding:0;font-size:clamp(18px,4.4vh,38px);display:flex;align-items:center;justify-content:center;cursor:default;font-family:inherit;color:#2b3440;transition:background .12s,box-shadow .12s}
+.cel.esc{background:#e9ecef}
+.cel.colAtual{box-shadow:inset 0 0 0 2px #9db6c9}
+.cel.colAtual.livre{cursor:pointer}
+.cel.colAtual.livre:hover{background:#e3f1e7}
+.cel.atacada{background-image:repeating-linear-gradient(45deg,#f3dfe2 0 5px,transparent 5px 10px)}
+.cel.dg1{background:#dbeaf6!important}
+.cel.dg2{background:#ffe6cc!important}
+.cel.dg1.dg2{background:#e9dccb!important}
+.cel.lin{box-shadow:inset 0 0 0 2px #8fb38f}
+.cel.probe-ok{box-shadow:inset 0 0 0 4px #5b8a6a!important}
+.cel.probe-no{box-shadow:inset 0 0 0 4px #b5545f!important}
+.cel.desfeito{animation:desfR .6s}
+@keyframes desfR{0%{background:#e4c7cb}100%{background:inherit}}
+.cel .rot{position:absolute;left:4px;bottom:2px;font:500 10px 'JetBrains Mono',monospace;color:#a2acb6}
+.cel .q{filter:drop-shadow(0 2px 2px #0002)}
+.colLbl{display:grid;gap:3px;max-width:min(560px,70vh);margin:4px auto 0;font:600 12px 'JetBrains Mono',monospace;color:var(--suave);text-align:center}
+@media (max-width:900px){.colLbl{max-width:min(92vw,52vh)}}
+.colLbl .on{color:#2f5d7c;font-weight:700}
+.vets{display:flex;flex-direction:column;gap:10px}
+.vet .nome{font:600 13px 'JetBrains Mono',monospace;color:#3d4852;margin-bottom:3px}
+.vet .nome small{font-family:'Fredoka',sans-serif;color:var(--suave);font-weight:500}
+.vet .cx{display:flex;gap:3px;flex-wrap:wrap}
+.vet .b{min-width:30px;border-radius:7px;border:2px solid transparent;text-align:center;font:700 14px 'JetBrains Mono',monospace;padding:2px 0 1px;position:relative}
+.vet .b small{display:block;font:500 9.5px 'JetBrains Mono',monospace;color:#8a95a0}
+.vet .b.v1{background:#e8f2ea;color:#2f6b45}
+.vet .b.v0{background:#f6e3e6;color:#9a3c48}
+.vet .b.hl{border-color:#2f3740;transform:translateY(-2px)}
+.vet .b.hl.v0{border-color:#b5545f}
+.vet.d1 .b.hl{box-shadow:0 0 0 3px #dbeaf6}
+.vet.d2 .b.hl{box-shadow:0 0 0 3px #ffe6cc}
+.sols{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;font:600 13px 'JetBrains Mono',monospace}
+.sols span{background:#eef4f8;border:1px solid #cfdde8;border-radius:8px;padding:3px 8px}
+.sols span.nova{background:#ffe6cc;border-color:#f0c59a}
+</style>
+<script src="modo.js"></script>
+</head>
+<body>
+<header>
+  <a class="btn" href="index.html" style="text-decoration:none;display:inline-flex;align-items:center">🕹 Início</a>
+  <h1>♛ Oito Rainhas</h1>
+  <div class="topoBtns">
+    <button class="btn icone" id="btnSom" title="som">🔊</button>
+    <button class="btn icone" id="btnTela" title="tela cheia">⛶</button>
+  </div>
+</header>
+<p class="sub">Coloque uma rainha em cada coluna sem que nenhuma ataque outra (mesma linha ou mesma diagonal). Coluna travou? Volte a rainha anterior e tente outra linha. O código usa três vetores pra saber o que está livre.</p>
+<div class="wrap">
+  <div class="abas">
+    <button data-aba="jogar" class="on">🎮 Jogar</button>
+    <button data-aba="auto">🔍 Ver o C rodar</button>
+    <button data-aba="prova">📝 Treino de prova</button>
+    <button data-aba="como">📖 Como funciona</button>
+  </div>
+
+  <div style="margin:4px 0 12px;display:flex;align-items:center;flex-wrap:wrap;gap:6px"><span id="modoSlot" data-ap="sem relógio, com as diagonais acesas e a ajuda &quot;Ainda tem saída?&quot;" data-esp="relógio, 3 vidas, sem diagonais acesas"></span><span class="espBarra oculto" id="espBarra"></span></div>
+  <div class="barra" id="barraN">
+    <label>Tabuleiro
+      <select id="selN"><option value="4">4 × 4</option><option value="5">5 × 5</option><option value="6" selected>6 × 6</option><option value="8">8 × 8</option></select>
+    </label>
+    <label class="soAprender"><input type="checkbox" id="verAtaque"> mostrar casas atacadas</label>
+    <span class="pequeno" id="infoN"></span>
+  </div>
+
+  <!-- ===================== JOGAR ===================== -->
+  <section id="aba-jogar">
+    <div class="grade grade2">
+      <div class="card">
+        <div class="tab" id="tabJ"></div>
+        <div class="colLbl" id="lblJ"></div>
+        <div class="legenda">
+          <span><i style="background:#9db6c9"></i>coluna da vez (<code>j</code>)</span>
+          <span class="soAprender"><i style="background:#dbeaf6"></i>diagonal <code>d1</code> (\)</span>
+          <span class="soAprender"><i style="background:#ffe6cc"></i>diagonal <code>d2</code> (/)</span>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <h3>Sua vez de ser o algoritmo</h3>
+          <p style="margin:0 0 8px">Você está na chamada <code>queen(<b id="jJ">0</b>, n)</code>: escolha uma linha <code>i</code> na coluna acesa. <span class="soAprender">Passe o mouse numa casa pra ver quais posições dos vetores ela usa.</span></p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn alerta" id="btnDesfazer">↩ Desfazer (backtrack)</button>
+            <button class="btn soAprender" id="btnDica">🤔 Ainda tem saída?</button>
+            <button class="btn" id="btnLimpa">Recomeçar</button>
+          </div>
+          <div class="stats">
+            <div class="stat xp">rainhas: <b id="jQ">0</b> / <b id="jN">6</b></div>
+            <div class="stat">voltas: <b id="jVoltas">0</b></div>
+            <div class="stat">soluções achadas: <b id="jSols">0</b> / <b id="jTot">4</b></div>
+          </div>
+          <div class="msg" id="jMsg"></div>
+          <div class="sols" id="jSolLista"></div>
+        </div>
+        <div class="card" style="margin-top:12px">
+          <h3>Os três vetores (1 = livre, 0 = ocupado)</h3>
+          <div class="vets" id="vetJ"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== AUTO ===================== -->
+  <section id="aba-auto" class="oculto">
+    <div class="barra"><label><input type="checkbox" id="semVolta"> versão com erro: sem as três linhas que devolvem 1 depois da chamada</label></div>
+    <div class="grade grade2">
+      <div>
+        <div class="card">
+          <div class="tab" id="tabA"></div>
+          <div class="colLbl" id="lblA"></div>
+          <div class="stats">
+            <div class="stat xp">contador: <b id="aCont">0</b></div>
+            <div class="stat">chamadas: <b id="aCham">0</b></div>
+            <div class="stat">profundidade: <b id="aProf">0</b></div>
+            <div class="stat">passos: <b id="aEv">0</b></div>
+          </div>
+          <div class="sols" id="aSols"></div>
+        </div>
+        <div class="card" style="margin-top:12px"><h3>Os três vetores</h3><div class="vets" id="vetA"></div></div>
+        <div class="card" style="margin-top:12px">
+          <h3>Pilha de chamadas</h3>
+          <div class="pilha" id="aPilha"></div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button class="btn pri" id="btnPasso">Próximo passo ▸</button>
+            <button class="btn" id="btnPlay">▶ Rodar</button>
+            <button class="btn" id="btnFim">⏭ Até o fim</button>
+            <button class="btn" id="btnReset">↺ Reiniciar</button>
+            <label style="font-size:14px;display:flex;gap:6px;align-items:center">velocidade <input type="range" id="vel" min="1" max="10" value="5"></label>
+            <label style="font-size:14px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="resumo"> só colocar e tirar</label>
+          </div>
+          <div class="msg" id="aMsg"></div>
+        </div>
+        <div class="card" style="margin-top:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <h3 style="margin:0">O código em C</h3>
+            <button class="btn" id="btnCopiar">Copiar programa completo</button>
+          </div>
+          <pre class="codigo" id="codigo"></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PROVA ===================== -->
+  <section id="aba-prova" class="oculto">
+    <div class="card" style="margin-bottom:12px">
+      <h3>Treino no estilo da prova</h3>
+      <p style="margin:0">Ler o código, prever o que imprime, achar o erro e adaptar. Responda antes de olhar a aba do C rodando e depois confira lá. <span class="pequeno" id="placar"></span></p>
+    </div>
+    <div class="card achaErro" style="margin-bottom:14px" id="cardErro">
+      <div class="qNum" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--suave)">Ache o erro</div>
+      <p style="margin:4px 0 8px">Este é o pseudocódigo das rainhas como aparece nos slides originais. Uma linha tem um erro de digitação que faz o algoritmo testar a diagonal errada. <b>Clique na linha errada.</b></p>
+      <pre class="codigo mini" id="pseudo"></pre>
+      <div class="msg oculto" id="erroMsg"></div>
+    </div>
+    <div class="quizGrade" id="quiz"></div>
+  </section>
+
+  <!-- ===================== COMO FUNCIONA ===================== -->
+  <section id="aba-como" class="oculto">
+    <div class="card texto">
+      <h2>A ideia antes do código</h2>
+      <p>Pensa em arrumar convidados numa mesa, um por cadeira, com a regra de que certos convidados não podem ficar perto de outros. Você senta o primeiro, depois o segundo, e quando chega num convidado que não cabe em lugar nenhum, você levanta o <b>último</b> que sentou e tenta outra cadeira pra ele.</p>
+      <p>Aqui cada coluna é um convidado (uma rainha por coluna) e as linhas são as cadeiras. A chamada <code>queen(j, n)</code> é "agora vou sentar a rainha da coluna <code>j</code>". O <code>for</code> tenta cada linha <code>i</code>.</p>
+
+      <h2>O que não está escrito mas existe</h2>
+      <div class="escondido">
+        <b>1. Por que só tem vetor de linha e não de coluna?</b> Porque cada chamada cuida de <b>uma coluna</b>. A coluna <code>j</code> nunca vai ter duas rainhas, então não precisa de vetor pra ela. É o próprio parâmetro <code>j</code> que garante isso.<br><br>
+        <b>2. O que é <code>d1[i - j + n - 1]</code>?</b> Numa diagonal que desce pra direita (\), a conta <code>i - j</code> dá sempre o mesmo número. Só que esse número vai de <code>-(n-1)</code> até <code>n-1</code>, e vetor em C não tem índice negativo. Somar <code>n - 1</code> empurra tudo pra começar em 0. Por isso o vetor tem <code>2n - 1</code> posições.<br><br>
+        <b>3. E o <code>d2[i + j]</code>?</b> Na diagonal que sobe pra direita (/), <code>i + j</code> é sempre igual. Vai de 0 até <code>2n - 2</code>, então não precisa somar nada.<br><br>
+        <b>4. O valor inicial.</b> Os três vetores começam com tudo 1 (tudo livre). Quem faz isso é o <code>main</code>, antes de chamar <code>queen(0, n)</code>. Nos slides originais isso aparece como <code>assign(n, true)</code> do C++.<br><br>
+        <b>5. <code>x[j] = i</code> não influencia a busca.</b> Ele só guarda onde a rainha ficou, pra quem quiser imprimir a solução. Por isso nem precisa desfazer: a próxima tentativa simplesmente escreve por cima.
+      </div>
+
+      <h2>Escolhe, explora, desfaz (com três vetores ao mesmo tempo)</h2>
+      <div class="caixa">
+        <b>1. Escolhe:</b> <code>linha[i] = 0; d1[i-j+n-1] = 0; d2[i+j] = 0;</code> marca a linha e as duas diagonais como ocupadas.<br>
+        <b>2. Explora:</b> <code>queen(j+1, n);</code> vai pra próxima coluna.<br>
+        <b>3. Desfaz:</b> <code>linha[i] = 1; d1[i-j+n-1] = 1; d2[i+j] = 1;</code> libera tudo de novo pra testar a próxima linha.
+      </div>
+      <p>Repara que aqui, igual ao Resta Um, o desfazer acontece <b>sempre</b>, não só quando deu errado. É porque este código <b>conta todas</b> as soluções: depois de achar uma, ele continua procurando.</p>
+
+      <h2>O jogo e o C são a mesma coisa</h2>
+      <table>
+        <tr><th>No jogo</th><th>No C</th></tr>
+        <tr><td>A coluna acesa</td><td>o parâmetro <code>j</code> da chamada atual</td></tr>
+        <tr><td>Clicar numa casa da coluna</td><td>o <code>for</code> chegando naquele <code>i</code></td></tr>
+        <tr><td>Casa atacada</td><td>o <code>if (linha[i] &amp;&amp; d1[...] &amp;&amp; d2[...])</code> dá falso</td></tr>
+        <tr><td>Colocar a rainha</td><td>os três vetores viram 0, <code>x[j] = i</code> e chama <code>queen(j+1, n)</code></td></tr>
+        <tr><td>Coluna sem casa livre</td><td>o <code>for</code> acaba sem chamar ninguém e a função volta</td></tr>
+        <tr><td>Botão Desfazer</td><td>as três linhas que devolvem 1, depois da chamada</td></tr>
+        <tr><td>Completar o tabuleiro</td><td><code>j == n</code>: <code>contador++</code></td></tr>
+      </table>
+
+      <h2>Quantas soluções existem</h2>
+      <table>
+        <tr><th>n</th><th>soluções</th><th>chamadas de <code>queen</code></th></tr>
+        <tr><td>4</td><td>2</td><td>17</td></tr>
+        <tr><td>5</td><td>10</td><td>54</td></tr>
+        <tr><td>6</td><td>4</td><td>153</td></tr>
+        <tr><td>8</td><td>92</td><td>2057</td></tr>
+      </table>
+      <p class="pequeno">Repara que 6 tem menos soluções que 5. Mais casas não quer dizer mais soluções.</p>
+
+      <h2>Desafios em C (pra fazer no terminal)</h2>
+      <ol>
+        <li>Copie o programa, compile com <code>gcc -Wall -Wextra -std=c99</code> e confira a tabela acima mudando o <code>#define N</code>.</li>
+        <li>Imprima cada solução como os slides fazem: o vetor <code>x</code> e o tabuleiro com <code>Q</code> e <code>.</code>.</li>
+        <li>Faça uma versão que para na <b>primeira</b> solução (dica: a função passa a devolver <code>int</code>, como o cavalo).</li>
+        <li>Troque os três vetores por uma função <code>pode(i, j)</code> que olha as rainhas já colocadas em <code>x[0..j-1]</code>. Fica mais simples ou mais complicado? E mais rápido ou mais lento?</li>
+      </ol>
+      <div class="fonte"><b>Fonte:</b> problema, pseudocódigo e código dos slides "Backtracking" de Wladimir Araújo Tavares (UFC, Campus de Quixadá, 2017). O original está em C++ (<code>vector&lt;bool&gt;</code>); aqui foi traduzido pra C com vetores de <code>int</code>, mantendo a mesma lógica. Os slides também mostram uma versão com Dancing Links, que não entrou aqui.</div>
+    </div>
+  </section>
+</div>
+
+<div id="vitoria" class="oculto"><div class="box">
+  <h2>Achou uma solução!</h2>
+  <div id="vTexto"></div>
+  <div class="grandes" id="vStats"></div>
+  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+    <button class="btn" id="vVerC">🔍 Ver o C contar todas</button>
+    <button class="btn pri" id="vOutra">Procurar outra ▸</button>
+  </div>
+</div></div>
+<div id="perdeu" class="oculto"><div class="box">
+  <h2>Acabaram as vidas</h2>
+  <p>No modo especialista cada rainha colocada numa casa atacada custa uma vida.</p>
+  <button class="btn pri" id="pDeNovo">Tentar de novo</button>
+</div></div>
+
+<script>
+"use strict";
+/* ---------- utilidades comuns (som, abas, relógio e vidas, quiz, vitória) ---------- */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+let AC=null, SOM=true;
+function ac(){ if(!AC){ try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){AC=null;} }
+  if(AC&&AC.state==='suspended') AC.resume(); return AC; }
+function tom(f,t0,dur,tipo,vol,f2){ const a=ac(); if(!a) return; const t=a.currentTime+t0;
+  const o=a.createOscillator(), g=a.createGain(); o.type=tipo; o.frequency.setValueAtTime(f,t);
+  if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+  g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+dur+.03); }
+function som(n){ if(!SOM) return; try{
+  if(n==='pulo') tom(520,0,.09,'square',.05,900);
+  else if(n==='volta') tom(620,0,.16,'triangle',.09,240);
+  else if(n==='erro'){ tom(200,0,.18,'sawtooth',.06,120); }
+  else if(n==='beco'){ tom(300,0,.12,'sawtooth',.04); tom(220,.14,.2,'sawtooth',.04); }
+  else if(n==='vitoria') [523,659,784,1047,1319].forEach((f,i)=>tom(f,i*.1,.22,'square',.05));
+  else if(n==='tick') tom(1000,0,.03,'square',.025);
+  else if(n==='desfaz') tom(340,0,.08,'triangle',.05,200);
+  else if(n==='ok') tom(700,0,.12,'sine',.07,1050);
+  else if(n==='nao') tom(260,0,.15,'sine',.07,180);
+}catch(e){} }
+function treme(){ document.body.classList.remove('treme'); void document.body.offsetWidth; document.body.classList.add('treme'); }
+function confete(){
+  const cores=['#c9ced4','#a9b1ba','#ffd6b0','#dcd8cc','#cfe6f5'];
+  for(let i=0;i<70;i++){ const s=document.createElement('span'); s.className='confete';
+    s.style.left=Math.random()*100+'vw'; s.style.background=cores[i%cores.length];
+    s.style.animationDuration=(1.8+Math.random()*1.8)+'s'; s.style.animationDelay=(Math.random()*.6)+'s';
+    document.body.appendChild(s); setTimeout(()=>s.remove(),4500); }
+}
+/* relógio e vidas do modo especialista */
+const ESPEC={t0:0,timer:null,vidas:3,ativo:false};
+function espInicia(){
+  clearInterval(ESPEC.timer); ESPEC.vidas=3; ESPEC.ativo=ESP(); ESPEC.t0=Date.now();
+  espDesenha();
+  if(ESPEC.ativo) ESPEC.timer=setInterval(espDesenha,500);
+}
+function espPara(){ clearInterval(ESPEC.timer); }
+function espSeg(){ return Math.round((Date.now()-ESPEC.t0)/1000); }
+function espDesenha(){
+  const el=$('espBarra'); if(!el) return;
+  if(!ESP()){ el.classList.add('oculto'); return; }
+  el.classList.remove('oculto');
+  const s=espSeg(); el.innerHTML=`⏱ <b>${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}</b> &nbsp; ${'❤️'.repeat(ESPEC.vidas)}${'🤍'.repeat(3-ESPEC.vidas)}`;
+}
+/* devolve true se ainda tem vida */
+function espErro(){
+  if(!ESP()) return true;
+  ESPEC.vidas--; espDesenha();
+  if(ESPEC.vidas<=0){ espPara(); $('perdeu').classList.remove('oculto'); return false; }
+  return true;
+}
+function estrelas(n){ return '★'.repeat(n)+'☆'.repeat(3-n); }
+/* quiz de prova: QUIZ=[{p, cod?, ops:[...], certa, exp}] */
+function montaQuiz(lista, alvo){
+  const box=$(alvo);
+  box.innerHTML=lista.map((q,k)=>`<div class="card quiz" data-k="${k}">
+    <div class="qNum">Questão ${k+1}</div>
+    <div class="qP">${q.p}</div>
+    ${q.cod?`<pre class="codigo mini">${q.cod.split('\n').map(l=>`<span class="ln">${esc(l)||' '}</span>`).join('')}</pre>`:''}
+    <div class="qOps">${q.ops.map((o,i)=>`<button class="btn qOp" data-i="${i}">${String.fromCharCode(97+i)}) ${o}</button>`).join('')}</div>
+    <div class="msg qExp oculto"></div></div>`).join('');
+  box.querySelectorAll('.quiz').forEach(c=>{
+    const q=lista[+c.dataset.k];
+    c.querySelectorAll('.qOp').forEach(b=>b.addEventListener('click',()=>{
+      if(c.classList.contains('feito')) return;
+      const i=+b.dataset.i, ok=i===q.certa; c.classList.add('feito');
+      b.classList.add(ok?'certo':'errado'); c.querySelectorAll('.qOp')[q.certa].classList.add('certo');
+      const e=c.querySelector('.qExp'); e.classList.remove('oculto'); e.classList.add(ok?'bom':'ruim');
+      e.innerHTML=(ok?'<b>Isso.</b> ':'<b>Não é essa.</b> ')+q.exp; som(ok?'ok':'nao');
+      const feitos=box.querySelectorAll('.quiz.feito').length, certas=box.querySelectorAll('.qOp.certo.errado').length;
+      atualizaPlacar(box);
+    }));
+  });
+  atualizaPlacar(box);
+}
+function atualizaPlacar(box){
+  const tot=box.querySelectorAll('.quiz').length, feitos=[...box.querySelectorAll('.quiz.feito')];
+  const certas=feitos.filter(c=>!c.querySelector('.qOp.errado')).length;
+  const p=$('placar'); if(p) p.innerHTML=`respondidas <b>${feitos.length}</b> de ${tot} · certas <b>${certas}</b>`;
+}
+
+
+const TOTAL={4:2,5:10,6:4,8:92};
+let N=6;
+let achadas={}; try{achadas=JSON.parse(localStorage.getItem('rainhas-alg2')||'{}');}catch(e){}
+const salva=()=>{try{localStorage.setItem('rainhas-alg2',JSON.stringify(achadas));}catch(e){}};
+const solsDe=n=>achadas[n]||(achadas[n]=[]);
+
+/* ---------- vetores ---------- */
+function novosVets(n){ return {linha:Array(n).fill(1), d1:Array(2*n-1).fill(1), d2:Array(2*n-1).fill(1)}; }
+const iD1=(i,j,n)=>i-j+n-1, iD2=(i,j)=>i+j;
+function livre(V,i,j,n){ return V.linha[i]&&V.d1[iD1(i,j,n)]&&V.d2[iD2(i,j)]; }
+function desenhaVets(el,V,n,hl){
+  const linhaV=(nome,cls,vet,dica,h)=>`<div class="vet ${cls}"><div class="nome">${nome} <small>${dica}</small></div><div class="cx">${vet.map((v,k)=>`<div class="b v${v}${h===k?' hl':''}">${v}<small>${k}</small></div>`).join('')}</div></div>`;
+  el.innerHTML=linhaV('linha[i]','lin',V.linha,`${n} posições, uma por linha`,hl?hl.i:null)
+    +linhaV('d1[i - j + n - 1]','d1',V.d1,`${2*n-1} posições, diagonais \\`,hl?iD1(hl.i,hl.j,n):null)
+    +linhaV('d2[i + j]','d2',V.d2,`${2*n-1} posições, diagonais /`,hl?iD2(hl.i,hl.j):null);
+}
+/* tabuleiro: q = vetor de linhas por coluna (x), jAtual, opções */
+function desenhaTab(el,lbl,n,x,k,opt={}){
+  el.style.gridTemplateColumns=`repeat(${n},1fr)`; el.style.gridTemplateRows=`repeat(${n},1fr)`;
+  lbl.style.gridTemplateColumns=`repeat(${n},1fr)`;
+  lbl.innerHTML=Array.from({length:n},(_,j)=>`<span class="${j===k?'on':''}">j=${j}</span>`).join('');
+  let h='';
+  for(let i=0;i<n;i++)for(let j=0;j<n;j++){
+    let cls='cel'; if((i+j)%2) cls+=' esc';
+    const temQ=j<k&&x[j]===i;
+    if(j===k&&opt.V){ cls+=' colAtual'; if(livre(opt.V,i,j,n)) cls+=' livre'; }
+    if(opt.ataque&&opt.V&&!temQ&&!(opt.V.linha[i]&&opt.V.d1[iD1(i,j,n)]&&opt.V.d2[iD2(i,j)])) cls+=' atacada';
+    if(opt.hl){ const a=opt.hl; if(i-j===a.i-a.j) cls+=' dg1'; if(i+j===a.i+a.j) cls+=' dg2'; if(i===a.i&&opt.mostraLinha) cls+=' lin';
+      if(a.i===i&&a.j===j&&a.ok!=null) cls+=a.ok?' probe-ok':' probe-no'; }
+    if(opt.flash&&opt.flash.i===i&&opt.flash.j===j) cls+=' desfeito';
+    h+=`<button class="${cls}" data-i="${i}" data-j="${j}">${temQ?'<span class="q">♛</span>':''}<span class="rot">${i},${j}</span></button>`;
+  }
+  el.innerHTML=h;
+}
+/* resolve a partir de um estado parcial (pra dica) */
+function temSaida(V,j,n){
+  if(j===n) return true;
+  for(let i=0;i<n;i++) if(livre(V,i,j,n)){
+    V.linha[i]=0;V.d1[iD1(i,j,n)]=0;V.d2[iD2(i,j)]=0;
+    const r=temSaida(V,j+1,n);
+    V.linha[i]=1;V.d1[iD1(i,j,n)]=1;V.d2[iD2(i,j)]=1;
+    if(r) return true;
+  }
+  return false;
+}
+
+/* =================== MODO JOGAR =================== */
+let J;
+function novoJogo(){
+  J={x:[],V:novosVets(N),voltas:0,hover:null,flash:null,fim:false};
+  espInicia();
+  jMsg(`Chamada <code>queen(0, ${N})</code>: coloque a rainha da coluna 0. Uma rainha por coluna, sem repetir linha nem diagonal.`);
+  renderJ();
+}
+function jMsg(h,t){const m=$('jMsg');m.innerHTML=h;m.className='msg'+(t?' '+t:'');}
+function renderJ(){
+  const k=J.x.length, aprender=!ESP();
+  desenhaTab($('tabJ'),$('lblJ'),N,J.x,J.fim?-1:k,{V:J.fim?null:J.V,ataque:aprender&&$('verAtaque').checked&&!J.fim,hl:aprender&&J.hover?J.hover:null,mostraLinha:true,flash:J.flash});
+  J.flash=null;
+  desenhaVets($('vetJ'),J.V,N,aprender&&J.hover?J.hover:null);
+  $('jJ').textContent=k; $('jQ').textContent=k; $('jN').textContent=N; $('jVoltas').textContent=J.voltas;
+  const L=solsDe(N); $('jSols').textContent=L.length; $('jTot').textContent=TOTAL[N];
+  $('jSolLista').innerHTML=L.map(s=>`<span class="${J.nova===s?'nova':''}">x = [${s}]</span>`).join('');
+  $('btnDesfazer').disabled=k===0;
+  $('tabJ').querySelectorAll('.cel').forEach(c=>{
+    const i=+c.dataset.i, j=+c.dataset.j;
+    c.addEventListener('click',()=>clique(i,j));
+    c.addEventListener('mouseenter',()=>{ if(ESP()||J.fim) return; J.hover={i,j}; renderHover(); });
+  });
+  $('tabJ').onmouseleave=()=>{ J.hover=null; renderHover(); };
+}
+function renderHover(){ // redesenha só as cores, sem perder os eventos
+  const aprender=!ESP(), h=J.hover;
+  $('tabJ').querySelectorAll('.cel').forEach(c=>{ const i=+c.dataset.i, j=+c.dataset.j;
+    c.classList.toggle('dg1',!!h&&i-j===h.i-h.j); c.classList.toggle('dg2',!!h&&i+j===h.i+h.j); c.classList.toggle('lin',!!h&&i===h.i); });
+  desenhaVets($('vetJ'),J.V,N,aprender&&h?h:null);
+}
+function clique(i,j){
+  if(J.fim) return;
+  const k=J.x.length;
+  if(j<k){ jMsg(`A coluna ${j} já tem rainha. Pra mexer nela, desfaça até voltar pra coluna ${j}: no backtracking só dá pra trocar a <b>última</b> escolha.`,'atencao'); som('nao'); return; }
+  if(j>k){ jMsg(`Ainda não é a vez da coluna ${j}. A chamada atual é <code>queen(${k}, ${N})</code>, que só olha a coluna ${k}.`,'atencao'); som('nao'); return; }
+  const V=J.V;
+  if(!livre(V,i,j,N)){
+    som('erro'); treme();
+    const motivos=[]; if(!V.linha[i]) motivos.push(`<code>linha[${i}] == 0</code> (já tem rainha nessa linha)`);
+    if(!V.d1[iD1(i,j,N)]) motivos.push(`<code>d1[${iD1(i,j,N)}] == 0</code> (diagonal \\ ocupada)`);
+    if(!V.d2[iD2(i,j)]) motivos.push(`<code>d2[${iD2(i,j)}] == 0</code> (diagonal / ocupada)`);
+    jMsg(ESP()?`Casa (${i},${j}) atacada.`:`Casa (${i},${j}) atacada: ${motivos.join(' e ')}. O <code>if</code> dá falso e o <code>for</code> pula pra <code>i = ${i+1}</code>.`,'ruim');
+    if(espErro()) renderJ(); return;
+  }
+  V.linha[i]=0; V.d1[iD1(i,j,N)]=0; V.d2[iD2(i,j)]=0; J.x.push(i); som('pulo');
+  const k2=J.x.length;
+  if(k2===N){ achou(); return; }
+  let algum=false; for(let r=0;r<N;r++) if(livre(V,r,k2,N)) algum=true;
+  if(!algum){ som('beco'); jMsg(`Rainha em (${i},${j}). Mas a coluna ${k2} ficou sem nenhuma casa livre: em <code>queen(${k2}, ${N})</code> o <code>for</code> vai do 0 ao ${N-1} sem entrar no <code>if</code> e a função volta sem fazer nada. Desfaça.`,'atencao'); }
+  else jMsg(`Rainha em (${i},${j}): <code>linha[${i}] = 0; d1[${iD1(i,j,N)}] = 0; d2[${iD2(i,j)}] = 0; x[${j}] = ${i};</code> e chama <code>queen(${k2}, ${N})</code>.`);
+  renderJ();
+}
+function desfazer(){
+  if(!J.x.length||J.fim) return;
+  const j=J.x.length-1, i=J.x.pop(), V=J.V;
+  V.linha[i]=1; V.d1[iD1(i,j,N)]=1; V.d2[iD2(i,j)]=1; J.voltas++; J.flash={i,j}; som('volta');
+  jMsg(`Desfez a rainha (${i},${j}): <code>linha[${i}] = 1; d1[${iD1(i,j,N)}] = 1; d2[${iD2(i,j)}] = 1;</code>. Volta pra <code>queen(${j}, ${N})</code>, que continua o <code>for</code> a partir de <code>i = ${i+1}</code>.`,'atencao');
+  renderJ();
+}
+function dica(){
+  if(J.fim) return;
+  const V={linha:J.V.linha.slice(),d1:J.V.d1.slice(),d2:J.V.d2.slice()};
+  if(temSaida(V,J.x.length,N)){ som('ok'); jMsg('Ainda tem saída: dá pra completar o tabuleiro sem mexer nas rainhas que já estão aí.','bom'); }
+  else { som('nao'); jMsg('Daqui não tem saída. Nenhuma combinação das próximas colunas funciona. Precisa desfazer pelo menos a última rainha.','ruim'); }
+}
+function achou(){
+  J.fim=true; espPara(); som('vitoria'); confete();
+  const s=J.x.join(', '), L=solsDe(N), nova=!L.includes(s);
+  if(nova){ L.push(s); salva(); } J.nova=s;
+  let st=J.voltas<=1?3:J.voltas<=5?2:1; if(ESP()&&espSeg()>120) st=Math.min(st,2);
+  jMsg(`Tabuleiro completo: <code>queen(${N}, ${N})</code> chega em <code>j == n</code> e faz <code>contador++</code>. A solução é <code>x = [${s}]</code>.`,'bom');
+  $('vTexto').innerHTML=`<code>x = [${s}]</code><br>${nova?'Solução nova!':'Essa você já tinha achado.'} Você tem <b>${L.length}</b> das <b>${TOTAL[N]}</b> soluções de ${N} × ${N}.${L.length===TOTAL[N]?' <b>Achou todas!</b> Foi exatamente o que o <code>contador</code> do C conta.':''}`;
+  $('vStats').innerHTML=`${ESP()?`<div class="stat xp">estrelas <b>${estrelas(st)}</b></div><div class="stat">tempo <b>${espSeg()}s</b></div>`:''}<div class="stat">voltas <b>${J.voltas}</b></div>`;
+  $('vitoria').classList.remove('oculto');
+  renderJ();
+}
+
+/* =================== VER O C RODAR =================== */
+const CODIGO=[
+ ['#include <stdio.h>',''],['#define N 4',''],['',''],
+ ['int linha[N];        /* linha[i] == 1: linha i livre */',''],
+ ['int d1[2*N - 1];     /* d1[i - j + N - 1] == 1: diagonal \\ livre */',''],
+ ['int d2[2*N - 1];     /* d2[i + j] == 1: diagonal / livre */',''],
+ ['int x[N];            /* x[j] = linha da rainha da coluna j */',''],
+ ['int contador = 0;',''],['',''],
+ ['void queen(int j, int n){','enter'],
+ ['    if (j == n){','base'],
+ ['        contador++;','cont'],
+ ['    } else {',''],
+ ['        for (int i = 0; i < n; i++){','for'],
+ ['            if (linha[i] && d1[i-j+n-1] && d2[i+j]){','if'],
+ ['                linha[i] = 0;','mark'],
+ ['                d1[i-j+n-1] = 0;','mark'],
+ ['                d2[i+j] = 0;','mark'],
+ ['                x[j] = i;','mark'],
+ ['                queen(j+1, n);','call'],
+ ['                linha[i] = 1;','unmark'],
+ ['                d1[i-j+n-1] = 1;','unmark'],
+ ['                d2[i+j] = 1;','unmark'],
+ ['            }',''],
+ ['        }',''],
+ ['    }',''],
+ ['}','fim'],['',''],
+ ['int main(){',''],
+ ['    for (int i = 0; i < N; i++) linha[i] = 1;','main'],
+ ['    for (int i = 0; i < 2*N - 1; i++){ d1[i] = 1; d2[i] = 1; }','main'],
+ ['    queen(0, N);','main'],
+ ['    printf("%d\\n", contador);','print'],
+ ['    return 0;',''],
+ ['}','']
+];
+function realca(t){
+  let cm='', i=t.indexOf('/*'); if(i>=0){cm=t.slice(i);t=t.slice(0,i);}
+  t=esc(t).replace(/("[^"]*")/g,'<span class="nu">$1</span>').replace(/\b(\d+)\b/g,'<span class="nu">$1</span>')
+    .replace(/(#include|#define|\bint\b|\bvoid\b|\breturn\b|\bif\b|\bfor\b|\belse\b)/g,'<span class="kw">$1</span>');
+  return t+(cm?`<span class="cm">${esc(cm)}</span>`:'');
+}
+function codigoAtual(){ const sem=$('semVolta').checked;
+  return CODIGO.filter(([t,id])=>!(sem&&id==='unmark')).map(([t,id])=>[t==='#define N 4'?`#define N ${N}`:t,id]); }
+function montaCodigo(){ $('codigo').innerHTML=codigoAtual().map(([t,id])=>`<span class="ln"${id?` data-id="${id}"`:''}>${realca(t)||' '}</span>`).join(''); }
+function acende(ids){ document.querySelectorAll('#codigo .ln').forEach(el=>el.classList.toggle('hl',ids.includes(el.dataset.id))); }
+
+let S, GEN, ULT=null, timer=null, rodando=false;
+const ev=(lines,msg,tipo)=>({lines,msg,tipo});
+function* queen(j){
+  const n=N, V=S.V;
+  const fr={j,i:'-'}; S.stack.push(fr); S.calls++; S.prof=Math.max(S.prof,S.stack.length); S.k=j; S.probe=null;
+  yield ev(['enter'],`Entrou em <code>queen(${j}, ${n})</code>: vai escolher a linha da rainha da coluna ${j}.`,'enter');
+  if(j===n){
+    yield ev(['base'],`<code>j == n</code>? ${j} == ${n}, sim! As ${n} colunas têm rainha.`,'base');
+    S.cont++; S.sols.push(S.x.slice(0,n).join(', '));
+    yield ev(['cont'],`<code>contador++</code>: agora vale <b>${S.cont}</b>. Solução <code>x = [${S.x.slice(0,n).join(', ')}]</code>. A função acaba e volta pra coluna anterior, que continua procurando.`,'achou');
+    S.stack.pop(); return;
+  }
+  yield ev(['base'],`<code>j == n</code>? ${j} == ${n}, não. Vai pro <code>else</code>.`,'base');
+  for(let i=0;i<n;i++){
+    fr.i=i; S.k=j; S.stack.length=S.stack.indexOf(fr)+1;
+    const a=V.linha[i], b=V.d1[iD1(i,j,n)], c=V.d2[iD2(i,j)], ok=!!(a&&b&&c);
+    S.probe={i,j,ok};
+    const partes=`<code>linha[${i}] = ${a}</code>, <code>d1[${iD1(i,j,n)}] = ${b}</code>, <code>d2[${iD2(i,j)}] = ${c}</code>`;
+    yield ev(['for','if'],`<code>i = ${i}</code>: testa a casa (${i},${j}). ${partes}. ${ok?'Os três são 1: está livre!':'Pelo menos um é 0: atacada, pula.'}`,ok?'ok':'no');
+    if(!ok) continue;
+    V.linha[i]=0; V.d1[iD1(i,j,n)]=0; V.d2[iD2(i,j)]=0; S.x[j]=i;
+    yield ev(['mark'],`<b>Escolhe:</b> <code>linha[${i}] = 0</code>, <code>d1[${iD1(i,j,n)}] = 0</code>, <code>d2[${iD2(i,j)}] = 0</code> e <code>x[${j}] = ${i}</code>. Rainha posta.`,'mark');
+    S.probe=null; S.k=j+1;
+    yield ev(['call'],`Chama <code>queen(${j+1}, ${n})</code>. Esta chamada fica esperando no <code>i = ${i}</code>.`,'call');
+    yield* queen(j+1);
+    S.stack.length=S.stack.indexOf(fr)+1; S.k=j;
+    if(S.sem){
+      S.probe={i,j,ok:null};
+      yield ev(['call'],`Voltou de <code>queen(${j+1}, ${n})</code>. <b>Nesta versão não tem as linhas que devolvem 1</b>: <code>linha[${i}]</code>, <code>d1[${iD1(i,j,n)}]</code> e <code>d2[${iD2(i,j)}]</code> continuam 0 pra sempre, mesmo sem rainha ali.`,'erro');
+    } else {
+      V.linha[i]=1; V.d1[iD1(i,j,n)]=1; V.d2[iD2(i,j)]=1; S.flash={i,j};
+      yield ev(['unmark'],`Voltou de <code>queen(${j+1}, ${n})</code>. <b>Desfaz:</b> <code>linha[${i}] = 1</code>, <code>d1[${iD1(i,j,n)}] = 1</code>, <code>d2[${iD2(i,j)}] = 1</code>. Tira a rainha e segue o <code>for</code>.`,'unmark');
+    }
+  }
+  S.probe=null;
+  yield ev(['fim'],`O <code>for</code> da coluna ${j} acabou. <code>queen(${j}, ${n})</code> termina e volta pra quem chamou.`,'ret');
+  S.stack.pop();
+}
+function resetAuto(){
+  pausa(); montaCodigo();
+  S={V:novosVets(N),x:Array(N).fill(0),stack:[],calls:0,prof:0,cont:0,sols:[],k:0,probe:null,flash:null,evs:0,fim:false,sem:$('semVolta').checked};
+  GEN=queen(0); ULT=null; acende(['main']);
+  setMsgA(`O <code>main</code> deixa os três vetores com tudo 1 (tudo livre) e chama <code>queen(0, ${N})</code>. Aperte <b>Próximo passo</b>.`,'');
+  renderAuto();
+}
+function setMsgA(h,t){const m=$('aMsg');m.innerHTML=h;m.className='msg'+(t?' '+t:'');}
+function umPasso(){
+  if(S.fim) return false;
+  const r=GEN.next(); S.evs++;
+  if(r.done){ S.fim=true; S.k=0; S.probe=null;
+    ULT=ev(['print'],`✅ Terminou. O <code>main</code> imprime <b>${S.cont}</b>, com ${S.calls} chamadas de <code>queen</code>.${S.sem?` <b>O certo seria ${TOTAL[N]}.</b> Sem liberar os vetores, cada linha e diagonal usada uma vez fica bloqueada pra sempre.`:''}`,'final');
+    return false; }
+  ULT=r.value; return true;
+}
+function avanca(){ if(!$('resumo').checked){ umPasso(); return; }
+  while(umPasso()){ if(['mark','unmark','achou','erro'].includes(ULT.tipo)) break; } }
+function renderAuto(){
+  desenhaTab($('tabA'),$('lblA'),N,S.x,S.fim?N:S.k,{hl:S.probe,flash:S.flash}); S.flash=null;
+  desenhaVets($('vetA'),S.V,N,S.probe);
+  $('aCont').textContent=S.cont; $('aCham').textContent=S.calls; $('aProf').textContent=S.stack.length; $('aEv').textContent=S.evs;
+  $('aSols').innerHTML=S.sols.map((s,k)=>`<span class="${k===S.sols.length-1&&ULT&&ULT.tipo==='achou'?'nova':''}">x = [${s}]</span>`).join('');
+  $('aPilha').innerHTML=S.stack.map((f,k)=>`<div class="${k===S.stack.length-1?'topo':''}">queen(${f.j}, ${N})   i = ${f.i}</div>`).reverse().join('')||'<div>main</div>';
+  if(ULT){ acende(ULT.lines); const t=ULT.tipo; setMsgA(ULT.msg, t==='unmark'||t==='no'?'ruim':(t==='achou'||t==='final')?'bom':t==='erro'?'atencao':''); }
+  ['btnPasso','btnPlay','btnFim'].forEach(id=>$(id).disabled=S.fim);
+}
+const ATRASOS=[1100,750,500,320,200,110,55,20,6,0];
+function pausa(){rodando=false; clearTimeout(timer); $('btnPlay').textContent='▶ Rodar';}
+function somEv(){ if(!ULT) return; if(ULT.tipo==='mark') som('tick'); else if(ULT.tipo==='unmark') som('desfaz'); else if(ULT.tipo==='achou') som('ok'); }
+function loop(){
+  if(!rodando) return;
+  const d=ATRASOS[+$('vel').value-1];
+  if(d===0){ for(let i=0;i<60&&!S.fim;i++) avanca(); } else { avanca(); if(d>=55) somEv(); }
+  renderAuto();
+  if(S.fim){pausa(); som('vitoria'); return;}
+  timer=setTimeout(loop, d===0?16:d);
+}
+
+/* =================== TREINO DE PROVA =================== */
+const PSEUDO=['function queen(j)','    if solução completa válida then','        registre solução','    for cada i tal que linha[i] == true do','        if d1[i − j] == true E d2[i + 2] == true then','            d1[i − j] ← false','            d2[i + j] ← false','            linha[i] ← false','            queen(j + 1)','            d1[i − j] ← true','            d2[i + j] ← true','            linha[i] ← true'];
+function montaErro(){
+  $('pseudo').innerHTML=PSEUDO.map((l,k)=>`<span class="ln" data-k="${k}">${String(k+1).padStart(2,' ')}:  ${esc(l)}</span>`).join('');
+  $('pseudo').querySelectorAll('.ln').forEach(el=>el.addEventListener('click',()=>{
+    if($('cardErro').classList.contains('feito')) return;
+    const k=+el.dataset.k, ok=k===4; $('cardErro').classList.add('feito');
+    el.classList.add(ok?'certo':'errado'); $('pseudo').querySelectorAll('.ln')[4].classList.add('certo');
+    const m=$('erroMsg'); m.classList.remove('oculto'); m.classList.add(ok?'bom':'ruim'); som(ok?'ok':'nao');
+    m.innerHTML=(ok?'<b>Achou.</b> ':'<b>Não é essa.</b> A errada é a linha 5. ')+'Ela testa <code>d2[i + 2]</code>, mas a diagonal / da casa (i, j) é <code>d2[i + j]</code>, como as linhas 7 e 11 mostram. Com o erro, o algoritmo olha sempre a diagonal da "coluna 2", qualquer que seja a coluna de verdade, e deixa passar rainhas que se atacam na diagonal /. Repara também que no pseudocódigo <code>d1[i − j]</code> está certo, porque lá o vetor foi declarado de <code>−(N−1)</code> até <code>N−1</code>. Em C, que não aceita índice negativo, vira <code>d1[i - j + n - 1]</code>.';
+  }));
+}
+const QUIZ=[
+ {p:'Com <code>#define N 4</code>, o que o programa imprime?',ops:['0','1','2','4'],certa:2,
+  exp:'Existem duas formas de pôr 4 rainhas num 4 × 4: <code>x = [1, 3, 0, 2]</code> e <code>x = [2, 0, 3, 1]</code>. Cada vez que <code>j == n</code>, <code>contador++</code>. Dá pra ver as duas aparecendo na aba do C rodando.'},
+ {p:'Por que o índice de <code>d1</code> é <code>i - j + n - 1</code> e não só <code>i - j</code>?',
+  ops:['Pra diagonal ficar na direção certa','Porque i - j pode ser negativo, e somar n - 1 desloca tudo pra começar em 0','Pra não colidir com os índices de d2','Porque o for começa em 0'],certa:1,
+  exp:'Na casa (0, n-1), <code>i - j = -(n-1)</code>. Vetor em C não tem índice negativo. Somando <code>n - 1</code>, o menor vira 0 e o maior vira <code>2n - 2</code>. Por isso <code>d1</code> tem <code>2n - 1</code> posições.'},
+ {p:'Alguém apagou as três linhas que devolvem 1 (as que vêm depois de <code>queen(j+1, n);</code>). Com <code>N = 4</code>, o que imprime?',
+  ops:['2, igual','1','0','Entra em loop infinito'],certa:2,
+  exp:'Sem liberar, a primeira tentativa (rainha na linha 0 da coluna 0) deixa <code>linha[0]</code> e as diagonais dela em 0 pra sempre. Cada tentativa seguinte bloqueia mais coisa, e a busca nunca chega em <code>j == 4</code>. Imprime 0. Ligue a versão com erro na aba do C pra ver os zeros ficando.'},
+ {p:'Quantas posições tem o vetor <code>d2</code> quando <code>N = 8</code>?',ops:['8','14','15','16'],certa:2,
+  exp:'<code>i + j</code> vai de 0 + 0 = 0 até 7 + 7 = 14. São 15 valores, ou seja, <code>2N - 1</code>.'},
+ {p:'Você quer imprimir cada solução encontrada (o vetor <code>x</code>). Onde entra o <code>for</code> que imprime <code>x[0]</code> até <code>x[n-1]</code>?',
+  ops:['Logo depois de x[j] = i;','Dentro do if (j == n), junto com contador++','Depois de queen(j+1, n);','No main, depois de queen(0, N);'],certa:1,
+  exp:'Só quando <code>j == n</code> todas as colunas têm rainha e o <code>x</code> está completo. Depois de <code>x[j] = i</code> a solução ainda está pela metade. No <code>main</code>, o <code>x</code> guarda só os restos da última tentativa.'},
+ {p:'Por que não existe um vetor <code>coluna[]</code> igual ao <code>linha[]</code>?',
+  ops:['Porque as colunas são verificadas pelo d1 e pelo d2','Porque cada chamada queen(j, n) coloca exatamente uma rainha na coluna j, então nunca tem duas na mesma coluna','Esqueceram, e o código tem um bug','Porque a matriz é quadrada'],certa:1,
+  exp:'A estrutura da recursão já garante a coluna: <code>queen(0)</code> põe na coluna 0, <code>queen(1)</code> na coluna 1, e assim por diante. Só a linha e as duas diagonais precisam ser controladas.'},
+ {p:'Com <code>N = 4</code>, quantas vezes <code>queen</code> é chamada no total, contando a chamada do <code>main</code>?',ops:['4','8','17','24'],certa:2,
+  exp:'São 17. Dá pra conferir na aba do C rodando, no contador de chamadas. Repare que é bem menos que testar todas as 4 × 4 × 4 × 4 = 256 combinações: assim que uma casa é atacada, o <code>if</code> corta aquele ramo inteiro. Isso é a poda do backtracking.'}
+];
+
+/* =================== abas e controles =================== */
+let aba='jogar';
+function trocaAba(a){
+  aba=a; document.querySelectorAll('.abas button').forEach(b=>b.classList.toggle('on',b.dataset.aba===a));
+  ['jogar','auto','prova','como'].forEach(x=>$('aba-'+x).classList.toggle('oculto',x!==a));
+  $('barraN').classList.toggle('oculto',a==='prova'||a==='como');
+  if(a!=='auto') pausa(); else renderAuto();
+}
+document.querySelectorAll('.abas button').forEach(b=>b.addEventListener('click',()=>trocaAba(b.dataset.aba)));
+$('selN').onchange=()=>{ N=+$('selN').value; $('infoN').textContent=`${TOTAL[N]} soluções existem em ${N} × ${N}.`; novoJogo(); resetAuto(); };
+$('verAtaque').onchange=renderJ;
+$('btnDesfazer').onclick=desfazer; $('btnDica').onclick=dica; $('btnLimpa').onclick=novoJogo;
+$('btnPasso').onclick=()=>{pausa(); avanca(); renderAuto(); somEv();};
+$('btnPlay').onclick=()=>{ if(rodando){pausa();return;} rodando=true; $('btnPlay').textContent='⏸ Pausar'; loop(); };
+$('btnFim').onclick=()=>{ pausa(); let g=0; while(umPasso()&&g<500000) g++; renderAuto(); som('vitoria'); };
+$('btnReset').onclick=resetAuto; $('semVolta').onchange=resetAuto;
+$('btnCopiar').onclick=()=>{ const txt=codigoAtual().map(x=>x[0]).join('\n'); (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>{$('btnCopiar').textContent='Copiado ✔';setTimeout(()=>$('btnCopiar').textContent='Copiar programa completo',1500);}).catch(()=>{}); };
+$('vVerC').onclick=()=>{ $('vitoria').classList.add('oculto'); resetAuto(); trocaAba('auto'); };
+$('vOutra').onclick=()=>{ $('vitoria').classList.add('oculto'); J.nova=null; novoJogo(); };
+$('pDeNovo').onclick=()=>{ $('perdeu').classList.add('oculto'); novoJogo(); };
+$('btnSom').onclick=()=>{ SOM=!SOM; $('btnSom').textContent=SOM?'🔊':'🔇'; if(SOM){ac(); som('ok');} };
+$('btnTela').onclick=()=>{ const d=document, el=d.documentElement; try{
+  if(d.fullscreenElement||d.webkitFullscreenElement){ (d.exitFullscreen||d.webkitExitFullscreen).call(d); }
+  else { const r=el.requestFullscreen||el.webkitRequestFullscreen; if(r){ const p=r.call(el); if(p&&p.catch) p.catch(()=>{}); } }
+}catch(e){} };
+
+/* início */
+$('infoN').textContent=`${TOTAL[N]} soluções existem em ${N} × ${N}.`;
+montaErro(); montaQuiz(QUIZ,'quiz');
+novoJogo(); resetAuto();
+</script>
+<script>window.addEventListener('modo',()=>location.reload());</script>
+<script src="canto.js"></script>
+</body>
+</html>

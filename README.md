@@ -28,6 +28,12 @@ A página inicial tem um mapa com todas as aulas e o que vem antes do quê. De l
 
 O conteúdo das aulas vem da disciplina CI1056 da UFPR, do professor André Vignatti. Os códigos, pseudocódigos e enunciados das listas são do material da disciplina e não entram na licença deste projeto.
 
+Alguns jogos de backtracking usam problemas e códigos de outras disciplinas, com os devidos créditos:
+
+- **Resta Um em linha** (`resta-um.html`) e **Oito Rainhas** (`rainhas.html`): problemas, pseudocódigo e código dos slides "Backtracking" de Wladimir Araújo Tavares (Universidade Federal do Ceará, Campus de Quixadá, 2017). O original está em C++; aqui foi traduzido pra C mantendo a mesma lógica. O "ache o erro" das rainhas usa o pseudocódigo como ele aparece nos slides.
+
+Esses códigos e pseudocódigos também são dos seus autores e não entram na licença deste projeto.
+
 O resto está sob [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). Use à vontade pra semear conhecimento: copie, adapte, leve pra sua turma. Detalhes no `LICENSE.txt`.
 
 <sub>\* A estrutura e o código do site foram criados com apoio de IA.</sub>

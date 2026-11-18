@@ -86,7 +86,7 @@ aplicaTema();
 function monta(){
   const c=el('div','canto');
   const A=(location.pathname.split('/').pop()||'index.html');
-  const ASS=/^(baus)/.test(A)?'busca':/^(blocos)/.test(A)?'ord':/^(suika)/.test(A)?'heap':/^(domino|cavalo|labirinto|slide|detetive)/.test(A)?'bt':'rec';
+  const ASS=/^(baus)/.test(A)?'busca':/^(blocos)/.test(A)?'ord':/^(suika)/.test(A)?'heap':/^(domino|cavalo|labirinto|slide|detetive|resta-um|rainhas)/.test(A)?'bt':'rec';
   const ROBO=`<g class="corpo">
     <ellipse cx="30" cy="57" rx="14" ry="2.5" fill="#2f5d7c" opacity=".18"/>
     <line x1="30" y1="10" x2="30" y2="5" stroke="#8fa9bd" stroke-width="2" stroke-linecap="round"/>
