@@ -1,7 +1,7 @@
 /* Algoritmos II · deixa o site funcionando como app e sem internet depois da primeira visita.
  * Páginas: tenta a rede primeiro (pra pegar atualização) e cai no cache se estiver offline.
  * Resto (scripts, imagens, fontes): cache primeiro. */
-const CACHE='alg2-v1';
+const CACHE='alg2-v2';
 const BASICO=['./','./index.html','./canto.js','./modo.js','./aula-core.js','./aula-fatia.js','./manifest.webmanifest','./icone-192.png','./icone-512.png'];
 self.addEventListener('install',e=>{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(BASICO).catch(()=>{}))); self.skipWaiting(); });
 self.addEventListener('activate',e=>{ e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k))))); self.clients.claim(); });

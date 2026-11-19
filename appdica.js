@@ -3,7 +3,8 @@
  * Falas prontas:
  *   - app: como usar o site como app (PWA). Também registra o sw.js (só com o site online).
  *   - idioma: "viu a lista do professor e não entendeu nada?" → idioma.html
- * Não abre sozinho: tocar no robô abre um menu (idioma e app); o link do rodapé abre a dica do app.
+ * Na página inicial, a dica do app aparece sozinha uma vez por visita (some depois de alguns segundos).
+ * Tocar no robô abre um menu (idioma e app).
  * Em outra página, defina window.ROBO_PAGINA antes deste script ('idioma' = boas-vindas da página do idioma). */
 (function(){
   const PAG=window.ROBO_PAGINA||'inicio';
@@ -11,7 +12,7 @@
   const app=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
   const online=location.protocol==='https:'||location.hostname==='localhost';
   if(online&&'serviceWorker' in navigator) navigator.serviceWorker.register(base+'sw.js').catch(()=>{});
-  let pedido=null, aberto=false, bal=null, tipo=null;
+  let pedido=null, aberto=false, bal=null, tipo=null, some=null;
   addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); pedido=e; });
   addEventListener('appinstalled',()=>{ marca('app'); fecha(); });
   const ua=navigator.userAgent, ios=/iPhone|iPad|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),
@@ -75,20 +76,21 @@
       e.onclick=async()=>{ fecha(); if(b.acao) await b.acao(); }; bts.appendChild(e); });
     document.body.appendChild(bal);
     bal.querySelector('.tt button').onclick=fecha;
-    digita(bal.querySelector('.fala'),f.texto,()=>bts.classList.add('on'));
+    digita(bal.querySelector('.fala'),f.texto,()=>{ bts.classList.add('on');
+      if(f.auto){ const b=bal; some=setTimeout(()=>{ if(bal===b) fecha(); },7000);
+        b.addEventListener('pointerdown',()=>clearTimeout(some)); b.addEventListener('mouseenter',()=>clearTimeout(some)); } });
   }
-  function fecha(){ aberto=false; clearTimeout(tipo); if(bal){ bal.remove(); bal=null; } }
+  function fecha(){ aberto=false; clearTimeout(tipo); clearTimeout(some); if(bal){ bal.remove(); bal=null; } }
   window.roboFala=roboFala; window.roboFalas=FALAS;
   window.abreDicaApp=()=>roboFala(FALAS.app());
 
   function liga(){
-    const r=document.querySelector('.rodape');
-    if(PAG==='inicio'&&r&&!r.querySelector('.linkApp')){ const b=document.createElement('button'); b.type='button'; b.className='linkApp'; b.textContent='📱 usar como app';
-      b.onclick=()=>roboFala(FALAS.app()); r.appendChild(document.createElement('br')); r.appendChild(b); }
     const ligaRobo=()=>{ const rb=document.querySelector('.canto .robo'); if(!rb){ setTimeout(ligaRobo,300); return; }
       rb.addEventListener('click',ev=>{ if(ev.isTrusted===false) return; aberto?fecha():roboFala(PAG==='idioma'?FALAS.bemvindo():FALAS.menu()); }); };
     ligaRobo();
-    // sem balão automático: o robô só fala quando alguém toca nele ou no link (pra não atrapalhar)
+    // na página inicial, a dica do app aparece sozinha uma vez por visita e some depois de uns segundos
+    let jaViu=true; try{ jaViu=!!sessionStorage.getItem('robo-app-auto'); sessionStorage.setItem('robo-app-auto','1'); }catch(x){}
+    if(PAG==='inicio'&&!app&&!jaViu) setTimeout(()=>{ if(!aberto) roboFala(Object.assign(FALAS.app(),{auto:true})); },1500);
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',liga); else liga();
 })();
