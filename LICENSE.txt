@@ -16,6 +16,6 @@ Em resumo, você pode copiar, redistribuir e adaptar este material desde que:
 NÃO fazem parte desta licença, e seguem os termos dos próprios autores:
   - os códigos em C das aulas (heap.c, all-binary-strings.c, all-subsets.c, cavalo.c,
     labirinto.c, quicksort-iterativo-e-recursivo.c) e os pseudocódigos das notas de aula,
-    material da disciplina CI1056 (UFPR);
-  - os enunciados das listas de exercícios 1, 2 e 3 citados em idioma.html, material da
-    disciplina CI1056 (UFPR).
+    material do professor André Vignatti (UFPR);
+  - os enunciados das listas de exercícios 1, 2 e 3 citados em idioma.html, dos professores
+    Marcos Castilho, André Vignatti e Daniel Oliveira (UFPR).

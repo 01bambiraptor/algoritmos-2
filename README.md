@@ -26,7 +26,7 @@ A página inicial tem um mapa com todas as aulas e o que vem antes do quê. De l
 
 ## Créditos e licença
 
-O conteúdo das aulas vem do material da disciplina CI1056 da UFPR. Os códigos, pseudocódigos e enunciados das listas são do material da disciplina e não entram na licença deste projeto.
+O conteúdo das aulas vem da disciplina CI1056 da UFPR, do professor André Vignatti. Os códigos, pseudocódigos e enunciados das listas são do material da disciplina e não entram na licença deste projeto.
 
 Alguns jogos de backtracking usam problemas e códigos de outras disciplinas, com os devidos créditos:
 
